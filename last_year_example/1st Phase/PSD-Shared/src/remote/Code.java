@@ -1,0 +1,14 @@
+package remote;
+
+public enum Code{
+	THEATERS,
+	ACCEPT_OK,
+	ACCEPT_ERROR,
+	AVAILABLE,
+	FULL,
+	CANCEL_OK,
+	CANCEL_ERROR,
+	RESERVE_OK,
+	RESERVE_ERROR,
+	BUSY
+}
