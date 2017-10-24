@@ -18,6 +18,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     private DataStorageIF dataStorageStub;
 
     private HashMap<Integer, ClientData> clientsList;
+    private int clientCounter;
 
     public WideBoxImpl() throws RemoteException {
 
@@ -30,6 +31,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
             //initialize the HashMap for the clients, set to maximum number of clients according to the assignment
             HashMap<Integer, ClientData> clientsList = new HashMap<Integer, ClientData>(100000);
+
+            clientCounter = 0;
+
         } catch (Exception e) {
             System.err.println("WideBoxImpl exception: " + e.toString());
             e.printStackTrace();
@@ -47,7 +51,11 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             return new Message(MessageType.FULL);
         }
         else {
-            //create ClientID
+            int clientID = clientCounter;
+            clientCounter++;
+            Seat seat = theater.reserveSeat();
+
+            clientsList.put(clientID, new ClientData(clientID, theaterName, seat, timer));
             //reserve a seat
             // insert clientID and reserved theater.seats.seat and timer to a internal DS
             return new Message(MessageType.AVAILABLE, theater.seats, clientID);
@@ -57,11 +65,11 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     public Message reserve(Seat seat, int clientID) throws RemoteException {
         ClientData client = validateClient(clientID);
         if (client == null) {
-            return new Message(MessageType.ERROR);
+            return new Message(MessageType.RESERVE_ERROR);
         }
 
         Theater theater = dataStorageStub.getTheater(client.theaterName);
-        Seat new_seat = theater.reserveSeat;
+        Seat new_seat = theater.reserveSeat();
         if (new_seat != null) {
             theater.freeSeat(client.seat);
             client.seat = new_seat;
@@ -74,12 +82,28 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     }
 
     public Message accept(int clientID) throws RuntimeException {
-        // check if clientID is existing (maybe check also timer of the clientID)
-        return null;
+        ClientData client = validateClient(clientID);
+        if (client == null) {
+            return new Message(MessageType.ACCEPT_ERROR);
+        }
+
+        Theater theater = dataStorageStub.getTheater(client.theaterName);
+        theater.occupySeat(client.seat);
+        clientsList.remove(clientID);
+        return new Message(MessageType.ACCEPT_OK);
     }
 
     public Message cancel(int clientID) throws RuntimeException {
-        return null;
+        ClientData client = validateClient(clientID);
+        if (client == null) {
+            return new Message(MessageType.CANCEL_ERROR);
+        }
+        else {
+            Theater theater = dataStorageStub.getTheater(client.theaterName);
+            theater.freeSeat(client.seat);
+            clientsList.remove(clientID);
+            return new Message(MessageType.CANCEL_OK);
+        }
     }
 
     private ClientData validateClient(int clientID){

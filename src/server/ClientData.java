@@ -10,4 +10,11 @@ public class ClientData {
     protected String theaterName;
     protected Seat seat;
     protected Timer timer;
+
+    public ClientData(int clientID, String theaterName, Seat seat, Timer timer) {
+        this.clientID = clientID;
+        this.theaterName = theaterName;
+        this.seat = seat;
+        this.timer = timer;
+    }
 }

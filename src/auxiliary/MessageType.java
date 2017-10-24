@@ -8,6 +8,8 @@ public enum MessageType {
     AVAILABLE,
     ACCEPT_OK,
     ACCEPT_ERROR,
-    ERROR,
+    RESERVE_ERROR,
+    CANCEL_OK,
+    CANCEL_ERROR,
     BUSY,
 }
