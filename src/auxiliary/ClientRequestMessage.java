@@ -1,6 +1,6 @@
 package auxiliary;
 
-public class ClientRequestMessage implements Message {
+public class ClientRequestMessage implements MessageIF {
 
     private String clientId;
     private String opId;

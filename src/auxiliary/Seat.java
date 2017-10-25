@@ -4,7 +4,7 @@ package auxiliary;
  * Created by tobiasmuench on 25.10.17.
  */
 public class Seat {
-    enum SeatStatus {
+    public enum SeatStatus {
         OCCUPIED,
         RESERVED,
         FREE,

@@ -13,10 +13,13 @@ public class Theater {
     public Theater(String theaterName) {
         this.theaterName = theaterName;
         this.status = TheaterStatus.FREE;
-        for (char i = 'A'; i <= 'Z'; i++) {
+
+        char row = 'A';
+        for (int i = 0; i < 26; i++) {
             for (int j = 0; j < 40; j++) {
-                new Seat(Seat.SeatStatus.FREE, i, j);
+                this.seats[i][j] = new Seat(Seat.SeatStatus.FREE, row, j);
             }
+            row++;
         }
     }
 
@@ -30,21 +33,28 @@ public class Theater {
 
     public Seat reserveSeat() {
         Seat seat = null;
+        //char row = 'A';
         for (char i = 'A'; i <= 'Z'; i++) {
             for (int j = 0; j < 40; j++) {
-                if (this.seats[i][j].status == Seat.SeatStatus.FREE){
-                    this.seats[i][j].status = Seat.SeatStatus.RESERVED;
+                if (this.seats[i-'A'][j].status == Seat.SeatStatus.FREE){
+                    this.seats[i-'A'][j].status = Seat.SeatStatus.RESERVED;
                     seat = new Seat(Seat.SeatStatus.RESERVED, i, j);
                     return seat;
                 }
             }
+            //row++;
         }
         return seat;
     }
 
     public Seat reserveSeat(Seat seat) {
-        this.seats[seat.rowNr][seat.colNr].status = Seat.SeatStatus.RESERVED;
-        seat.status = Seat.SeatStatus.RESERVED;
-        return seat;
+        if (this.seats[seat.rowNr - 'A'][seat.colNr].status == Seat.SeatStatus.FREE) {
+            this.seats[seat.rowNr - 'A'][seat.colNr].status = Seat.SeatStatus.RESERVED;
+            seat.status = Seat.SeatStatus.RESERVED;
+            return seat;
+        }
+        else {
+            return null;
+        }
     }
 }

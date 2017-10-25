@@ -5,11 +5,17 @@ package auxiliary;
  */
 public class Message {
 
-    public Message(Enum<MessageType> messageType) {
+    public MessageType type;
+    public Seat[][] theaterSeats = null;
+    public int clientID = -1;
 
+    public Message(MessageType messageType) {
+        this.type = messageType;
     }
 
-    public Message(Enum<MessageType> messageType, Seat[][] seats, int clientID) {
-
+    public Message(MessageType messageType, Seat[][] seats, int clientID) {
+        this.type = messageType;
+        this.theaterSeats = seats;
+        this.clientID = clientID;
     }
 }
