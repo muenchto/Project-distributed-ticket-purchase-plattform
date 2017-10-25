@@ -29,10 +29,10 @@ public class Client {
             System.out.println("Widebox is looking for this theater: " + theaterChoice);
 
             Message answer = wideboxStub.query(theaterChoice);
-            clientID = answer.clientID;
+            clientID = answer.getClientID();
             System.out.println("Hello" + clientID + ": " + theaterChoice + " has following seats: ");
             //TODO: How to the seat of the client? expand the Message?
-            System.out.println(Arrays.asList(answer.theaterSeats));
+            System.out.println(Arrays.asList(answer.getTheaterSeats()));
 
             while (true){
                 String choice = console.readLine("Accept (y/n)?");
@@ -54,11 +54,11 @@ public class Client {
                 answer = wideboxStub.reserve(seat, clientID);
                 System.out.println("Hello" + clientID + ": " + theaterChoice + " has following seats: ");
                 //TODO: How to the seat of the client? expand the Message?
-                System.out.println(Arrays.asList(answer.theaterSeats));
+                System.out.println(Arrays.asList(answer.getTheaterSeats()));
             }
 
 
-            if (answer.type == MessageType.ACCEPT_OK) {
+            if (answer.getType() == MessageType.ACCEPT_OK) {
                 System.out.println("You have succesfully booked the seat "+ seatChoice + " in " + theaterChoice+"!");
             }
             else {
