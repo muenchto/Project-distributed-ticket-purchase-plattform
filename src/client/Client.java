@@ -14,7 +14,7 @@ public class Client {
 
     public static void main(String[] args) {
 
-        int clientID = 0;
+        int clientID = 5;
 
         String host = (args.length < 1) ? null : args[0];
         try {
@@ -34,17 +34,29 @@ public class Client {
             //TODO: How to the seat of the client? expand the Message?
             System.out.println(Arrays.asList(answer.theaterSeats));
 
-            String seatChoice = console.readLine("Accept (type 'a') or choose a new seat!");
+            while (true){
+                String choice = console.readLine("Accept (y/n)?");
+                if (choice.equals("y")){
+                    answer = wideboxStub.accept(clientID);
+                    break;
+                }
+                else {
+                    String seatChoice = console.readLine("Choose a Seat:");
+                }
+            }
+
+
             while (!seatChoice.equals("a")) {
                 //TODO: check input as a regex
                 // if ()
-                Seat seat = new Seat(Seat.SeatStatus.RESERVED, seatChoice.charAt(0), (int)seatChoice.charAt(1));
+                int seatColumn = Integer.parseInt(seatChoice.substring(1));
+                Seat seat = new Seat(Seat.SeatStatus.RESERVED, seatChoice.charAt(0), seatColumn);
                 answer = wideboxStub.reserve(seat, clientID);
                 System.out.println("Hello" + clientID + ": " + theaterChoice + " has following seats: ");
                 //TODO: How to the seat of the client? expand the Message?
                 System.out.println(Arrays.asList(answer.theaterSeats));
             }
-            answer = wideboxStub.accept(clientID);
+
 
             if (answer.type == MessageType.ACCEPT_OK) {
                 System.out.println("You have succesfully booked the seat "+ seatChoice + " in " + theaterChoice+"!");

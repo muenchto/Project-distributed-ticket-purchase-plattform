@@ -1,9 +1,11 @@
 package auxiliary;
 
+import java.io.Serializable;
+
 /**
  * Created by tobiasmuench on 25.10.17.
  */
-public class Theater {
+public class Theater implements Serializable {
     public String theaterName;
     public TheaterStatus status;
     public Seat[][] seats = new Seat[26][40];
@@ -24,11 +26,11 @@ public class Theater {
     }
 
     public void freeSeat(Seat seat) {
-        this.seats[seat.rowNr][seat.colNr].status = Seat.SeatStatus.FREE;
+        this.seats[seat.rowNr-'A'][seat.colNr].status = Seat.SeatStatus.FREE;
     }
 
     public void occupySeat(Seat seat) {
-        this.seats[seat.rowNr][seat.colNr].status = Seat.SeatStatus.OCCUPIED;
+        this.seats[seat.rowNr-'A'][seat.colNr].status = Seat.SeatStatus.OCCUPIED;
     }
 
     public Seat reserveSeat() {

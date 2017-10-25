@@ -3,7 +3,7 @@ package auxiliary;
 /**
  * Created by tobiasmuench on 25.10.17.
  */
-public class Message {
+public class Message implements MessageIF {
 
     public MessageType type;
     public Seat[][] theaterSeats = null;
