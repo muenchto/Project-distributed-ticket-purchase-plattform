@@ -1,6 +1,4 @@
 .idea/
-
 *.iml
-
-
-#add macOS bs here pls
+*.ds
+.out/
