@@ -1,10 +1,12 @@
 package auxiliary;
 
+import java.io.Serializable;
+
 /**
  * Created by tobiasmuench on 25.10.17.
  */
-public class Seat {
-    public enum SeatStatus {
+public class Seat implements Serializable{
+    public enum SeatStatus  {
         OCCUPIED,
         RESERVED,
         FREE,

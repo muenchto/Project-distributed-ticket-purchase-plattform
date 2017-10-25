@@ -29,7 +29,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             this.theaters.put("TheaterNr"+i, new Theater("TheaterNr"+i));
         }
         //initialize the HashMap for the clients, set to maximum number of clients according to the assignment
-        ExpiringMap<Integer, ClientData> clientsList = new ExpiringMap<Integer, ClientData>(15, 1);
+        this.clientsList = new ExpiringMap<Integer, ClientData>(15, 1);
         clientsList.getExpirer().startExpiring();
         clientCounter = 0;
 
@@ -68,8 +68,12 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             int clientID = clientCounter;
             clientCounter++;
             Seat seat = theater.reserveSeat();
-            System.out.println("try to put the client data in list");
+            if (seat != null) {
+                System.out.println("reserved seat: "+ seat.rowNr+":"+seat.colNr);
+            }
+            System.out.println("try to put the client data in list: "+clientID+ ", "+theaterName+", "+seat.rowNr+":"+seat.colNr);
             clientsList.put(clientID, new ClientData(clientID, theaterName, seat));
+            System.out.println("put succesful");
             return new Message(MessageType.AVAILABLE, theater.seats, clientID);
         }
     }
