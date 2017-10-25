@@ -47,7 +47,7 @@ public class ConfigHandler {
                         break;
                     case "targettheater":
                         if(skip){
-                            //skip = true;
+                            skip = false;
                             break;
                         }
                         this.targetTheater = split[1];
