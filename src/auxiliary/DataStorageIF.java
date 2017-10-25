@@ -7,5 +7,7 @@ package auxiliary;
  * I will state here the methods that I think the DBServer has to be able to answer very soon!
  */
 public interface DataStorageIF {
+
     String[] getTheaterNames();
+    Theater getTheater(String theaterName);
 }

@@ -1,9 +1,15 @@
 package auxiliary;
 
-import java.io.Serializable;
+/**
+ * Created by tobiasmuench on 25.10.17.
+ */
+public class Message {
 
-public interface Message extends Serializable{
+    public Message(Enum<MessageType> messageType) {
 
+    }
 
+    public Message(Enum<MessageType> messageType, Seat[][] seats, int clientID) {
 
+    }
 }

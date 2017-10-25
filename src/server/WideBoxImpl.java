@@ -42,12 +42,12 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
 
     public String[] getNames() throws RemoteException {
-        return new dataStorageStub.getTheaterNames();
+        return dataStorageStub.getTheaterNames();
     }
 
     public Message query(String theaterName) throws RemoteException {
         Theater theater = dataStorageStub.getTheater(theaterName);
-        if (theater.status() == TheaterStatus.FULL) {
+        if (theater.status == TheaterStatus.FULL) {
             return new Message(MessageType.FULL);
         }
         else {
@@ -56,8 +56,6 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             Seat seat = theater.reserveSeat();
 
             clientsList.put(clientID, new ClientData(clientID, theaterName, seat, timer));
-            //reserve a seat
-            // insert clientID and reserved theater.seats.seat and timer to a internal DS
             return new Message(MessageType.AVAILABLE, theater.seats, clientID);
         }
     }
@@ -69,7 +67,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
 
         Theater theater = dataStorageStub.getTheater(client.theaterName);
-        Seat new_seat = theater.reserveSeat();
+        Seat new_seat = theater.reserveSeat(seat);
         if (new_seat != null) {
             theater.freeSeat(client.seat);
             client.seat = new_seat;
@@ -111,14 +109,10 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             return null;
         }
         else {
-            ClientData client = clientsList.get(clientID);
-            if (client.timer < 15000) {
-                return null;
-            }
-            else {
-                return client;
-            }
+
+            return client;
         }
+
 
 
     }
