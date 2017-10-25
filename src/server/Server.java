@@ -20,7 +20,7 @@ public class Server {
         try {
 
             // Bind the remote object's stub in the registry
-            registry = LocateRegistry.getRegistry(0);
+            registry = LocateRegistry.createRegistry(5000);
             registry.rebind("WideBoxServer", widebox);
 
             System.err.println("Server ready");
