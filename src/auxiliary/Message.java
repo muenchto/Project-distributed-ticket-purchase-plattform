@@ -5,9 +5,9 @@ package auxiliary;
  */
 public class Message implements MessageIF {
 
-    public MessageType type;
-    public Seat[][] theaterSeats = null;
-    public int clientID = -1;
+    private MessageType type;
+    private Seat[][] theaterSeats = null;
+    private int clientID = -1;
 
     public Message(MessageType messageType) {
         this.type = messageType;
@@ -17,5 +17,17 @@ public class Message implements MessageIF {
         this.type = messageType;
         this.theaterSeats = seats;
         this.clientID = clientID;
+    }
+
+    public MessageType getType() {
+        return type;
+    }
+
+    public Seat[][] getTheaterSeats() {
+        return theaterSeats;
+    }
+
+    public int getClientID() {
+        return clientID;
     }
 }

@@ -13,7 +13,7 @@ public class Client {
 
 
     public static void main(String[] args) {
-
+/*
         int clientID = 5;
 
         String host = (args.length < 1) ? null : args[0];
@@ -67,6 +67,7 @@ public class Client {
         } catch (Exception e) {
             System.err.println("Client exception: " + e.toString());
             e.printStackTrace();
-        }
+        }*/
     }
+
 }
