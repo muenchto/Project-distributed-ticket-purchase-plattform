@@ -7,7 +7,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -18,10 +17,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     private Registry registry;
     private DataStorageIF dataStorageStub;
 
-    private ExpiringMap<Integer, ClientData> clientsList;
     private int clientCounter;
 
-    private ConcurrentHashMap<String, ConcurrentHashMap<Seat, Seat.SeatStatus>> reservedSeats;
+    private ConcurrentHashMap<String, ExpiringMap<Seat, Integer>> reservedSeats;
 
     private LinkedHashMap theaters;
 
@@ -31,12 +29,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         for (int i = 0; i < 1500; i++) {
             this.theaters.put("TheaterNr"+i, new Theater("TheaterNr"+i));
         }
-        //initialize the HashMap for the clients, set to maximum number of clients according to the assignment
-        this.clientsList = new ExpiringMap<Integer, ClientData>(15, 1);
-        clientsList.getExpirer().startExpiring();
         this.clientCounter = 0;
 
-        this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMap<Seat, Seat.SeatStatus>>(1500);
+        this.reservedSeats = new ConcurrentHashMap<String, ExpiringMap<Seat, Integer>>(1500);
 
        /* try {
             //TODO: find the registry
@@ -73,74 +68,82 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             int clientID = clientCounter;
             clientCounter++;
 
-            reservedSeats.putIfAbsent(theater.theaterName, new ConcurrentHashMap<Seat, Seat.SeatStatus>(26*40));
+            //if the theater is queried the first time, the name is added to the HasMap
+            //and a new ExporingMap is created for the Seats and the Expirer is started for this seat map
+            if (!reservedSeats.containsKey(theaterName)){
+                ExpiringMap<Seat, Integer> expiringSeatMap = new ExpiringMap<Seat, Integer>(15);
+                expiringSeatMap.getExpirer().startExpiring();
+                reservedSeats.put(theater.theaterName, expiringSeatMap);
+            }
 
+            //add all reserved seats from one theater to the theaterObject as reserved
             for (Seat s: reservedSeats.get(theaterName).keySet()) {
                 theater.reserveSeat(s);
             }
+            //reserve a new Seat for the client
             Seat seat = theater.reserveSeat();
-            reservedSeats.get(theater.theaterName).put(seat, Seat.SeatStatus.RESERVED);
 
-            clientsList.put(clientID, new ClientData(clientID, theaterName, seat));
-            return new Message(MessageType.AVAILABLE, theater.seats, clientID);
+            //add this seat to the list
+            reservedSeats.get(theater.theaterName).put(seat, clientID);
+
+            return new Message(MessageType.AVAILABLE, theater.seats, seat, clientID);
         }
     }
 
-    public Message reserve(Seat seat,  int clientID) throws RemoteException {
-        ClientData client = clientsList.get(clientID);
-        if (client == null) {
+    public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
+
+        //check if this client has already that seat reserved, if not, return error
+        if (reservedSeats.get(theaterName).get(old_seat) == null ||
+                reservedSeats.get(theaterName).get(old_seat) != clientID) {
             return new Message(MessageType.RESERVE_ERROR);
         }
 
         //Theater theater = dataStorageStub.getTheater(client.theaterName);
-        Theater theater = (Theater) this.theaters.get(client.theaterName);
-        Seat new_seat = theater.reserveSeat(seat);
+        Theater theater = (Theater) this.theaters.get(theaterName);
+
+        //add all reserved seats from one theater to the theaterObject as reserved
+        for (Seat s: reservedSeats.get(theaterName).keySet()) {
+            theater.reserveSeat(s);
+        }
+        //try to reserve a new Seat for the client
+        Seat new_seat = theater.reserveSeat(wish_seat);
         if (new_seat != null) {
-            reservedSeats.get(client.theaterName).put(new_seat, Seat.SeatStatus.RESERVED);
-            reservedSeats.get(client.theaterName).remove(seat);
+            reservedSeats.get(theaterName).put(new_seat, clientID);
+            reservedSeats.get(theaterName).remove(old_seat);
 
-            client.seat = new_seat;
-            clientsList.put(clientID, client);
+            theater.freeSeat(old_seat);
 
-            theater.freeSeat(client.seat);
-            for (Seat s: reservedSeats.get(client.theaterName).keySet()) {
-                theater.reserveSeat(s);
-            }
-            return new Message(MessageType.AVAILABLE, theater.seats, clientID);
+            return new Message(MessageType.AVAILABLE, theater.seats, new_seat, clientID);
         }
         else {
-            return new Message(MessageType.AVAILABLE, theater.seats, clientID);
+            return new Message(MessageType.AVAILABLE, theater.seats, old_seat, clientID);
         }
     }
 
-   public Message accept(int clientID) throws RemoteException {
-        ClientData client = clientsList.get(clientID);
-        if (client == null) {
-            return new Message(MessageType.ACCEPT_ERROR);
-        }
+   public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
 
-        //dataStorageStub.occupySeat(client.theaterName, client.seat);
-        Theater theater = (Theater) this.theaters.get(client.theaterName);
-        theater.occupySeat(client.seat);
+       //check if this client has already that seat reserved, if not, return error
+       if (reservedSeats.get(theaterName).get(acceptedSeat) == null ||
+               reservedSeats.get(theaterName).get(acceptedSeat) != clientID) {
+           return new Message(MessageType.ACCEPT_ERROR);
+       }
 
-        reservedSeats.get(client.theaterName).remove(client.seat);
-        clientsList.remove(clientID);
+       //dataStorageStub.occupySeat(client.theaterName, client.seat);
+        Theater theater = (Theater) this.theaters.get(theaterName);
+        theater.occupySeat(acceptedSeat);
 
+        reservedSeats.get(theaterName).remove(acceptedSeat);
         return new Message(MessageType.ACCEPT_OK);
     }
 
-    public Message cancel(int clientID) throws RemoteException {
-        ClientData client = clientsList.get(clientID);
-        if (client == null) {
+    public Message cancel(String theaterName, Seat seat, int clientID) throws RemoteException {
+        //check if this client has already that seat reserved, if not, return error
+        if (reservedSeats.get(theaterName).get(seat) == null ||
+                reservedSeats.get(theaterName).get(seat) != clientID) {
             return new Message(MessageType.CANCEL_ERROR);
         }
         else {
-            //Theater theater = dataStorageStub.getTheater(client.theaterName);
-            Theater theater = (Theater) this.theaters.get(client.theaterName);
-            theater.freeSeat(client.seat);
-
-            reservedSeats.get(client.theaterName).remove(client.seat);
-            clientsList.remove(clientID);
+            reservedSeats.get(theaterName).remove(seat);
             return new Message(MessageType.CANCEL_OK);
         }
     }
