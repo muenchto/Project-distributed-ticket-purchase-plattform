@@ -35,11 +35,13 @@ public class TrafficGenerator {
             long sleepRate = rate/1000;
 
 
-            ExecutorService ex = Executors.newFixedThreadPool(6);
+            ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
                         op,numClients,numTheaters,duration,sleepRate);
-                tgt.setName(Integer.toString(i));
+                if(tgt.getState().equals(Thread.State.TERMINATED)){
+                    tgt.getLatency();
+                }
                 ex.execute(tgt);
             }
             ex.shutdown();

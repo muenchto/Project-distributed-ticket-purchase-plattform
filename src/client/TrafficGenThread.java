@@ -13,8 +13,6 @@ public class TrafficGenThread extends Thread {
     //performance
     private int requests;
     private long averageLatency;
-    private int discarted;
-    private int servedResquestsRate;
     private int cancelled;
     private int purchased;
     private int errors;
@@ -32,7 +30,7 @@ public class TrafficGenThread extends Thread {
 
     public TrafficGenThread(WideBoxIF widebox, String targettheater, String origin,
                             String target, String op, int numClients, int numTheaters
-                            , int duration, long sleepRate) {
+            , int duration, long sleepRate) {
         this.wideBoxStub = widebox;
         this.targetTheater = targettheater;
         this.origin = origin;
@@ -495,11 +493,4 @@ public class TrafficGenThread extends Thread {
         return averageLatency;
     }
 
-    public int getDiscarted() {
-        return discarted;
-    }
-
-    public int getServedResquestsRate() {
-        return servedResquestsRate;
-    }
 }
