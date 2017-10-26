@@ -7,6 +7,7 @@ public class Message implements MessageIF {
 
     private MessageType type;
     private Seat[][] theaterSeats = null;
+    private Seat clientsSeat = null;
     private int clientID = -1;
 
     public Message(MessageType messageType) {
@@ -29,5 +30,9 @@ public class Message implements MessageIF {
 
     public int getClientID() {
         return clientID;
+    }
+
+    public Seat getClientsSeat() {
+        return clientsSeat;
     }
 }
