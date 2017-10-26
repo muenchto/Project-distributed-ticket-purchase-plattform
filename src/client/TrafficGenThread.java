@@ -144,8 +144,7 @@ public class TrafficGenThread extends Thread {
                 System.out.println("I'm purchasing my pre-reservation\n" +
                         "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
-                wideBoxStub.accept(theaters[Integer.parseInt(targetTheater)],
-                        m.getClientsSeat(), m.getClientID());
+                wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
                 addToLatency(latencyEnd - latencyBeg);
