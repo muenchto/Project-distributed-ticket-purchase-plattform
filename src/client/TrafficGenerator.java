@@ -7,10 +7,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Random;
 
-import auxiliary.ConfigHandler;
-import auxiliary.Message;
-import auxiliary.MessageType;
-import auxiliary.WideBoxIF;
+import auxiliary.*;
 
 public class TrafficGenerator {
 
@@ -53,7 +50,9 @@ public class TrafficGenerator {
                             Thread.sleep(sleepRate);
                             System.out.println("I'm cancelling my pre-reservation\n" +
                                     "------------------------------------");
-                            wideBoxStub.cancel(m.getClientID());
+                            if(m.getType() != MessageType.FULL) {
+                                wideBoxStub.cancel(m.getClientID());
+                            }
                         }
                     } else { //operation = purchase
                         endTime = System.currentTimeMillis() + duration;
@@ -87,7 +86,9 @@ public class TrafficGenerator {
                             Thread.sleep(sleepRate);
                             System.out.println("I'm canceling the pre-reservation\n" +
                                     "-----------------------------");
-                            wideBoxStub.cancel(m.getClientID());
+                            if(m.getType() != MessageType.FULL) {
+                                wideBoxStub.cancel(m.getClientID());
+                            }
                         }
                     } else { //operation = purchase
                         endTime = System.currentTimeMillis() + duration;
