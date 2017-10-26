@@ -9,7 +9,7 @@ import java.rmi.RemoteException;
 public interface WideBoxIF extends Remote{
     String[] getNames() throws RemoteException;
     Message query(String theaterName) throws RemoteException;
-    Message reserve(Seat seat, int clientID) throws RemoteException;
-    Message accept(int clientID) throws RemoteException;
-    Message cancel(int clientID) throws RemoteException;
+    Message reserve(Seat old_seat, Seat new_seat, int clientID) throws RemoteException;
+    Message accept(Seat seat, int clientID) throws RemoteException;
+    Message cancel(Seat seat, int clientID) throws RemoteException;
 }

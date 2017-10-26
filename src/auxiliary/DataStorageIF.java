@@ -10,4 +10,5 @@ public interface DataStorageIF {
 
     String[] getTheaterNames();
     Theater getTheater(String theaterName);
+    boolean occupySeat(String theaterName, Seat theaterSeat);
 }
