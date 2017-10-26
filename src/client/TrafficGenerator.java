@@ -18,7 +18,7 @@ public class TrafficGenerator {
     public static void main(String[] args) {
 
         try {
-            Registry reg = LocateRegistry.getRegistry(0);
+            Registry reg = LocateRegistry.getRegistry(5000);
             WideBoxIF wideBoxStub = (WideBoxIF) reg.lookup("WideBoxServer");
 
 
@@ -28,9 +28,9 @@ public class TrafficGenerator {
             String target = ch.getTarget();
             String targetTheater = ch.getTargetTheater();
             int numClients = ch.getNumClients();
-            int numTheaters = ch.getNumClients();
+            int numTheaters = ch.getNumTheaters();
             String op = ch.getOp();
-            int duration = ch.getDuration();
+            int duration = ch.getDuration()*1000; //milliseconds
             int rate = ch.getRate();
             long sleepRate = rate / 1000;
 
@@ -44,17 +44,33 @@ public class TrafficGenerator {
                     if (op.equals("query")) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
-                            Message m = wideBoxStub.query("Theater" + targetTheater);
+                            System.out.println("Getting the theater names");
+                            String [] theaters = wideBoxStub.getNames();
+                            System.out.println("Sending a query for theater "+
+                                    theaters[Integer.parseInt(targetTheater)]);
+                            Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
+                            System.out.println("I'm sleeping");
                             Thread.sleep(sleepRate);
+                            System.out.println("I'm cancelling my pre-reservation\n" +
+                                    "------------------------------------");
                             wideBoxStub.cancel(m.getClientID());
                         }
                     } else { //operation = purchase
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
-                            Message m = wideBoxStub.query("Theater" + targetTheater);
+                            System.out.println("Getting the theater names");
+                            String [] theaters = wideBoxStub.getNames();
+                            System.out.println("Sending a query for theater "+
+                                    theaters[Integer.parseInt(targetTheater)]);
+                            Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
+                            System.out.println("I'm sleeping");
                             Thread.sleep(sleepRate);
-                            if (m.getType().equals(MessageType.ACCEPT_OK)) {
+                            if (m.getType().equals(MessageType.AVAILABLE)) {
+                                System.out.println("I'm accepting the pre-reservation on seat\n" +
+                                        "------------------------------");
                                 wideBoxStub.accept(m.getClientID());
+                            }else {
+                                System.out.println("Couldn't accept pre-reservation");
                             }
                         }
                     }
@@ -62,17 +78,34 @@ public class TrafficGenerator {
                     if (op.equals("query")) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
-                            Message m = wideBoxStub.query("Theater" + Integer.toString(r.nextInt(numTheaters)));
+                            System.out.println("Getting the theater names");
+                            String [] theaters = wideBoxStub.getNames();
+                            int aux = r.nextInt(numTheaters);
+                            System.out.println("Sending a query for theater "+theaters[aux]);
+                            Message m = wideBoxStub.query(theaters[aux]);
+                            System.out.println("I'm sleeping");
                             Thread.sleep(sleepRate);
+                            System.out.println("I'm canceling the pre-reservation\n" +
+                                    "-----------------------------");
                             wideBoxStub.cancel(m.getClientID());
                         }
                     } else { //operation = purchase
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
-                            Message m = wideBoxStub.query("Theater" + Integer.toString(numTheaters));
+                            System.out.println("Getting the theater names");
+                            String [] theaters = wideBoxStub.getNames();
+                            int aux = r.nextInt(numTheaters);
+                            System.out.println("Sending a query for theater "+theaters[aux]);
+                            Message m = wideBoxStub.query(theaters[aux]);
+                            System.out.println("I'm sleeping");
                             Thread.sleep(sleepRate);
-                            if (m.getType().equals(MessageType.ACCEPT_OK)) {
+                            if (m.getType().equals(MessageType.AVAILABLE)) {
+                                System.out.println("I'm accepting the pre-reservation\n" +
+                                        "------------------------------");
                                 wideBoxStub.accept(m.getClientID());
+                            }else {
+                                System.out.println("Couldn't accept pre-reservation\n" +
+                                        "----------------------------");
                             }
                         }
                     }
@@ -83,8 +116,16 @@ public class TrafficGenerator {
                         while (clientId <= numClients) {
                             endTime = System.currentTimeMillis() + duration;
                             while (System.currentTimeMillis() < endTime) {
-                                Message m = wideBoxStub.query("Theater" + targetTheater);
+                                System.out.println("Im client: "+clientId);
+                                System.out.println("Getting the theater names");
+                                String [] theaters = wideBoxStub.getNames();
+                                System.out.println("Sending a query for theater "+
+                                        theaters[Integer.parseInt(targetTheater)]);
+                                Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
+                                System.out.println("I'm sleeping");
                                 Thread.sleep(sleepRate);
+                                System.out.println("I'm cancelling my pre-reservation\n" +
+                                        "------------------------------------");
                                 wideBoxStub.cancel(m.getClientID());
                             }
                             clientId++;
@@ -93,10 +134,21 @@ public class TrafficGenerator {
                         while (clientId <= numClients) {
                             endTime = System.currentTimeMillis() + duration;
                             while (System.currentTimeMillis() < endTime) {
-                                Message m = wideBoxStub.query("Theater" + targetTheater);
+                                System.out.println("Im client: "+clientId);
+                                System.out.println("Getting the theater names");
+                                String [] theaters = wideBoxStub.getNames();
+                                System.out.println("Sending a query for theater "+
+                                        theaters[Integer.parseInt(targetTheater)]);
+                                Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
+                                System.out.println("I'm sleeping");
                                 Thread.sleep(sleepRate);
-                                if (m.getType().equals(MessageType.ACCEPT_OK)) {
+                                if (m.getType().equals(MessageType.AVAILABLE)) {
+                                    System.out.println("I'm accepting the pre-reservation\n" +
+                                            "------------------------------");
                                     wideBoxStub.accept(m.getClientID());
+                                }else {
+                                    System.out.println("Couldn't accept pre-reservation\n" +
+                                            "-----------------------------------");
                                 }
                             }
                             clientId++;
@@ -107,8 +159,16 @@ public class TrafficGenerator {
                         while (clientId <= numClients) {
                             endTime = System.currentTimeMillis() + duration;
                             while (System.currentTimeMillis() < endTime) {
-                                Message m = wideBoxStub.query("Theater" + Integer.toString(r.nextInt(numTheaters)));
+                                System.out.println("Im client: "+clientId);
+                                System.out.println("Getting the theater names");
+                                String [] theaters = wideBoxStub.getNames();
+                                int aux = r.nextInt(numTheaters);
+                                System.out.println("Sending a query for theater "+theaters[aux]);
+                                Message m = wideBoxStub.query(theaters[aux]);
+                                System.out.println("I'm sleeping");
                                 Thread.sleep(sleepRate);
+                                System.out.println("I'm canceling the pre-reservation\n" +
+                                        "-------------------------");
                                 wideBoxStub.cancel(m.getClientID());
                             }
                             clientId++;
@@ -117,10 +177,21 @@ public class TrafficGenerator {
                         while (clientId <= numClients) {
                             endTime = System.currentTimeMillis() + duration;
                             while (System.currentTimeMillis() < endTime) {
-                                Message m = wideBoxStub.query("Theater" + Integer.toString(r.nextInt(numTheaters)));
+                                System.out.println("Im client: "+clientId);
+                                System.out.println("Getting the theater names");
+                                String [] theaters = wideBoxStub.getNames();
+                                int aux = r.nextInt(numTheaters);
+                                System.out.println("Sending a query for theater "+theaters[aux]);
+                                Message m = wideBoxStub.query(theaters[aux]);
+                                System.out.println("I'm sleeping");
                                 Thread.sleep(sleepRate);
-                                if (m.getType().equals(MessageType.ACCEPT_OK)) {
+                                if (m.getType().equals(MessageType.AVAILABLE)) {
+                                    System.out.println("I'm accepting the pre-reservation\n" +
+                                            "------------------------------");
                                     wideBoxStub.accept(m.getClientID());
+                                }else {
+                                    System.out.println("Couldn't accept pre-reservation\n" +
+                                            "--------------------------");
                                 }
                             }
                             clientId++;
