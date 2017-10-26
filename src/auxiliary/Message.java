@@ -14,9 +14,10 @@ public class Message implements MessageIF {
         this.type = messageType;
     }
 
-    public Message(MessageType messageType, Seat[][] seats, int clientID) {
+    public Message(MessageType messageType, Seat[][] seats, Seat clientSeat, int clientID) {
         this.type = messageType;
         this.theaterSeats = seats;
+        this.clientsSeat = clientSeat;
         this.clientID = clientID;
     }
 
