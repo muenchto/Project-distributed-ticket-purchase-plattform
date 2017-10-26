@@ -1,15 +1,15 @@
 package client;
 
-import java.rmi.AccessException;
+import auxiliary.ConfigHandler;
+import auxiliary.WideBoxIF;
+
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import auxiliary.*;
 
 public class TrafficGenerator {
 
@@ -45,7 +45,7 @@ public class TrafficGenerator {
             for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
                         op,numClients,numTheaters,rate,duration,sleepRate);
-                tgt.
+                tgt.start();
             }
 
 
