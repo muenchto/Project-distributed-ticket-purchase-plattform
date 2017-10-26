@@ -59,8 +59,8 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     public Message query(String theaterName) throws RemoteException {
         //Theater theater = dataStorageStub.getTheater(theaterName);
-        System.out.println("start query");
         Theater theater = (Theater) this.theaters.get(theaterName);
+        theater = theater.clone();
         if (theater.status == TheaterStatus.FULL) {
             return new Message(MessageType.FULL);
         }
@@ -85,7 +85,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
             //add this seat to the list
             reservedSeats.get(theater.theaterName).put(seat.getSeatName(), clientID);
-            System.out.println("put in reservedSeats: " + reservedSeats.get(theater.theaterName).keySet());
+            System.out.println("QUERY: reservedSeats @ "+theater.theaterName +": "+ reservedSeats.get(theater.theaterName).keySet());
 
             return new Message(MessageType.AVAILABLE, theater.seats, seat, clientID);
         }
@@ -95,6 +95,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         //Theater theater = dataStorageStub.getTheater(client.theaterName);
         Theater theater = (Theater) this.theaters.get(theaterName);
+        theater = theater.clone();
 
         //add all reserved seats from one theater to the theaterObject as reserved
         for (String s: reservedSeats.get(theaterName).keySet()) {
@@ -130,11 +131,12 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
        }
 
        //dataStorageStub.occupySeat(client.theaterName, client.seat);
-        Theater theater = (Theater) this.theaters.get(theaterName);
-        theater.occupySeat(acceptedSeat);
+       Theater theater = (Theater) this.theaters.get(theaterName);
 
-        reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
-        return new Message(MessageType.ACCEPT_OK);
+       theater.occupySeat(acceptedSeat);
+
+       reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
+       return new Message(MessageType.ACCEPT_OK);
     }
 
     public Message cancel(String theaterName, Seat seat, int clientID) throws RemoteException {
