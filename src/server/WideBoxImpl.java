@@ -8,6 +8,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by tobiasmuench on 12.10.17.
@@ -20,6 +21,8 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     private ExpiringMap<Integer, ClientData> clientsList;
     private int clientCounter;
 
+    private ConcurrentHashMap<String, ConcurrentHashMap<Seat, Seat.SeatStatus>> reservedSeats;
+
     private LinkedHashMap theaters;
 
     public WideBoxImpl() throws RemoteException {
@@ -31,7 +34,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         //initialize the HashMap for the clients, set to maximum number of clients according to the assignment
         this.clientsList = new ExpiringMap<Integer, ClientData>(15, 1);
         clientsList.getExpirer().startExpiring();
-        clientCounter = 0;
+        this.clientCounter = 0;
+
+        this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMap<Seat, Seat.SeatStatus>>(1500);
 
        /* try {
             //TODO: find the registry
@@ -67,13 +72,16 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         else {
             int clientID = clientCounter;
             clientCounter++;
-            Seat seat = theater.reserveSeat();
-            if (seat != null) {
-                System.out.println("reserved seat: "+ seat.rowNr+":"+seat.colNr);
+
+            reservedSeats.putIfAbsent(theater.theaterName, new ConcurrentHashMap<Seat, Seat.SeatStatus>(26*40));
+
+            for (Seat s: reservedSeats.get(theaterName).keySet()) {
+                theater.reserveSeat(s);
             }
-            System.out.println("try to put the client data in list: "+clientID+ ", "+theaterName+", "+seat.rowNr+":"+seat.colNr);
+            Seat seat = theater.reserveSeat();
+            reservedSeats.get(theater.theaterName).put(seat, Seat.SeatStatus.RESERVED);
+
             clientsList.put(clientID, new ClientData(clientID, theaterName, seat));
-            System.out.println("put succesful");
             return new Message(MessageType.AVAILABLE, theater.seats, clientID);
         }
     }
@@ -88,9 +96,16 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         Theater theater = (Theater) this.theaters.get(client.theaterName);
         Seat new_seat = theater.reserveSeat(seat);
         if (new_seat != null) {
-            theater.freeSeat(client.seat);
+            reservedSeats.get(client.theaterName).put(new_seat, Seat.SeatStatus.RESERVED);
+            reservedSeats.get(client.theaterName).remove(seat);
+
             client.seat = new_seat;
             clientsList.put(clientID, client);
+
+            theater.freeSeat(client.seat);
+            for (Seat s: reservedSeats.get(client.theaterName).keySet()) {
+                theater.reserveSeat(s);
+            }
             return new Message(MessageType.AVAILABLE, theater.seats, clientID);
         }
         else {
@@ -104,10 +119,13 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             return new Message(MessageType.ACCEPT_ERROR);
         }
 
-        //Theater theater = dataStorageStub.getTheater(client.theaterName);
-       Theater theater = (Theater) this.theaters.get(client.theaterName);
+        //dataStorageStub.occupySeat(client.theaterName, client.seat);
+        Theater theater = (Theater) this.theaters.get(client.theaterName);
         theater.occupySeat(client.seat);
+
+        reservedSeats.get(client.theaterName).remove(client.seat);
         clientsList.remove(clientID);
+
         return new Message(MessageType.ACCEPT_OK);
     }
 
@@ -120,6 +138,8 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             //Theater theater = dataStorageStub.getTheater(client.theaterName);
             Theater theater = (Theater) this.theaters.get(client.theaterName);
             theater.freeSeat(client.seat);
+
+            reservedSeats.get(client.theaterName).remove(client.seat);
             clientsList.remove(clientID);
             return new Message(MessageType.CANCEL_OK);
         }
