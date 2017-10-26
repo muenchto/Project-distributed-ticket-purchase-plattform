@@ -27,13 +27,12 @@ public class TrafficGenThread extends Thread {
     private String op;
     private int numClients;
     private int numTheaters;
-    private int rate;
     private int duration;
     private long sleepRate;
 
     public TrafficGenThread(WideBoxIF widebox, String targettheater, String origin,
-                            String target, String op, int numClients, int numTheaters,
-                            int rate, int duration, long sleepRate) {
+                            String target, String op, int numClients, int numTheaters
+                            , int duration, long sleepRate) {
         this.wideBoxStub = widebox;
         this.targetTheater = targettheater;
         this.origin = origin;
@@ -41,7 +40,6 @@ public class TrafficGenThread extends Thread {
         this.op = op;
         this.numClients = numClients;
         this.numTheaters = numTheaters;
-        this.rate = rate;
         this.duration = duration;
         this.sleepRate = sleepRate;
     }

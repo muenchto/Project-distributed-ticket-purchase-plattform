@@ -34,20 +34,28 @@ public class TrafficGenerator {
             int numThread = ch.getNumThreads();
             long sleepRate = rate/1000;
 
-            /*
+
             ExecutorService ex = Executors.newFixedThreadPool(6);
             for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
-                        op,numClients,numTheaters,rate,duration,sleepRate);
+                        op,numClients,numTheaters,duration,sleepRate);
+                tgt.setName(Integer.toString(i));
+                ex.execute(tgt);
             }
-            ex.
-            */
+            ex.shutdown();
+            while(!ex.isTerminated())
+                ;
+
+
+
+            //ex.
+            /*
             for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
                         op,numClients,numTheaters,rate,duration,sleepRate);
                 tgt.start();
             }
-
+            */
 
 
         } catch (RemoteException e1) {
