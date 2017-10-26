@@ -15,6 +15,7 @@ public class ConfigHandler {
     private String op;
     private int rate;
     private int duration;
+    private int numThreads;
 
     public ConfigHandler() {
         try {
@@ -66,6 +67,9 @@ public class ConfigHandler {
                         break;
                     case "duration":
                         this.duration = Integer.parseInt(split[1]);
+                        break;
+                    case "threads":
+                        this.numThreads = Integer.parseInt(split[1]);
                         break;
                 }
             }
@@ -120,5 +124,9 @@ public class ConfigHandler {
                 "op = " + op + "\n" +
                 "rate = " + rate +"\n"+
                 "duration = " + duration +"\n";
+    }
+
+    public int getNumThreads() {
+        return numThreads;
     }
 }
