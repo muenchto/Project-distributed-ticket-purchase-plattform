@@ -55,10 +55,7 @@ public class Client {
                     Seat seat = new Seat(Seat.SeatStatus.RESERVED, seatChoice.charAt(0), seatColumn);
 
                     answer = wideboxStub.reserve(theaterChoice, answer.getClientsSeat(), seat, clientID);
-                    if (answer.getType() == MessageType.RESERVE_ERROR){
-                        System.out.println("could not reserve " +seat.rowNr+""+seat.colNr);
-                        continue;
-                    }
+
                     System.out.println("Hello " + clientID + ": " + theaterChoice + " has following seats: ");
                     printSeats(answer.getTheaterSeats());
                     System.out.println("Your seat is: "+answer.getClientsSeat().rowNr+":"+answer.getClientsSeat().colNr
@@ -71,10 +68,10 @@ public class Client {
             System.out.println(answer.getType());
             switch (answer.getType()){
                 case ACCEPT_OK:
-                    System.out.println("You have successfully booked the seat "+ seatChoice + " in " + theaterChoice+"!");
+                    System.out.println("You have successfully booked in " + theaterChoice+"!");
                     break;
                 case ACCEPT_ERROR:
-                    System.out.println("Booking the seat "+ seatChoice + " in " + theaterChoice+" was not successful!");
+                    System.out.println("Booking the seat was not successful!");
                     break;
                 case CANCEL_OK:
                     System.out.println("Cancel successful.");

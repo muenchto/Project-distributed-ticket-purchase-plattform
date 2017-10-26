@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Created by tobiasmuench on 25.10.17.
  */
-public class Theater implements Serializable {
+public class Theater implements Serializable{
     public String theaterName;
     public TheaterStatus status;
     public Seat[][] seats = new Seat[26][40];
@@ -63,5 +63,16 @@ public class Theater implements Serializable {
 
         this.seats[seatName.charAt(0)-'A'][Integer.parseInt(seatName.substring(1))].status = Seat.SeatStatus.RESERVED;
 
+    }
+
+    @Override
+    public Theater clone() {
+        Theater clone = new Theater(this.theaterName);
+        for (char i = 'A'; i <= 'Z'; i++) {
+            for (int j = 0; j < 40; j++) {
+                clone.seats[i-'A'][j].status = this.seats[i-'A'][j].status;
+            }
+        }
+        return clone;
     }
 }
