@@ -19,7 +19,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private int clientCounter;
 
-    private ConcurrentHashMap<String, ExpiringMap<Seat, Integer>> reservedSeats;
+    private ConcurrentHashMap<String, ExpiringMap<String, Integer>> reservedSeats;
 
     private LinkedHashMap theaters;
 
@@ -31,7 +31,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
         this.clientCounter = 0;
 
-        this.reservedSeats = new ConcurrentHashMap<String, ExpiringMap<Seat, Integer>>(1500);
+        this.reservedSeats = new ConcurrentHashMap<String, ExpiringMap<String, Integer>>(1500);
 
        /* try {
             //TODO: find the registry
@@ -69,22 +69,23 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             clientCounter++;
 
             //if the theater is queried the first time, the name is added to the HasMap
-            //and a new ExporingMap is created for the Seats and the Expirer is started for this seat map
+            //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
             if (!reservedSeats.containsKey(theaterName)){
-                ExpiringMap<Seat, Integer> expiringSeatMap = new ExpiringMap<Seat, Integer>(15);
+                ExpiringMap<String, Integer> expiringSeatMap = new ExpiringMap<String, Integer>(15);
                 expiringSeatMap.getExpirer().startExpiring();
                 reservedSeats.put(theater.theaterName, expiringSeatMap);
             }
 
             //add all reserved seats from one theater to the theaterObject as reserved
-            for (Seat s: reservedSeats.get(theaterName).keySet()) {
-                theater.reserveSeat(s);
+            for (String s: reservedSeats.get(theaterName).keySet()) {
+                theater.setSeatToReserved(s);
             }
             //reserve a new Seat for the client
             Seat seat = theater.reserveSeat();
 
             //add this seat to the list
-            reservedSeats.get(theater.theaterName).put(seat, clientID);
+            reservedSeats.get(theater.theaterName).put(seat.getSeatName(), clientID);
+            System.out.println("put in reservedSeats: " + reservedSeats.get(theater.theaterName).keySet());
 
             return new Message(MessageType.AVAILABLE, theater.seats, seat, clientID);
         }
@@ -92,25 +93,25 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
 
-        //check if this client has already that seat reserved, if not, return error
-        if (reservedSeats.get(theaterName).get(old_seat) == null ||
-                reservedSeats.get(theaterName).get(old_seat) != clientID) {
-            return new Message(MessageType.RESERVE_ERROR);
-        }
-
         //Theater theater = dataStorageStub.getTheater(client.theaterName);
         Theater theater = (Theater) this.theaters.get(theaterName);
 
         //add all reserved seats from one theater to the theaterObject as reserved
-        for (Seat s: reservedSeats.get(theaterName).keySet()) {
-            theater.reserveSeat(s);
+        for (String s: reservedSeats.get(theaterName).keySet()) {
+            theater.setSeatToReserved(s);
         }
         //try to reserve a new Seat for the client
         Seat new_seat = theater.reserveSeat(wish_seat);
         if (new_seat != null) {
-            reservedSeats.get(theaterName).put(new_seat, clientID);
-            reservedSeats.get(theaterName).remove(old_seat);
+            reservedSeats.get(theaterName).put(new_seat.getSeatName(), clientID);
 
+            //when reserve happens before 15 sec timeout, we need to remove the old reserved seat
+            if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) != null) {
+                if(reservedSeats.get(theaterName).get(old_seat.getSeatName()) == clientID){
+                    reservedSeats.get(theaterName).remove(old_seat.getSeatName());
+                }
+
+            }
             theater.freeSeat(old_seat);
 
             return new Message(MessageType.AVAILABLE, theater.seats, new_seat, clientID);
@@ -123,8 +124,8 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
    public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
 
        //check if this client has already that seat reserved, if not, return error
-       if (reservedSeats.get(theaterName).get(acceptedSeat) == null ||
-               reservedSeats.get(theaterName).get(acceptedSeat) != clientID) {
+       if (reservedSeats.get(theaterName).get(acceptedSeat.getSeatName()) == null ||
+               reservedSeats.get(theaterName).get(acceptedSeat.getSeatName()) != clientID) {
            return new Message(MessageType.ACCEPT_ERROR);
        }
 
@@ -132,18 +133,18 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         Theater theater = (Theater) this.theaters.get(theaterName);
         theater.occupySeat(acceptedSeat);
 
-        reservedSeats.get(theaterName).remove(acceptedSeat);
+        reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
         return new Message(MessageType.ACCEPT_OK);
     }
 
     public Message cancel(String theaterName, Seat seat, int clientID) throws RemoteException {
         //check if this client has already that seat reserved, if not, return error
-        if (reservedSeats.get(theaterName).get(seat) == null ||
-                reservedSeats.get(theaterName).get(seat) != clientID) {
+        if (reservedSeats.get(theaterName).get(seat.getSeatName()) == null ||
+                reservedSeats.get(theaterName).get(seat.getSeatName()) != clientID) {
             return new Message(MessageType.CANCEL_ERROR);
         }
         else {
-            reservedSeats.get(theaterName).remove(seat);
+            reservedSeats.get(theaterName).remove(seat.getSeatName());
             return new Message(MessageType.CANCEL_OK);
         }
     }

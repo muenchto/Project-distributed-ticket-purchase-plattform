@@ -39,7 +39,8 @@ public class Client {
             clientID = answer.getClientID();
             System.out.println("Hello " + clientID + ": " + theaterChoice + " has following seats: ");
             printSeats(answer.getTheaterSeats());
-            System.out.println("Your seat is: "+answer.getClientsSeat());
+            System.out.println("Your seat is: "+answer.getClientsSeat().rowNr+""+answer.getClientsSeat().colNr
+                    +"; "+answer.getClientsSeat());
 
             String seatChoice = null;
             while (true){
@@ -53,10 +54,15 @@ public class Client {
                     int seatColumn = Integer.parseInt(seatChoice.substring(1));
                     Seat seat = new Seat(Seat.SeatStatus.RESERVED, seatChoice.charAt(0), seatColumn);
 
-                    answer = wideboxStub.reserve(theaterChoice, answer.getClientsSeat(),seat, clientID);
+                    answer = wideboxStub.reserve(theaterChoice, answer.getClientsSeat(), seat, clientID);
+                    if (answer.getType() == MessageType.RESERVE_ERROR){
+                        System.out.println("could not reserve " +seat.rowNr+""+seat.colNr);
+                        continue;
+                    }
                     System.out.println("Hello " + clientID + ": " + theaterChoice + " has following seats: ");
                     printSeats(answer.getTheaterSeats());
-                    System.out.println("Your seat is: "+answer.getClientsSeat());
+                    System.out.println("Your seat is: "+answer.getClientsSeat().rowNr+":"+answer.getClientsSeat().colNr
+                            +"; "+answer.getClientsSeat());
                 } else if (choice.equals("c")) {
                     answer = wideboxStub.cancel(theaterChoice, answer.getClientsSeat(), clientID);
                     break;

@@ -59,4 +59,9 @@ public class Theater implements Serializable {
             return null;
         }
     }
+    public void setSeatToReserved(String seatName) {
+
+        this.seats[seatName.charAt(0)-'A'][Integer.parseInt(seatName.substring(1))].status = Seat.SeatStatus.RESERVED;
+
+    }
 }

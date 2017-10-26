@@ -21,4 +21,9 @@ public class Seat implements Serializable{
         this.rowNr = rowNr;
         this.colNr = colNr;
     }
+
+    public String getSeatName() {
+        StringBuilder sb = new StringBuilder();
+        return sb.append(rowNr).append(colNr).toString();
+    }
 }
