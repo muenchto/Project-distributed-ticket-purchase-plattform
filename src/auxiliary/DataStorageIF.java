@@ -14,22 +14,24 @@ import java.util.TreeSet;
 public interface DataStorageIF {
 
     public String[] getTheaterNames() throws RemoteException;
+
     public Theater getTheater(int theaterName) throws RemoteException;
 
     // make a purchase and return true if the operation was successful
-    public boolean purchase (int theater, Seat seat) throws RemoteException;
-    
+    public boolean purchase(int theater, Seat seat) throws RemoteException;
+
     // cancel a reservation of a seat, return true if the seat was reserved
     public boolean cancelReserve(int theater, Seat seat) throws RemoteException;
-    
+
     // Just in case we need it relative to reservation
     // make a random reservation within a free seat and return true if the operation was successful
-    public boolean reserveSeat (int theater, Seat seat) throws RemoteException; 
-    
+    public boolean reserveSeat(int theater, Seat seat) throws RemoteException;
+
     // make a reserve within a specific seat and return true if the operation was successful
     public Seat reserveSeat(int theater) throws RemoteException;
-  
+
     boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException;
+}
     
    
     

@@ -98,5 +98,10 @@ public class DBServer extends UnicastRemoteObject implements DataStorageIF {
 		return null;
 	}
 
+	@Override
+	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException {
+		return false;
+	}
+
 }
 
