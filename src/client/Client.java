@@ -24,9 +24,7 @@ public class Client {
 
     public static void main(String[] args) {
 
-        int clientID = 5;
-
-        String host = (args.length < 1) ? null : args[0];
+        int clientID;
         try {
             Registry registry = LocateRegistry.getRegistry(5000);
             WideBoxIF wideboxStub = (WideBoxIF) registry.lookup("WideBoxServer");

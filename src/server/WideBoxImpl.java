@@ -2,7 +2,7 @@ package server;
 
 import auxiliary.*;
 import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
+import java.rmi.registry.*;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +22,12 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private LinkedHashMap theaters;
 
+    private boolean dbServerLocalMode;
+
     public WideBoxImpl() throws RemoteException {
+
+        dbServerLocalMode = false;
+
         System.out.println("Widebox starting");
         this.theaters = new LinkedHashMap<String, Theater>();
         for (int i = 0; i < 1500; i++) {
@@ -32,69 +37,85 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         this.reservedSeats = new ConcurrentHashMap<String, ExpiringMap<String, Integer>>(1500);
 
-       /* try {
-            //TODO: find the registry
-            registry = LocateRegistry.getRegistry(0);
-            System.out.println("WideBoxImpl got the registry");
-            dataStorageStub = (DataStorageIF) registry.lookup("DBServer");
+        if (!dbServerLocalMode) {
+           try {
+                registry = LocateRegistry.getRegistry(5000);
+                System.out.println("WideBoxImpl got the registry");
+                dataStorageStub = (DataStorageIF) registry.lookup("dbServer");
 
-            System.err.println("WideBoxImpl found DBServer");
+                System.err.println("WideBoxImpl found DBServer");
 
-        } catch (Exception e) {
-            System.err.println("WideBoxImpl exception: " + e.toString());
-            e.printStackTrace();
-        }*/
+            } catch (Exception e) {
+                System.err.println("WideBoxImpl exception: " + e.toString());
+                e.printStackTrace();
+            }
+        }
 
     }
 
 
     public String[] getNames() throws RemoteException {
-        //return dataStorageStub.getTheaterNames();
-        java.util.Set keys = this.theaters.keySet();
-        String[] names = (String[]) keys.toArray(new String[keys.size()]);
-        return names;
+        if (dbServerLocalMode) {
+            java.util.Set keys = this.theaters.keySet();
+            String[] names = (String[]) keys.toArray(new String[keys.size()]);
+            return names;
 
+        }
+        else {
+            return dataStorageStub.getTheaterNames();
+        }
     }
 
     public Message query(String theaterName) throws RemoteException {
-        //Theater theater = dataStorageStub.getTheater(theaterName);
-        Theater theater = (Theater) this.theaters.get(theaterName);
-        theater = theater.clone();
-        if (theater.status == TheaterStatus.FULL) {
-            return new Message(MessageType.FULL);
+        Theater theater;
+        if (dbServerLocalMode){
+            theater = (Theater) this.theaters.get(theaterName);
+            theater = theater.clone();
         }
         else {
-            int clientID = clientCounter;
-            clientCounter++;
-
-            //if the theater is queried the first time, the name is added to the HasMap
-            //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
-            if (!reservedSeats.containsKey(theaterName)){
-                ExpiringMap<String, Integer> expiringSeatMap = new ExpiringMap<String, Integer>(15);
-                expiringSeatMap.getExpirer().startExpiring();
-                reservedSeats.put(theater.theaterName, expiringSeatMap);
-            }
-
-            //add all reserved seats from one theater to the theaterObject as reserved
-            for (String s: reservedSeats.get(theaterName).keySet()) {
-                theater.setSeatToReserved(s);
-            }
-            //reserve a new Seat for the client
-            Seat seat = theater.reserveSeat();
-
-            //add this seat to the list
-            reservedSeats.get(theater.theaterName).put(seat.getSeatName(), clientID);
-            System.out.println("QUERY: reservedSeats @ "+theater.theaterName +": "+ reservedSeats.get(theater.theaterName).keySet());
-
-            return new Message(MessageType.AVAILABLE, theater.seats, seat, clientID);
+            theater = dataStorageStub.getTheater(theaterName);
         }
+
+        int clientID = clientCounter;
+        clientCounter++;
+
+        //if the theater is queried the first time, the name is added to the HasMap
+        //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
+        if (!reservedSeats.containsKey(theaterName)){
+            ExpiringMap<String, Integer> expiringSeatMap = new ExpiringMap<String, Integer>(15);
+            expiringSeatMap.getExpirer().startExpiring();
+            reservedSeats.put(theater.theaterName, expiringSeatMap);
+        }
+
+        //add all reserved seats from one theater to the theaterObject as reserved
+        for (String s: reservedSeats.get(theaterName).keySet()) {
+            theater.setSeatToReserved(s);
+        }
+        //reserve a new Seat for the client
+        Seat seat = theater.reserveSeat();
+
+        if (seat == null) {
+            return new Message(MessageType.FULL);
+        }
+
+        //add this seat to the list
+        reservedSeats.get(theater.theaterName).put(seat.getSeatName(), clientID);
+        System.out.println("QUERY: reservedSeats @ "+theater.theaterName +": "+ reservedSeats.get(theater.theaterName).keySet());
+
+        return new Message(MessageType.AVAILABLE, theater.seats, seat, clientID);
+
     }
 
     public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
+        Theater theater;
+        if (dbServerLocalMode){
+            theater = (Theater) this.theaters.get(theaterName);
+            theater = theater.clone();
+        }
+        else {
+            theater = dataStorageStub.getTheater(theaterName);
+        }
 
-        //Theater theater = dataStorageStub.getTheater(client.theaterName);
-        Theater theater = (Theater) this.theaters.get(theaterName);
-        theater = theater.clone();
 
         //add all reserved seats from one theater to the theaterObject as reserved
         for (String s: reservedSeats.get(theaterName).keySet()) {
@@ -129,16 +150,32 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
            return new Message(MessageType.ACCEPT_ERROR);
        }
 
-       //dataStorageStub.occupySeat(client.theaterName, client.seat);
-       Theater theater = (Theater) this.theaters.get(theaterName);
+       Theater theater;
+       if (dbServerLocalMode){
+           theater = (Theater) this.theaters.get(theaterName);
+           if (theater.occupySeat(acceptedSeat)) {
+               reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
+               return new Message(MessageType.ACCEPT_OK);
+           }
+           else {
+               return new Message(MessageType.ACCEPT_ERROR);
+           }
+       }
+       else {
+           if (dataStorageStub.occupySeat(theaterName, acceptedSeat)) {
+               reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
+               return new Message(MessageType.ACCEPT_OK);
+           }
+           else {
+               return new Message(MessageType.ACCEPT_ERROR);
+           }
+       }
 
-       theater.occupySeat(acceptedSeat);
 
-       reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
-       return new Message(MessageType.ACCEPT_OK);
     }
 
     public Message cancel(String theaterName, Seat seat, int clientID) throws RemoteException {
+
         //check if this client has already that seat reserved, if not, return error
         if (reservedSeats.get(theaterName).get(seat.getSeatName()) == null ||
                 reservedSeats.get(theaterName).get(seat.getSeatName()) != clientID) {

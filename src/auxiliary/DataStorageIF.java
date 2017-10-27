@@ -1,12 +1,15 @@
 package auxiliary;
 
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
 /**
  * PSD Project - Phase 1
  * @author group: psd002 ; members: 42560-50586-30360
  */
-public interface DataStorageIF {
+public interface DataStorageIF extends Remote {
 
-    String[] getTheaterNames();
-    Theater getTheater(String theaterName);
-    boolean occupySeat(String theaterName, Seat theaterSeat);
+    String[] getTheaterNames() throws RemoteException;
+    Theater getTheater(String theaterName) throws RemoteException;
+    boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException;
 }
