@@ -117,7 +117,6 @@ public class TrafficGenThread extends Thread {
     }
 
     private void RRPRequests(int clientId, Random r) {
-        System.out.println("Getting the theater names");
         String[] theaters;
         long latencyBeg = System.currentTimeMillis();
         long latencyEnd;
@@ -129,7 +128,6 @@ public class TrafficGenThread extends Thread {
             this.latencyCounter++;
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
-            System.out.println("Sending a query for theater " + theaters[aux]);
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
@@ -138,11 +136,8 @@ public class TrafficGenThread extends Thread {
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
 
-            System.out.println("I'm sleeping");
             Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
-                System.out.println("I'm purchasing my pre-reservation\n" +
-                        "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
@@ -162,7 +157,6 @@ public class TrafficGenThread extends Thread {
     }
 
     private void RRQRequests(int clientId, Random r) {
-        System.out.println("Getting the theater names");
         String[] theaters;
         long latencyBeg = System.currentTimeMillis();
         long latencyEnd;
@@ -174,7 +168,6 @@ public class TrafficGenThread extends Thread {
             this.latencyCounter++;
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
-            System.out.println("Sending a query for theater " + theaters[aux]);
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
@@ -183,11 +176,8 @@ public class TrafficGenThread extends Thread {
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
 
-            System.out.println("I'm sleeping");
             Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
-                System.out.println("I'm cancelling my pre-reservation\n" +
-                        "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
@@ -208,7 +198,6 @@ public class TrafficGenThread extends Thread {
 
     //does the same has SSPRequests........
     private void RSPRequests(int clientId) {
-        System.out.println("Getting the theater names");
         String[] theaters;
         long latencyBeg = System.currentTimeMillis();
         long latencyEnd;
@@ -218,8 +207,6 @@ public class TrafficGenThread extends Thread {
             this.latencyCounter++;
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
-            System.out.println("Sending a query for theater " +
-                    theaters[Integer.parseInt(targetTheater)]);
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
@@ -228,11 +215,8 @@ public class TrafficGenThread extends Thread {
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
 
-            System.out.println("I'm sleeping");
             Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
-                System.out.println("I'm purchasing my pre-reservation\n" +
-                        "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.accept(theaters[Integer.parseInt(targetTheater)],
                         m.getClientsSeat(), m.getClientID());
@@ -254,7 +238,6 @@ public class TrafficGenThread extends Thread {
 
     //does the same as SSQRequests.......... :/
     private void RSQRequests(int clientId) {
-        System.out.println("Getting the theater names");
         String[] theaters;
         long latencyBeg = System.currentTimeMillis();
         long latencyEnd;
@@ -264,8 +247,6 @@ public class TrafficGenThread extends Thread {
             this.latencyCounter++;
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
-            System.out.println("Sending a query for theater " +
-                    theaters[Integer.parseInt(targetTheater)]);
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
@@ -274,11 +255,8 @@ public class TrafficGenThread extends Thread {
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
 
-            System.out.println("I'm sleeping");
             Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
-                System.out.println("I'm cancelling my pre-reservation\n" +
-                        "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.cancel(theaters[Integer.parseInt(targetTheater)],
                         m.getClientsSeat(), m.getClientID());
@@ -299,7 +277,6 @@ public class TrafficGenThread extends Thread {
     }
 
     private void SRPRequest(Random r) {
-        System.out.println("Getting the theater names");
         String[] theaters;
         long latencyBeg = System.currentTimeMillis();
         long latencyEnd;
@@ -311,7 +288,6 @@ public class TrafficGenThread extends Thread {
             this.latencyCounter++;
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
-            System.out.println("Sending a query for theater " + theaters[aux]);
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
@@ -320,11 +296,8 @@ public class TrafficGenThread extends Thread {
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
 
-            System.out.println("I'm sleeping");
             Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
-                System.out.println("I'm purchasing my pre-reservation\n" +
-                        "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
@@ -344,7 +317,6 @@ public class TrafficGenThread extends Thread {
     }
 
     private void SRQRequest(Random r) {
-        System.out.println("Getting the theater names");
         String[] theaters;
         long latencyBeg = System.currentTimeMillis();
         long latencyEnd;
@@ -356,7 +328,6 @@ public class TrafficGenThread extends Thread {
             this.latencyCounter++;
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
-            System.out.println("Sending a query for theater " + theaters[aux]);
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
@@ -365,11 +336,8 @@ public class TrafficGenThread extends Thread {
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
 
-            System.out.println("I'm sleeping");
             Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
-                System.out.println("I'm cancelling my pre-reservation\n" +
-                        "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
@@ -389,7 +357,6 @@ public class TrafficGenThread extends Thread {
     }
 
     private void SSPRequests() {
-        System.out.println("Getting the theater names");
         String[] theaters;
         long latencyBeg = System.currentTimeMillis();
         long latencyEnd;
@@ -399,8 +366,6 @@ public class TrafficGenThread extends Thread {
             this.latencyCounter++;
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
-            System.out.println("Sending a query for theater " +
-                    theaters[Integer.parseInt(targetTheater)]);
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
@@ -409,11 +374,8 @@ public class TrafficGenThread extends Thread {
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
 
-            System.out.println("I'm sleeping");
             Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
-                System.out.println("I'm purchasing my pre-reservation\n" +
-                        "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.accept(theaters[Integer.parseInt(targetTheater)],
                         m.getClientsSeat(), m.getClientID());
@@ -434,7 +396,6 @@ public class TrafficGenThread extends Thread {
     }
 
     private void SSQRequests() {
-        System.out.println("Getting the theater names");
         String[] theaters;
         long latencyBeg = System.currentTimeMillis();
         long latencyEnd;
@@ -445,8 +406,6 @@ public class TrafficGenThread extends Thread {
             this.latencyCounter++;
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
-            System.out.println("Sending a query for theater " +
-                    theaters[Integer.parseInt(targetTheater)]);
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
@@ -455,11 +414,8 @@ public class TrafficGenThread extends Thread {
             addToLatency(latencyEnd - latencyBeg);
             this.requests++;
 
-            System.out.println("I'm sleeping");
             Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
-                System.out.println("I'm cancelling my pre-reservation\n" +
-                        "------------------------------------");
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.cancel(theaters[Integer.parseInt(targetTheater)],
                         m.getClientsSeat(), m.getClientID());
