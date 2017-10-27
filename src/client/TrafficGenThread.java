@@ -7,7 +7,10 @@ import server.WideBoxImpl;
 
 import java.rmi.RemoteException;
 import java.util.Random;
-
+/**
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
+ */
 public class TrafficGenThread extends Thread {
 
     //performance

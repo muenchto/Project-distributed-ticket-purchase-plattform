@@ -1,16 +1,15 @@
 package server;
 
 import auxiliary.*;
-
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by tobiasmuench on 12.10.17.
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
  */
 public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 

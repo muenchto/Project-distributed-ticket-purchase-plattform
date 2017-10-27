@@ -5,6 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+/**
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
+ */
 public class ConfigHandler {
 
     private String origin;

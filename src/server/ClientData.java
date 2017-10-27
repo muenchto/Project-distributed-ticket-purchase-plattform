@@ -1,10 +1,10 @@
 package server;
 
-import java.util.Timer;
 import auxiliary.*;
 
 /**
- * Created by tobiasmuench on 24.10.17.
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
  */
 public class ClientData {
     protected int clientID;

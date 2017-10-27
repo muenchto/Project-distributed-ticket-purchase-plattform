@@ -1,15 +1,12 @@
 package server;
 
-/**
- * Created by tobiasmuench on 25.10.17.
- */
-import auxiliary.*;
-
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 
+/**
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
+ */
 public class Server {
 
     public static void main(String args[]) throws Exception {

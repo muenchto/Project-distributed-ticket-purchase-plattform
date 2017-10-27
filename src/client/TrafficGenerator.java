@@ -10,7 +10,10 @@ import java.rmi.registry.Registry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
+/**
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
+ */
 public class TrafficGenerator {
 
 
@@ -39,15 +42,9 @@ public class TrafficGenerator {
             for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
                         op,numClients,numTheaters,duration,sleepRate);
-                if(tgt.getState().equals(Thread.State.TERMINATED)){
-                    tgt.getLatency();
-                }
                 ex.execute(tgt);
             }
             ex.shutdown();
-            while(!ex.isTerminated())
-                ;
-
 
 
             //ex.

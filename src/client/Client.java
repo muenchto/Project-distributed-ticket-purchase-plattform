@@ -6,8 +6,11 @@ import java.io.Console;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Arrays;
-import java.util.HashMap;
 
+/**
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
+ */
 public class Client {
 
     private static void printSeats(Seat[][] seats) {
