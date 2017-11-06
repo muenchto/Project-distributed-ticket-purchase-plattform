@@ -5,7 +5,11 @@ import java.rmi.RemoteException;
 import java.rmi.registry.*;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import net.jodah.expiringmap.*;
 
 /**
  * PSD Project - Phase 1
@@ -82,9 +86,10 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         //if the theater is queried the first time, the name is added to the HasMap
         //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
         if (!reservedSeats.containsKey(theaterName)){
-            ExpiringMap<String, Integer> expiringSeatMap = new ExpiringMap<String, Integer>(15);
-            expiringSeatMap.getExpirer().startExpiring();
-            reservedSeats.put(theater.theaterName, expiringSeatMap);
+            Map<String, Integer> expiringSeatMap = ExpiringMap.builder()
+                    .expiration(30, TimeUnit.SECONDS)
+                    .build();
+            reservedSeats.put(theater.theaterName, (ExpiringMap<String, Integer>) expiringSeatMap);
         }
 
         //add all reserved seats from one theater to the theaterObject as reserved
