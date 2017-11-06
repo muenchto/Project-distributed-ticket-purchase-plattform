@@ -70,6 +70,13 @@ public class Theater implements Serializable{
 
     }
 
+   //return the number of freeSeats given from DBServer to check  if freeSeats+reservation==total seat's
+    /*
+    public int seatsAvailable () {
+    	return freeSeats;
+    }
+    */
+
     @Override
     public Theater clone() {
         Theater clone = new Theater(this.theaterName);
