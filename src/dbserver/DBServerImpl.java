@@ -53,7 +53,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	
 	// RMI FUNCTIONS **********************************************************
 	@Override
-	public synchronized String[] getTheaterNames() {
+	public synchronized String[] getTheaterNames()  throws RemoteException {
 		System.out.println("getTheaterNames");
 		/* just in case a ordered array is needed
 			String names[] = null;
@@ -68,14 +68,14 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	}
 
 	@Override
-	public synchronized Theater getTheater(String theaterName) {
+	public synchronized Theater getTheater(String theaterName) throws RemoteException  {
 		return theaters.get(theaterName);
 	}
 
 	@Override
 	//ONLY CALL THIS FUCTION IF EXIST A PRIOR RESERVATION.
 	//This validation should be done at appserver 
-	public boolean occupySeat(String theaterName, Seat theaterSeat) {
+	public boolean occupySeat(String theaterName, Seat theaterSeat)  throws RemoteException {
 		//Theater theater = theaters.get(theaterName).seats
 		if(theaters.get(theaterName).seats[theaterSeat.rowNr][theaterSeat.colNr].status==SeatStatus.FREE) {
 			synchronized(this){

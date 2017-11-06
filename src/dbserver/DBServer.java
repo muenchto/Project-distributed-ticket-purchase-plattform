@@ -1,6 +1,7 @@
 package dbserver;
 
 
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
@@ -10,17 +11,16 @@ import java.rmi.registry.Registry;
  */
 public class DBServer {
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String args[]) throws RemoteException {
     	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) future use
     	int mode = 0;
         int num_theaters = 1500;
-        DBServerImpl dbServer = new DBServerImpl(num_theaters,mode);
 
         Registry registry;
         try {
             // Bind the remote object's stub in the registry
             registry = LocateRegistry.createRegistry(5000);
-            registry.rebind("dbServer", dbServer);
+            registry.rebind("dbServer", new DBServerImpl(num_theaters,mode));
 
             System.err.println("dbServer ready");
         } catch (Exception e) {

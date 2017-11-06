@@ -1,5 +1,7 @@
 package auxiliary;
 
+import java.rmi.RemoteException;
+
 /**
  * Created by tobiasmuench on 24.10.17.
  * Note to Hugo: I just set this up for test purpose.
@@ -9,7 +11,7 @@ package auxiliary;
 
 public interface DataStorageIF {
 
-		String[] getTheaterNames();
-		Theater getTheater(String theaterName);
-		boolean occupySeat(String theaterName, Seat theaterSeat);
+		String[] getTheaterNames()  throws RemoteException ;
+		Theater getTheater(String theaterName) throws RemoteException ;
+		boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException ;
 	}
