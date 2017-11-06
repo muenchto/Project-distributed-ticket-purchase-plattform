@@ -84,16 +84,6 @@ public class Storage {
 		return true;
 	}
 	
-	//Auxiliary fuction to prevent writing the whole words to file
-	int intValueSeat (Seat seat) {
-		int resp=-1;
-		if (seat.status==SeatStatus.FREE) resp=1;
-		if (seat.status==SeatStatus.RESERVED) resp=2;
-		if (seat.status==SeatStatus.OCCUPIED) resp=3;
-		return resp;
-	}
-
-
 	public synchronized void buySeat(String theaterName, Seat theaterSeat) {
 		try {
 			logfosw.append(theaterName+DELIMITER+theaterSeat.rowNr+DELIMITER+theaterSeat.colNr+DELIMITER+intValueSeat(theaterSeat));
@@ -108,9 +98,18 @@ public class Storage {
 			}
 			logfosw.close();
 		} catch (IOException e) {
-			System.err.println("LOG> Erro a escrever no ficheiro de log");
+			System.err.println("LOG> Error writing to log");
 			//e.printStackTrace();
 		}
+	}
+	
+	//Auxiliary fuction to prevent writing the whole words to file
+	int intValueSeat (Seat seat) {
+		int resp=-1;
+		if (seat.status==SeatStatus.FREE) resp=1;
+		if (seat.status==SeatStatus.RESERVED) resp=2;
+		if (seat.status==SeatStatus.OCCUPIED) resp=3;
+		return resp;
 	}
 
 }
