@@ -1,4 +1,4 @@
 .idea/
 *.iml
-*.ds
+*.ds_Store
 #out/
