@@ -11,11 +11,13 @@ public class Server {
 
     public static void main(String args[]) throws Exception {
 
+
+
         Registry registry;
         try {
 
             // Bind the remote object's stub in the registry
-            registry = LocateRegistry.getRegistry(5000);
+            registry = LocateRegistry.createRegistry(5000);
 
             WideBoxImpl widebox = new WideBoxImpl();
             registry.rebind("WideBoxServer", widebox);
