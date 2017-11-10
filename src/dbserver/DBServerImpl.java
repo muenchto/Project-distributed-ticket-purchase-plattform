@@ -22,6 +22,8 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public int[] theaterIndexBack = new int [2];
 	public Storage storageFile ;
 	public int mode;
+
+	private int errors;
 	//public Storage storageFile = new Storage ("dbfileBack.txt","dblogfileBack.txt"); //FUTURE USE
 	
 	public DBServerImpl(int num_theaters, int writingMode ) throws IOException{
@@ -34,6 +36,8 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
 			//System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" adicionado");
 		}
+
+		errors = 0;
 		//System.out.println("tamanho do mapa é "+theaters.size());
 	}
 
@@ -53,8 +57,8 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	
 	// RMI FUNCTIONS **********************************************************
 	@Override
-	public synchronized String[] getTheaterNames()  throws RemoteException {
-		System.out.println("getTheaterNames");
+	public synchronized String[] getTheaterNames() throws RemoteException{
+		//System.out.println("getTheaterNames");
 		/* just in case a ordered array is needed
 			String names[] = null;
 			for (int i=0;i<theaters.size();i++)
@@ -68,25 +72,28 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	}
 
 	@Override
-	public synchronized Theater getTheater(String theaterName) throws RemoteException  {
+	public synchronized Theater getTheater(String theaterName) throws RemoteException{
 		return theaters.get(theaterName);
 	}
 
 	@Override
 	//ONLY CALL THIS FUCTION IF EXIST A PRIOR RESERVATION.
 	//This validation should be done at appserver 
-	public boolean occupySeat(String theaterName, Seat theaterSeat)  throws RemoteException {
+	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException{
 		//Theater theater = theaters.get(theaterName).seats
-		if(theaters.get(theaterName).seats[theaterSeat.rowNr][theaterSeat.colNr].status==SeatStatus.FREE) {
+		if(theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
 			synchronized(this){
-				theaters.get(theaterName).seats[theaterSeat.rowNr][theaterSeat.colNr].status=SeatStatus.OCCUPIED;
+				theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status=SeatStatus.OCCUPIED;
 				if(mode>1)
 					storageFile.buySeat(theaterName,theaterSeat);
 			}
 			return true;
 		}
-		else
+		else {
+			errors++;
+			System.out.println("OCCUPY ERROR [" + errors + "]: " + theaterName + " " + theaterSeat.getSeatName());
 			return false;
+		}
 	}
 
 }

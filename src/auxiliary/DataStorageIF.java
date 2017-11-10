@@ -1,17 +1,18 @@
 package auxiliary;
 
+
+import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.TreeSet;
 
 /**
- * Created by tobiasmuench on 24.10.17.
- * Note to Hugo: I just set this up for test purpose.
- * I think we need this in order to be able to call the DBServer via RMI.
- * I will state here the methods that I think the DBServer has to be able to answer very soon!
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
  */
 
-public interface DataStorageIF {
+public interface DataStorageIF extends Remote{
 
-		String[] getTheaterNames()  throws RemoteException ;
-		Theater getTheater(String theaterName) throws RemoteException ;
-		boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException ;
+		String[] getTheaterNames() throws RemoteException;
+		Theater getTheater(String theaterName) throws RemoteException;
+		boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException;
 	}
