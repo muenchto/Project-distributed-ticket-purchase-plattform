@@ -192,4 +192,10 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             return new Message(MessageType.CANCEL_OK);
         }
     }
+
+
+	@Override
+	public void killServer() throws RemoteException {
+		System.exit(0);		
+	}
 }

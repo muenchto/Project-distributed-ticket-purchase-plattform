@@ -96,4 +96,10 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		}
 	}
 
+	@Override
+	public void killServer() throws RemoteException {
+		System.exit(0);
+		
+	}
+
 }

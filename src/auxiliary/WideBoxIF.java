@@ -13,4 +13,5 @@ public interface WideBoxIF extends Remote{
     Message reserve(String theaterName, Seat old_seat, Seat new_seat, int clientID) throws RemoteException;
     Message accept(String theaterName, Seat seat, int clientID) throws RemoteException;
     Message cancel(String theaterName, Seat seat, int clientID) throws RemoteException;
+    void killServer() throws RemoteException;
 }

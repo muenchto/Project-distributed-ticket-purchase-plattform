@@ -15,4 +15,5 @@ public interface DataStorageIF extends Remote{
 		String[] getTheaterNames() throws RemoteException;
 		Theater getTheater(String theaterName) throws RemoteException;
 		boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException;
+		void killServer() throws RemoteException;
 	}
