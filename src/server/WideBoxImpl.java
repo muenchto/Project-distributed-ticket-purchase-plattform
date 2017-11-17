@@ -28,7 +28,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private boolean dbServerLocalMode;
 
-    public WideBoxImpl() throws RemoteException {
+    public WideBoxImpl(String DBServerIP) throws RemoteException {
 
         dbServerLocalMode = false;
 
@@ -43,11 +43,17 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         if (!dbServerLocalMode) {
            try {
-                registry = LocateRegistry.getRegistry(5000);
-                System.out.println("WideBoxImpl got the registry");
-                dataStorageStub = (DataStorageIF) registry.lookup("dbServer");
+               if (DBServerIP != null) {
+                   registry = LocateRegistry.getRegistry(DBServerIP,5000);
+               }
+               else {
+                   registry = LocateRegistry.getRegistry(5000);
+               }
 
-                System.err.println("WideBoxImpl found DBServer");
+               System.out.println("WideBoxImpl got the registry");
+               dataStorageStub = (DataStorageIF) registry.lookup("dbServer");
+
+               System.err.println("WideBoxImpl found DBServer");
 
             } catch (Exception e) {
                 System.err.println("WideBoxImpl exception: " + e.toString());

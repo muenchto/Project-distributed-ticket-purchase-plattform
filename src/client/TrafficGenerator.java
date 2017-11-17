@@ -20,7 +20,13 @@ public class TrafficGenerator {
     public static void main(String[] args) {
 
         try {
-            Registry reg = LocateRegistry.getRegistry(5000);
+            Registry reg;
+            if (args.length > 0) {
+                reg = LocateRegistry.getRegistry(args[0],5001);
+            }
+            else {
+                reg = LocateRegistry.getRegistry(5001);
+            }
             WideBoxIF wideBoxStub = (WideBoxIF) reg.lookup("WideBoxServer");
 
 
