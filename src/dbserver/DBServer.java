@@ -28,11 +28,5 @@ public class DBServer {
             e.printStackTrace();
         }
     }
-
-	@Override
-	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException {
-		return false;
-	}
-
 }
 

@@ -121,36 +121,49 @@ public class TrafficGenThread extends Thread {
 
     private void RRPRequests(int clientId, Random r) {
         String[] theaters;
-        long latencyBeg = System.currentTimeMillis();
+        long latencyBeg;
         long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
         int aux = r.nextInt(this.numTheaters + 1);
         try {
-
+            latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
-            Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
-                addToLatency(latencyEnd - latencyBeg);
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
                 this.requests++;
                 this.purchased++;
             } else {
                 this.errors++;
             }
+
+            if (mainRequestLatency < sleepRate){
+                
+            }
+
+            Thread.sleep(sleepRate);
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
