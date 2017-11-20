@@ -5,7 +5,11 @@ import java.rmi.RemoteException;
 import java.rmi.registry.*;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import net.jodah.expiringmap.*;
 
 /**
  * PSD Project - Phase 1
@@ -24,7 +28,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private boolean dbServerLocalMode;
 
-    public WideBoxImpl() throws RemoteException {
+    public WideBoxImpl(String DBServerIP) throws RemoteException {
 
         dbServerLocalMode = false;
 
@@ -39,11 +43,17 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         if (!dbServerLocalMode) {
            try {
-                registry = LocateRegistry.getRegistry(5000);
-                System.out.println("WideBoxImpl got the registry");
-                dataStorageStub = (DataStorageIF) registry.lookup("dbServer");
+               if (DBServerIP != null) {
+                   registry = LocateRegistry.getRegistry(DBServerIP,5000);
+               }
+               else {
+                   registry = LocateRegistry.getRegistry(5000);
+               }
 
-                System.err.println("WideBoxImpl found DBServer");
+               System.out.println("WideBoxImpl got the registry");
+               dataStorageStub = (DataStorageIF) registry.lookup("dbServer");
+
+               System.err.println("WideBoxImpl found DBServer");
 
             } catch (Exception e) {
                 System.err.println("WideBoxImpl exception: " + e.toString());
@@ -66,7 +76,17 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
     }
 
-    public Message query(String theaterName) throws RemoteException {
+    synchronized public Message query(String theaterName) throws RemoteException {
+
+        //if the theater is queried the first time, the name is added to the HasMap
+        //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
+        if (!reservedSeats.containsKey(theaterName)){
+            Map<String, Integer> expiringSeatMap = ExpiringMap.builder()
+                    .expiration(15, TimeUnit.SECONDS)
+                    .build();
+            reservedSeats.put(theaterName, (ExpiringMap<String, Integer>) expiringSeatMap);
+        }
+
         Theater theater;
         if (dbServerLocalMode){
             theater = (Theater) this.theaters.get(theaterName);
@@ -74,17 +94,6 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
         else {
             theater = dataStorageStub.getTheater(theaterName);
-        }
-
-        int clientID = clientCounter;
-        clientCounter++;
-
-        //if the theater is queried the first time, the name is added to the HasMap
-        //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
-        if (!reservedSeats.containsKey(theaterName)){
-            ExpiringMap<String, Integer> expiringSeatMap = new ExpiringMap<String, Integer>(15);
-            expiringSeatMap.getExpirer().startExpiring();
-            reservedSeats.put(theater.theaterName, expiringSeatMap);
         }
 
         //add all reserved seats from one theater to the theaterObject as reserved
@@ -98,6 +107,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             return new Message(MessageType.FULL);
         }
 
+        clientCounter++;
+        int clientID = clientCounter;
+
         //add this seat to the list
         reservedSeats.get(theater.theaterName).put(seat.getSeatName(), clientID);
         System.out.println("QUERY: reservedSeats @ "+theater.theaterName +": "+ reservedSeats.get(theater.theaterName).keySet());
@@ -106,7 +118,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     }
 
-    public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
+    synchronized public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
         Theater theater;
         if (dbServerLocalMode){
             theater = (Theater) this.theaters.get(theaterName);
@@ -142,7 +154,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
     }
 
-   public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
+   synchronized public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
 
        //check if this client has already that seat reserved, if not, return error
        if (reservedSeats.get(theaterName).get(acceptedSeat.getSeatName()) == null ||
@@ -186,4 +198,10 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             return new Message(MessageType.CANCEL_OK);
         }
     }
+
+
+	@Override
+	public void killServer() throws RemoteException {
+		System.exit(0);		
+	}
 }

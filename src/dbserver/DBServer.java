@@ -4,99 +4,30 @@ package dbserver;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.Scanner;
-import java.util.TreeSet;
 
-import auxiliary.*;
-import auxiliary.Seat.SeatStatus;
+/**
+ * PSD Project - Phase 1
+ * @author group: psd002 ; members: 42560-50586-30360
+ */
+public class DBServer {
 
-public class DBServer extends UnicastRemoteObject implements DataStorageIF {
+    public static void main(String args[]) throws RemoteException {
+    	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) future use
+    	int mode = 0;
+        int num_theaters = 1500;
 
-	protected DBServer() throws RemoteException {
-		super();
-		// TODO Auto-generated constructor stub
-	}
+        Registry registry;
+        try {
+            // Bind the remote object's stub in the registry
+            registry = LocateRegistry.createRegistry(5000);
+            registry.rebind("dbServer", new DBServerImpl(num_theaters,mode));
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -7420422297302142902L;
-	final static String DBFILENAME = "dbfile.txt";
-	final static String LOGFILENAME = "logfile.txt";
-	
-	public Theater[] theaters = new Theater[1500];
-	
-	
-	
-	
-	public static void main(String[] args) throws RemoteException {{
-			System.out.println("Starting server");
-			// CORRECT RMI TO SERVE THE METHODES IMPLEMETED HERE
-			//	Registry registry = LocateRegistry.createRegistry(5099);
-			//	registry.rebind("DBServer", DBServer);
-		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-	}
-
-
-
-	@Override
-	public String[] getTheaterNames() {
-		String[] names = null;
-		for (int i=0;i<theaters.length;i++) {
-			names[i]=theaters[i].theaterName;
-		}
-		return names;
-	}
-
-	@Override
-	public Theater getTheater(int theaterName) {
-		return theaters[theaterName];
-	}
-
-	@Override
-	public boolean purchase(int theater, Seat seat) {
-		if (theaters[theater].seats[seat.rowNr][seat.colNr].status==SeatStatus.FREE||
-				theaters[theater].seats[seat.rowNr][seat.colNr].status==SeatStatus.RESERVED)
-			theaters[theater].seats[seat.rowNr][seat.colNr].status=SeatStatus.OCCUPIED;
-		else
-			return false;
-		return true;
-	}
-
-	@Override
-	public boolean cancelReserve(int theater, Seat seat) {
-		if (theaters[theater].seats[seat.rowNr][seat.colNr].status==SeatStatus.RESERVED)
-			theaters[theater].seats[seat.rowNr][seat.colNr].status=SeatStatus.FREE;
-		else
-			return false;
-	return true;
-	}
-
-	@Override
-	public boolean reserveSeat(int theater, Seat seat) {
-		if (theaters[theater].seats[seat.rowNr][seat.colNr].status==SeatStatus.FREE)
-			theaters[theater].seats[seat.rowNr][seat.colNr].status=SeatStatus.RESERVED;
-		else
-			return false;
-		return true;
-	}
-
-	@Override
-	public Seat reserveSeat(int theater) {
-		//TODO return a random free seat from the theater
-		return null;
-	}
+            System.err.println("dbServer ready");
+        } catch (Exception e) {
+            System.err.println("dbServer exception: " + e.toString());
+            e.printStackTrace();
+        }
+    }
 
 	@Override
 	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException {
