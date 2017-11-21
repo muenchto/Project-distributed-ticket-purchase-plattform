@@ -29,10 +29,5 @@ public class DBServer {
         }
     }
 
-	@Override
-	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException {
-		return false;
-	}
-
 }
 

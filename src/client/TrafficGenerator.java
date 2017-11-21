@@ -9,6 +9,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * PSD Project - Phase 1
@@ -43,7 +44,7 @@ public class TrafficGenerator {
             int numThread = ch.getNumThreads();
             long sleepRate = rate/1000;
 
-
+            long startTime = System.currentTimeMillis();
             ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
@@ -51,7 +52,13 @@ public class TrafficGenerator {
                 ex.execute(tgt);
             }
             ex.shutdown();
+            try {
+                ex.awaitTermination(duration * 3, TimeUnit.SECONDS);
+            }
+            catch (InterruptedException e){
 
+            }
+            System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime)/1000));
 
             //ex.
             /*
