@@ -41,13 +41,13 @@ public class TrafficGenerator {
             int duration = ch.getDuration()*1000; //milliseconds
             int rate = ch.getRate();
             int numThread = ch.getNumThreads();
-            long sleepRate = rate/1000;
+            long sleepRate = 1000;//going to be updated inside the thread     //rate/1000;
 
 
             ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
-                        op,numClients,numTheaters,duration,sleepRate);
+                        op,numClients,numTheaters,duration,sleepRate, rate);
                 ex.execute(tgt);
             }
             ex.shutdown();

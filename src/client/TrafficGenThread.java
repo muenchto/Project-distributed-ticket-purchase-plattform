@@ -30,10 +30,12 @@ public class TrafficGenThread extends Thread {
     private int numTheaters;
     private int duration;
     private long sleepRate;
+    private int rate;
+    private int rateCounter;
 
     public TrafficGenThread(WideBoxIF widebox, String targettheater, String origin,
                             String target, String op, int numClients, int numTheaters
-            , int duration, long sleepRate) {
+            , int duration, long sleepRate, int rate) {
         this.wideBoxStub = widebox;
         this.targetTheater = targettheater;
         this.origin = origin;
@@ -43,6 +45,8 @@ public class TrafficGenThread extends Thread {
         this.numTheaters = numTheaters;
         this.duration = duration;
         this.sleepRate = sleepRate;
+        this.rate = rate;
+        this.rateCounter = 1;
     }
 
     @Override
@@ -108,14 +112,25 @@ public class TrafficGenThread extends Thread {
                 } else { //op = purchase
                     while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
-                        while (System.currentTimeMillis() < endTime) {
-                            RRPRequests(clientId, r);
+                        while (System.currentTimeMillis() <= endTime/* && this.requests/3 <= this.rate*this.duration*/) {
+                            //System.out.println("mili");
+                            //int rateaux = 1;
+                            while(this.rateCounter % (this.rate+1) != 0/*this.requests/3 <= this.rate*this.duration*/) {
+                                RRPRequests(clientId, r);
+                                //this.rateCounter++;
+                                //rateaux = this.rateCounter % this.rate+1;
+                                //System.out.println("ratecounter depois do metodo antes do while acabar"+ rateaux);
+                                System.out.println(this.requests/3);
+                            }
+                            //System.out.println("ratecounter fora "+ rateCounter);
+                            if (this.rateCounter == this.rate+1){
+                                this.rateCounter = 1;
+                            }
                         }
                         clientId++;
                     }
                 }
             }
-
         }
     }
 
@@ -159,11 +174,27 @@ public class TrafficGenThread extends Thread {
                 this.errors++;
             }
 
-            if (mainRequestLatency < sleepRate){
-                
+            if (mainRequestLatency <= this.sleepRate ){
+                this.sleepRate -= mainRequestLatency;
+                //System.out.println("latency: " +mainRequestLatency);
+                //System.out.println("sleeprate: " +this.sleepRate);
+                //System.out.println(this.requests/3);
             }
 
-            Thread.sleep(sleepRate);
+
+            //System.out.println(rateCounter);
+            if (this.rateCounter == this.rate){
+                if (this.sleepRate > 0){
+                    //System.out.println("sleeping"+sleepRate);
+                    Thread.sleep(this.sleepRate);
+                }
+                //Thread.sleep(sleepRate);
+                //System.out.println("sleeping"+sleepRate);
+                //this.rateCounter = 1;
+                //System.out.println("sleeprate a mil");
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
