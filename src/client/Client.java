@@ -25,6 +25,9 @@ public class Client {
     public static void main(String[] args) {
 
         int clientID;
+
+        System.setProperty( "java.rmi.server.hostname", "192.168.RMIServer.IP" ) ;
+
         try {
             Registry reg;
             if (args.length > 0) {

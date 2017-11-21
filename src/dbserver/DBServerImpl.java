@@ -95,6 +95,13 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			return false;
 		}
 	}
+	//only needed in case of lazy synchronization
+	/*public synchronized boolean isSeatFree(String theaterName, Seat theaterSeat) throws RemoteException {
+		if (theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status == SeatStatus.FREE) {
+			return true;
+		}
+		return false;
+	}*/
 
 	@Override
 	public void killServer() throws RemoteException {

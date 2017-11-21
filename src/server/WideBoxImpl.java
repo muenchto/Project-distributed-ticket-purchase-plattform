@@ -1,15 +1,14 @@
 package server;
 
 import auxiliary.*;
+import com.stoyanr.evictor.map.ConcurrentHashMapWithTimedEviction;
+
 import java.rmi.RemoteException;
-import java.rmi.registry.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import net.jodah.expiringmap.*;
 
 /**
  * PSD Project - Phase 1
@@ -17,12 +16,14 @@ import net.jodah.expiringmap.*;
  */
 public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
+    private final long EXPIRING_DURATION = 15000;
+
     private Registry registry;
     private DataStorageIF dataStorageStub;
 
     private int clientCounter;
 
-    private ConcurrentHashMap<String, ExpiringMap<String, Integer>> reservedSeats;
+    private ConcurrentHashMap<String, com.stoyanr.evictor.map.ConcurrentHashMapWithTimedEviction<String, Integer>> reservedSeats;
 
     private LinkedHashMap theaters;
 
@@ -39,7 +40,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
         this.clientCounter = 0;
 
-        this.reservedSeats = new ConcurrentHashMap<String, ExpiringMap<String, Integer>>(1500);
+        this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMapWithTimedEviction<String, Integer>>(1500);
 
         if (!dbServerLocalMode) {
            try {
@@ -76,85 +77,100 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
     }
 
-    synchronized public Message query(String theaterName) throws RemoteException {
+     public Message query(String theaterName) throws RemoteException {
 
         //if the theater is queried the first time, the name is added to the HasMap
         //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
         if (!reservedSeats.containsKey(theaterName)){
-            Map<String, Integer> expiringSeatMap = ExpiringMap.builder()
-                    .expiration(15, TimeUnit.SECONDS)
-                    .build();
-            reservedSeats.put(theaterName, (ExpiringMap<String, Integer>) expiringSeatMap);
+
+            ConcurrentHashMapWithTimedEviction<String, Integer> expiringSeatMap =
+                    new ConcurrentHashMapWithTimedEviction<>();
+            reservedSeats.put(theaterName, expiringSeatMap);
         }
 
         Theater theater;
-        if (dbServerLocalMode){
-            theater = (Theater) this.theaters.get(theaterName);
-            theater = theater.clone();
-        }
-        else {
-            theater = dataStorageStub.getTheater(theaterName);
-        }
-
-        //add all reserved seats from one theater to the theaterObject as reserved
-        for (String s: reservedSeats.get(theaterName).keySet()) {
-            theater.setSeatToReserved(s);
-        }
-        //reserve a new Seat for the client
-        Seat seat = theater.reserveSeat();
-
-        if (seat == null) {
-            return new Message(MessageType.FULL);
-        }
-
-        clientCounter++;
-        int clientID = clientCounter;
-
-        //add this seat to the list
-        reservedSeats.get(theater.theaterName).put(seat.getSeatName(), clientID);
-        System.out.println("QUERY: reservedSeats @ "+theater.theaterName +": "+ reservedSeats.get(theater.theaterName).keySet());
-
-        return new Message(MessageType.AVAILABLE, theater.seats, seat, clientID);
-
-    }
-
-    synchronized public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
-        Theater theater;
-        if (dbServerLocalMode){
-            theater = (Theater) this.theaters.get(theaterName);
-            theater = theater.clone();
-        }
-        else {
-            theater = dataStorageStub.getTheater(theaterName);
-        }
-
-
-        //add all reserved seats from one theater to the theaterObject as reserved
-        for (String s: reservedSeats.get(theaterName).keySet()) {
-            theater.setSeatToReserved(s);
-        }
-        //try to reserve a new Seat for the client
-        Seat new_seat = theater.reserveSeat(wish_seat);
-        if (new_seat != null) {
-            reservedSeats.get(theaterName).put(new_seat.getSeatName(), clientID);
-
-            //when reserve happens before 15 sec timeout, we need to remove the old reserved seat
-            if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) != null) {
-                if(reservedSeats.get(theaterName).get(old_seat.getSeatName()) == clientID){
-                    reservedSeats.get(theaterName).remove(old_seat.getSeatName());
-                }
-
+         synchronized (reservedSeats.get(theaterName)) {
+            if (dbServerLocalMode){
+                theater = (Theater) this.theaters.get(theaterName);
+                theater = theater.clone();
             }
-            theater.freeSeat(old_seat);
+            else {
+                theater = dataStorageStub.getTheater(theaterName);
+            }
 
-            return new Message(MessageType.AVAILABLE, theater.seats, new_seat, clientID);
-        }
-        else {
-            return new Message(MessageType.AVAILABLE, theater.seats, old_seat, clientID);
+
+            //add all reserved seats from one theater to the theaterObject as reserved
+            for (String s : reservedSeats.get(theaterName).keySet()) {
+                theater.setSeatToReserved(s);
+            }
+            //reserve a new Seat for the client
+            Seat seat = theater.reserveSeat();
+
+            if (seat == null) {
+                //TODO: how should the FULL Message be modeled?
+                return new Message(MessageType.FULL);
+            }
+
+            clientCounter++;
+            int clientID = clientCounter;
+
+            if (reservedSeats.get(theater.theaterName).containsKey(seat.getSeatName())) {
+                System.out.println("RESERVE ERROR: " + theaterName + " " + seat.getSeatName());
+            }
+            //if (!dataStorageStub.isSeatFree(theater.theaterName, seat)) {
+              //  System.out.println("ALREADY COCCUPIED ERROR: " + theaterName + " " + seat.getSeatName());
+            //}
+            //add this seat to the list
+            reservedSeats.get(theater.theaterName).put(seat.getSeatName(), clientID, EXPIRING_DURATION);
+
+
+            System.out.println("QUERY from "+clientCounter+": reservedSeats @ "+theater.theaterName +": "+ reservedSeats.get(theater.theaterName).keySet());
+
+            return new Message(MessageType.AVAILABLE, theater.seats, seat, clientID);
         }
     }
 
-   synchronized public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
+     public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
+
+
+
+        Theater theater;
+         synchronized (reservedSeats.get(theaterName)) {
+            if (dbServerLocalMode){
+                theater = (Theater) this.theaters.get(theaterName);
+                theater = theater.clone();
+            }
+            else {
+                theater = dataStorageStub.getTheater(theaterName);
+            }
+
+
+            //add all reserved seats from one theater to the theaterObject as reserved
+            for (String s : reservedSeats.get(theaterName).keySet()) {
+                theater.setSeatToReserved(s);
+            }
+            //try to reserve a new Seat for the client
+            Seat new_seat = theater.reserveSeat(wish_seat);
+            if (new_seat != null) {
+                reservedSeats.get(theaterName).put(new_seat.getSeatName(), clientID, EXPIRING_DURATION);
+
+                //when reserve happens before 15 sec timeout, we need to remove the old reserved seat
+                if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) != null) {
+                    if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) == clientID) {
+                        reservedSeats.get(theaterName).remove(old_seat.getSeatName());
+                    }
+
+                }
+                theater.freeSeat(old_seat);
+
+                return new Message(MessageType.AVAILABLE, theater.seats, new_seat, clientID);
+            } else {
+                return new Message(MessageType.AVAILABLE, theater.seats, old_seat, clientID);
+            }
+        }
+    }
+
+    public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
 
        //check if this client has already that seat reserved, if not, return error
        if (reservedSeats.get(theaterName).get(acceptedSeat.getSeatName()) == null ||
@@ -174,12 +190,13 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
            }
        }
        else {
-           if (dataStorageStub.occupySeat(theaterName, acceptedSeat)) {
-               reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
-               return new Message(MessageType.ACCEPT_OK);
-           }
-           else {
-               return new Message(MessageType.ACCEPT_ERROR);
+           synchronized (reservedSeats.get(theaterName)) {
+               if (dataStorageStub.occupySeat(theaterName, acceptedSeat)) {
+                   reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
+                   return new Message(MessageType.ACCEPT_OK);
+               } else {
+                   return new Message(MessageType.ACCEPT_ERROR);
+               }
            }
        }
 
