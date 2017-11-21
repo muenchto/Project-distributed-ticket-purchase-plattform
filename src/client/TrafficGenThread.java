@@ -99,7 +99,7 @@ public class TrafficGenThread extends Thread {
                     while (System.currentTimeMillis() < endTime) {
                         while (this.rateCounter % (this.rate + 1) != 0) {
                             SRPRequest(r);
-                            System.out.println(this.requests / 3);
+                            //System.out.println(this.requests / 3);
                         }
                         if (this.rateCounter == this.rate + 1) {
                             this.rateCounter = 1;
@@ -178,7 +178,7 @@ public class TrafficGenThread extends Thread {
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
-        int aux = r.nextInt(this.numTheaters + 1);
+        int aux = r.nextInt(this.numTheaters);
         try {
             latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
@@ -238,7 +238,7 @@ public class TrafficGenThread extends Thread {
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
-        int aux = r.nextInt(this.numTheaters + 1);
+        int aux = r.nextInt(this.numTheaters);
         try {
             latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
@@ -420,7 +420,7 @@ public class TrafficGenThread extends Thread {
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
-        int aux = r.nextInt(this.numTheaters + 1);
+        int aux = r.nextInt(this.numTheaters);
         try {
             latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
@@ -460,6 +460,7 @@ public class TrafficGenThread extends Thread {
 
             if (this.rateCounter == this.rate) {
                 if (this.sleepRate > 0) {
+                    //System.out.println("sleeping for "+sleepRate);
                     Thread.sleep(this.sleepRate);
                 }
                 this.sleepRate = 1000;
@@ -480,7 +481,7 @@ public class TrafficGenThread extends Thread {
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
-        int aux = r.nextInt(this.numTheaters + 1);
+        int aux = r.nextInt(this.numTheaters);
         try {
             latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
