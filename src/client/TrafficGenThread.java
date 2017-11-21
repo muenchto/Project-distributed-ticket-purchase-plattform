@@ -7,8 +7,10 @@ import server.WideBoxImpl;
 
 import java.rmi.RemoteException;
 import java.util.Random;
+
 /**
  * PSD Project - Phase 1
+ *
  * @author group: psd002 ; members: 42560-50586-30360
  */
 public class TrafficGenThread extends Thread {
@@ -60,24 +62,48 @@ public class TrafficGenThread extends Thread {
                 if (op.equals("query")) {
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
-                        SSQRequests();
+                        while (this.rateCounter % (this.rate + 1) != 0) {
+                            SSQRequests();
+                            System.out.println(this.requests / 3);
+                        }
+                        if (this.rateCounter == this.rate + 1) {
+                            this.rateCounter = 1;
+                        }
                     }
                 } else { //op = purchase
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
-                        SSPRequests();
+                        while (this.rateCounter % (this.rate + 1) != 0) {
+                            SSPRequests();
+                            System.out.println(this.requests / 3);
+                        }
+                        if (this.rateCounter == this.rate + 1) {
+                            this.rateCounter = 1;
+                        }
                     }
                 }
             } else { //target = random
                 if (op.equals("query")) {
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
-                        SRQRequest(r);
+                        while (this.rateCounter % (this.rate + 1) != 0) {
+                            SRQRequest(r);
+                            System.out.println(this.requests / 3);
+                        }
+                        if (this.rateCounter == this.rate + 1) {
+                            this.rateCounter = 1;
+                        }
                     }
                 } else { //op = purchase
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
-                        SRPRequest(r);
+                        while (this.rateCounter % (this.rate + 1) != 0) {
+                            SRPRequest(r);
+                            System.out.println(this.requests / 3);
+                        }
+                        if (this.rateCounter == this.rate + 1) {
+                            this.rateCounter = 1;
+                        }
                     }
                 }
             }
@@ -87,7 +113,13 @@ public class TrafficGenThread extends Thread {
                     while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
-                            RSQRequests(clientId);
+                            while (this.rateCounter % (this.rate + 1) != 0) {
+                               RSQRequests(clientId);
+                                System.out.println(this.requests / 3);
+                            }
+                            if (this.rateCounter == this.rate + 1) {
+                                this.rateCounter = 1;
+                            }
                         }
                         clientId++;
                     }
@@ -95,7 +127,13 @@ public class TrafficGenThread extends Thread {
                     while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
-                            RSPRequests(clientId);
+                            while (this.rateCounter % (this.rate + 1) != 0) {
+                                RSPRequests(clientId);
+                                System.out.println(this.requests / 3);
+                            }
+                            if (this.rateCounter == this.rate + 1) {
+                                this.rateCounter = 1;
+                            }
                         }
                         clientId++;
                     }
@@ -105,25 +143,25 @@ public class TrafficGenThread extends Thread {
                     while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
-                            RRQRequests(clientId, r);
+                            while (this.rateCounter % (this.rate + 1) != 0) {
+                                RRQRequests(clientId, r);
+                                System.out.println(this.requests / 3);
+                            }
+                            if (this.rateCounter == this.rate + 1) {
+                                this.rateCounter = 1;
+                            }
                         }
                         clientId++;
                     }
                 } else { //op = purchase
                     while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
-                        while (System.currentTimeMillis() <= endTime/* && this.requests/3 <= this.rate*this.duration*/) {
-                            //System.out.println("mili");
-                            //int rateaux = 1;
-                            while(this.rateCounter % (this.rate+1) != 0/*this.requests/3 <= this.rate*this.duration*/) {
+                        while (System.currentTimeMillis() <= endTime) {
+                            while (this.rateCounter % (this.rate + 1) != 0) {
                                 RRPRequests(clientId, r);
-                                //this.rateCounter++;
-                                //rateaux = this.rateCounter % this.rate+1;
-                                //System.out.println("ratecounter depois do metodo antes do while acabar"+ rateaux);
-                                System.out.println(this.requests/3);
+                                System.out.println(this.requests / 3);
                             }
-                            //System.out.println("ratecounter fora "+ rateCounter);
-                            if (this.rateCounter == this.rate+1){
+                            if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
@@ -174,27 +212,18 @@ public class TrafficGenThread extends Thread {
                 this.errors++;
             }
 
-            if (mainRequestLatency <= this.sleepRate ){
+            if (mainRequestLatency <= this.sleepRate) {
                 this.sleepRate -= mainRequestLatency;
-                //System.out.println("latency: " +mainRequestLatency);
-                //System.out.println("sleeprate: " +this.sleepRate);
-                //System.out.println(this.requests/3);
             }
 
-
-            //System.out.println(rateCounter);
-            if (this.rateCounter == this.rate){
-                if (this.sleepRate > 0){
-                    //System.out.println("sleeping"+sleepRate);
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
                     Thread.sleep(this.sleepRate);
                 }
-                //Thread.sleep(sleepRate);
-                //System.out.println("sleeping"+sleepRate);
-                //this.rateCounter = 1;
-                //System.out.println("sleeprate a mil");
                 this.sleepRate = 1000;
             }
             this.rateCounter++;
+
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
@@ -205,36 +234,56 @@ public class TrafficGenThread extends Thread {
 
     private void RRQRequests(int clientId, Random r) {
         String[] theaters;
-        long latencyBeg = System.currentTimeMillis();
+        long latencyBeg;
         long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
         int aux = r.nextInt(this.numTheaters + 1);
         try {
-
+            latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
-            Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
-                addToLatency(latencyEnd - latencyBeg);
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
                 this.requests++;
                 this.cancelled++;
             } else {
                 this.errors++;
             }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
@@ -246,35 +295,56 @@ public class TrafficGenThread extends Thread {
     //does the same has SSPRequests........
     private void RSPRequests(int clientId) {
         String[] theaters;
-        long latencyBeg = System.currentTimeMillis();
+        long latencyBeg;
         long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
         try {
+            latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
-            Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.accept(theaters[Integer.parseInt(targetTheater)],
                         m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
-                addToLatency(latencyEnd - latencyBeg);
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
                 this.requests++;
                 this.purchased++;
             } else {
                 this.errors++;
             }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
@@ -286,35 +356,56 @@ public class TrafficGenThread extends Thread {
     //does the same as SSQRequests.......... :/
     private void RSQRequests(int clientId) {
         String[] theaters;
-        long latencyBeg = System.currentTimeMillis();
+        long latencyBeg;
         long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
         try {
+            latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
-            Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.cancel(theaters[Integer.parseInt(targetTheater)],
                         m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
-                addToLatency(latencyEnd - latencyBeg);
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
                 this.requests++;
                 this.cancelled++;
             } else {
                 this.errors++;
             }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
@@ -325,36 +416,56 @@ public class TrafficGenThread extends Thread {
 
     private void SRPRequest(Random r) {
         String[] theaters;
-        long latencyBeg = System.currentTimeMillis();
+        long latencyBeg;
         long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
         int aux = r.nextInt(this.numTheaters + 1);
         try {
-
+            latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
-            Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
-                addToLatency(latencyEnd - latencyBeg);
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
                 this.requests++;
                 this.purchased++;
             } else {
                 this.errors++;
             }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
@@ -365,36 +476,56 @@ public class TrafficGenThread extends Thread {
 
     private void SRQRequest(Random r) {
         String[] theaters;
-        long latencyBeg = System.currentTimeMillis();
+        long latencyBeg;
         long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
         int aux = r.nextInt(this.numTheaters + 1);
         try {
-
+            latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
-            Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
-                addToLatency(latencyEnd - latencyBeg);
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
                 this.requests++;
                 this.cancelled++;
             } else {
                 this.errors++;
             }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
@@ -405,35 +536,56 @@ public class TrafficGenThread extends Thread {
 
     private void SSPRequests() {
         String[] theaters;
-        long latencyBeg = System.currentTimeMillis();
+        long latencyBeg;
         long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
         try {
+            latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
-            Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.accept(theaters[Integer.parseInt(targetTheater)],
                         m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
-                addToLatency(latencyEnd - latencyBeg);
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
                 this.requests++;
                 this.purchased++;
             } else {
                 this.errors++;
             }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
@@ -444,36 +596,56 @@ public class TrafficGenThread extends Thread {
 
     private void SSQRequests() {
         String[] theaters;
-        long latencyBeg = System.currentTimeMillis();
+        long latencyBeg;
         long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
         try {
-
+            latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
-            addToLatency(latencyEnd - latencyBeg);
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
             this.requests++;
 
-            Thread.sleep(sleepRate);
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
                 wideBoxStub.cancel(theaters[Integer.parseInt(targetTheater)],
                         m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
-                addToLatency(latencyEnd - latencyBeg);
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
                 this.requests++;
                 this.cancelled++;
             } else {
                 this.errors++;
             }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
         } catch (RemoteException e) {
             this.errors++;
             e.printStackTrace();
