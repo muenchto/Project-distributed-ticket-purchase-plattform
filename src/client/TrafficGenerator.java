@@ -14,7 +14,15 @@ import java.util.concurrent.*;
  * @author group: psd002 ; members: 42560-50586-30360
  */
 public class TrafficGenerator {
-
+    /*
+    volatile int requests;
+    volatile int averageLatency;
+    volatile int cancelled;
+    volatile int purchased;
+    volatile int errors;
+*/
+    //requests, completed requests, purchased, cancelled, errors, average latency
+    static volatile int [] stats = new int[6];
 
     public static void main(String[] args) {
 
@@ -46,8 +54,10 @@ public class TrafficGenerator {
             //ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 
+            //ConcurrentLinkedQueue<Result> queue = new ConcurrentLinkedQueue<>();
             Result r;
-            Future<Result> futureR = ex.submit(new Result(wideBoxStub,numTheaters,rate,sleepRate,duration));
+            Future<Result> futureR = ex.submit(new Result(wideBoxStub,numTheaters,rate,
+                    sleepRate,duration, stats));
             /*for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
                         op,numClients,numTheaters,duration,sleepRate, rate);
@@ -61,6 +71,7 @@ public class TrafficGenerator {
 
             }
             */
+
 
             try {
                 r = futureR.get();

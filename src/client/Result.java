@@ -22,14 +22,16 @@ public class Result implements Callable {
     private int rate;
     private long sleepRate;
     private int duration;
+    private int[] stats;
     private int rateCounter;
 
-    public Result(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration) {
+    public Result(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration, int[] stats) {
         this.wideBoxStub = wideBoxStub;
         this.numTheaters = numTheaters;
         this.rate = rate;
         this.sleepRate = sleepRate;
         this.duration = duration;
+        this.stats = stats;
         this.rateCounter = 1;
         this.cancelled = 0;
     }
