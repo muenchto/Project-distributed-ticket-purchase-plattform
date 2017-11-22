@@ -9,13 +9,8 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class Result implements Callable {
-
-    private int requests;
-    private int averageLatency;
-    private int cancelled;
-    private int purchased;
-    private int errors;
-
+/*
+*/
     private long latencyCounter;
     private WideBoxIF wideBoxStub;
     private int numTheaters;
@@ -33,7 +28,7 @@ public class Result implements Callable {
         this.duration = duration;
         this.stats = stats;
         this.rateCounter = 1;
-        this.cancelled = 0;
+        this.stats[2] = 0;
     }
 
     @Override
@@ -56,7 +51,7 @@ public class Result implements Callable {
                     latencydif = latencyEnd - latencyBeg;
                     mainRequestLatency += latencydif;
                     addToLatency(latencydif);
-                    this.requests++;
+                    this.stats[0]++;
 
                     latencyBeg = System.currentTimeMillis();
                     Message m = wideBoxStub.query(theaters[aux]);
@@ -65,7 +60,8 @@ public class Result implements Callable {
                     latencydif = latencyEnd - latencyBeg;
                     mainRequestLatency += latencydif;
                     addToLatency(latencydif);
-                    this.requests++;
+                    this.stats[0]++;
+
 
                     if (m.getType() == MessageType.AVAILABLE) {
                         latencyBeg = System.currentTimeMillis();
@@ -75,10 +71,10 @@ public class Result implements Callable {
                         latencydif = latencyEnd - latencyBeg;
                         mainRequestLatency += latencydif;
                         addToLatency(latencydif);
-                        this.requests++;
-                        this.purchased++;
+                        this.stats[0]++;
+                        this.stats[1]++;
                     } else {
-                        this.errors++;
+                        this.stats[3]++;
                     }
 
                     if (mainRequestLatency <= this.sleepRate) {
@@ -87,7 +83,6 @@ public class Result implements Callable {
 
                     if (this.rateCounter == this.rate) {
                         if (this.sleepRate > 0) {
-                            //System.out.println("sleeping for "+sleepRate);
                             Thread.sleep(this.sleepRate);
                         }
                         this.sleepRate = 1000;
@@ -95,7 +90,7 @@ public class Result implements Callable {
                     this.rateCounter++;
 
                 } catch (RemoteException e) {
-                    this.errors++;
+                    this.stats[3]++;
                     e.printStackTrace();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -109,16 +104,16 @@ public class Result implements Callable {
     }
 
     private void addToLatency(long diff) {
-        this.averageLatency = Math.toIntExact(this.averageLatency + ((diff - this.averageLatency) / this.latencyCounter));
+        this.stats[4] = Math.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.latencyCounter));
     }
 
     @Override
     public String toString() {
-        return "Num of requests made: " + this.requests + "\n" +
-                "Num of completed requests: " + this.requests / 3 + "\n" +
-                "Num of purchases made: " + this.purchased + "\n" +
-                "Num of cancels made: " + this.cancelled + "\n" +
-                "Num of errors gotten: " + this.errors + "\n" +
-                "Average latenty per request: " + this.averageLatency + "\n";
+        return "Num of requests made: " + this.stats[0] + "\n" +
+                "Num of completed requests: " + this.stats[0] / 3 + "\n" +
+                "Num of purchases made: " + this.stats[1] + "\n" +
+                "Num of cancels made: " + this.stats[2] + "\n" +
+                "Num of errors gotten: " + this.stats[3] + "\n" +
+                "Average latenty per request: " + this.stats[4]+ "\n";
     }
 }
