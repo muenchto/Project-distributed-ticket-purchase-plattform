@@ -32,8 +32,12 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		mode=writingMode;
 		//checkDBfile();
 		//checkDBlogfilme();
+		for (int i = 0; i < num_theaters; i++) {
+			theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
+			System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
+		}
 		
-
+/*
 		storageFile = new Storage ("dbfile.txt","dblogfile.txt", num_theaters, mode);
 		//if there isn't an existant storage file, create clean theaters hashmap and make first dump to create a new file
 		if (storageFile.existentDBfile()) {
@@ -52,7 +56,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			storageFile.writeToFile(theaters);
 			
 		}
-		
+		*/
 		
 		//theaters = new ConcurrentHashMap<String, Theater>();
 		//theatersBackup = new ConcurrentHashMap<String, Theater>(); //not used yet
@@ -60,7 +64,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	
 		
 
-		errors = 0;
+		//7errors = 0;
 		//System.out.println("tamanho do mapa é "+theaters.size());
 	}
 
