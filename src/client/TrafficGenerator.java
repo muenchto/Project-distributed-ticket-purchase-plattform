@@ -56,7 +56,6 @@ public class TrafficGenerator {
             //ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 
-            //ConcurrentLinkedQueue<Result> queue = new ConcurrentLinkedQueue<>();
             Result r;
             Future<Result> futureR = ex.submit(new Result(wideBoxStub, numTheaters, rate,
                     sleepRate, duration, stats));
@@ -99,7 +98,6 @@ public class TrafficGenerator {
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
-
 
             ex.shutdown();
 

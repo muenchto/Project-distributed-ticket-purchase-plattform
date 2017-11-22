@@ -9,8 +9,6 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 public class Result implements Callable {
-/*
-*/
     private long latencyCounter;
     private WideBoxIF wideBoxStub;
     private int numTheaters;
