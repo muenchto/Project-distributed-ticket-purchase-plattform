@@ -20,7 +20,9 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	//that the replica is responsible, as a primary and as a backup of other.
 	public int[] theaterIndexPrim = new int [2];
 	public int[] theaterIndexBack = new int [2];
-	public Storage storageFile ;
+	public Storage storageFile;
+	
+	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) future use
 	public int mode;
 
 	private int errors;
@@ -28,32 +30,70 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	
 	public DBServerImpl(int num_theaters, int writingMode ) throws IOException{
 		mode=writingMode;
-		storageFile = new Storage ("dbfile.txt","dblogfile.txt", mode);
-		theaters = new ConcurrentHashMap<String, Theater>();
-		theatersBackup = new ConcurrentHashMap<String, Theater>(); //not used yet
+		//checkDBfile();
+		//checkDBlogfilme();
 		
-		for (int i = 0; i < num_theaters; i++) {
-			theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
-			//System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" adicionado");
+
+		storageFile = new Storage ("dbfile.txt","dblogfile.txt", num_theaters, mode);
+		//if there isn't an existant storage file, create clean theaters hashmap and make first dump to create a new file
+		if (storageFile.existentDBfile()) {
+			//Creation of the theaters hashmap
+			theaters = storageFile.loadDBfile();
+
 		}
+		else {
+			//Creation of the theaters hashmap
+			theaters = new ConcurrentHashMap<String, Theater>();
+			for (int i = 0; i < num_theaters; i++) {
+				theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
+				System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
+			}
+			//dump newly createad hashmap to file
+			storageFile.writeToFile(theaters);
+			
+		}
+		
+		
+		//theaters = new ConcurrentHashMap<String, Theater>();
+		//theatersBackup = new ConcurrentHashMap<String, Theater>(); //not used yet
+		
+	
+		
 
 		errors = 0;
 		//System.out.println("tamanho do mapa é "+theaters.size());
 	}
 
+	private void checkDBfile() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	//TESTING PROPOSES DELETE BEFORE EACH DELIVERIES
 	public static void main(String[] args) throws IOException {
 		DBServerImpl db = new DBServerImpl(1500, 0);
-		String teste[] = db.getTheaterNames();
-		for (int i=0;i<theaters.size();i++)
+		
+		
+		
+		
+		
+		
+		
+		//String teste[] = db.getTheaterNames();
+		/*for (int i=0;i<theaters.size();i++)
 			System.out.print(teste[i]+";");
-		//System.out.println("testing write file");
+		System.out.println("testing write file");
+		*/
 		//db.writeToFile();
 		//System.out.println("done");
 		//System.exit(0);
 		
 	}
 
+	
+	
+	
+	
 	
 	// RMI FUNCTIONS **********************************************************
 	@Override

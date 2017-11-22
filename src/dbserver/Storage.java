@@ -29,21 +29,76 @@ public class Storage {
 	private static boolean SafeMode;
 	private int mode;	
 	final static String DELIMITER ="\n";
-	final static Integer NUM_THEATERS=1500;
+	private static Integer num_theathers=1500;
+	private boolean existDBFile; //flag to inform DBServer that exist or not a existant DBFile
+	private static ConcurrentHashMap<String, Theater> theatersTemp = null ;
 
-	public Storage(String dbInputFile, String logInputFile, int mode) throws IOException{
-		
+	public Storage(String dbInputFile, String logInputFile, int num_theathers, int mode) throws IOException{
+		Storage.num_theathers=num_theathers;
 		db = new File (dbInputFile);
 		log = new File (logInputFile);
+		
+		
+		if(db.exists()) {
+			System.out.println("DB file present");
+			existDBFile=true;
+			if (log.exists()) {
+				System.out.println("log file present, initiate log processing");
+				//processLog();
+			}
+			else
+				try {
+					log.createNewFile();
+					System.out.println("Log file not present, a new log file was created");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+		}
+		else
+			try {
+				existDBFile=false;
+				db.createNewFile();
+				System.out.println("BD file not present, a new file was created");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+
+
+
+
+		/*
 		logfos =new FileOutputStream(logInputFile,true); //este comando esta a apagar o ficheiro
 		logfosw = new OutputStreamWriter (logfos);
 		logfd = logfos.getFD();
+		*/
 	}
+	
+
+	
+
+
+	//TESTING PROPOSES DELETE BEFORE EACH DELIVERIES
+	public static void main(String[] args) {
+		if(db.exists())
+			System.out.println("DB file present");
+		else
+			try {
+				db.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+
+	}
+	
 	
 	
 	//write the all hashmap to DBFILENAME
 	public boolean writeToFile (ConcurrentHashMap<String, Theater> theaters) throws IOException {
-		// Instant is for perfomance testing (mesures the time it takes to dump the memory to file)
+		// Instant is for perfomance metrics (mesures the time it takes to dump the memory to file)
 		Instant Start=null;
 		Instant End=null;
 		Start= Instant.now();
@@ -57,18 +112,28 @@ public class Storage {
 		//it's appearing without order
 		//KeySetView<String, Theater> keys = theaters.keySet();
 		//System.out.println(keys.toString());
-		for (int t=0;t<NUM_THEATERS;t++) {
+		System.out.println("STORAGE: Starting dumpping DB to file");
+		for (int t=0;t<num_theathers;t++) {
 			for (int i=0;i<26;i++){
 				for(int j = 0; j < 40; j++) {
-					try {
-						//System.out.println("Writing to file -- "+theaters.get(Integer.toString(t)).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+theaters.get(Integer.toString(t)).seats[i][j].status+DELIMITER);
-						dbfosw.write(theaters.get(Integer.toString(t)).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get(Integer.toString(t)).seats[i][j])+DELIMITER);
+					try {				
+						//Storing with teather as a int value, and the seat as a int value
+						dbfosw.write(t+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
+						//dbfosw.write(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
+						
+						//Stores seat with a int value and theaters string value
+						//System.out.println(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
+						
+						//Stores seats with the string value and theaters string value
+						//System.out.println(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+theaters.get("TheaterNr"+t).seats[i][j].status+DELIMITER);
 					}
+
 					catch (IOException e) {
 						System.err.println("DBSERVERImpl - ERROR WRITING TO FILE");
 						e.printStackTrace();
 						return false;
 					}//end catch
+
 				}
 			}
 			if(t%20==0)
@@ -111,6 +176,29 @@ public class Storage {
 		if (seat.status==SeatStatus.OCCUPIED) resp=3;
 		return resp;
 	}
+
+
+	public boolean existentDBfile() {
+		return existDBFile;
+	}
+
+
+	public void saveToFile(ConcurrentHashMap<String, Theater> theaters) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	public ConcurrentHashMap<String, Theater> loadDBfile() {
+		theatersTemp = new ConcurrentHashMap<String, Theater> ();
+		return null;
+	}
+
+	private void processLog() {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }
 
