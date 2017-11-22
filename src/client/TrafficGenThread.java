@@ -17,7 +17,7 @@ public class TrafficGenThread extends Thread {
 
     //performance
     private int requests;
-    private long averageLatency;
+    private int averageLatency;
     private int cancelled;
     private int purchased;
     private int errors;
@@ -95,6 +95,7 @@ public class TrafficGenThread extends Thread {
                         }
                     }
                 } else { //op = purchase
+                    this.cancelled = 0;
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
                         while (this.rateCounter % (this.rate + 1) != 0) {
@@ -170,6 +171,7 @@ public class TrafficGenThread extends Thread {
                 }
             }
         }
+        System.out.println(this.requests/3);
     }
 
     private void RRPRequests(int clientId, Random r) {
@@ -656,7 +658,7 @@ public class TrafficGenThread extends Thread {
     }
 
     private void addToLatency(long diff) {
-        this.averageLatency = this.averageLatency + ((diff - this.averageLatency) / this.latencyCounter);
+        this.averageLatency = Math.toIntExact(this.averageLatency + ((diff - this.averageLatency) / this.latencyCounter));
     }
 
 
