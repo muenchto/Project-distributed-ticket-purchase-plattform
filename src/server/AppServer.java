@@ -17,7 +17,7 @@ public class AppServer {
         Registry registry;
         try {
             if (args.length > 0) {
-                registry = LocateRegistry.getRegistry(args[0]);
+                registry = LocateRegistry.getRegistry(args[0], 5000);
             }
             else {
                 registry = LocateRegistry.getRegistry(5000);
@@ -26,7 +26,7 @@ public class AppServer {
             WideBoxImpl widebox;
             String dbServerIP;
             if (args.length > 0) {
-                dbServerIP = args[1];
+                dbServerIP = args[0];
             }
             else {
                 dbServerIP = null;

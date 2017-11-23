@@ -42,7 +42,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         if (!dbServerLocalMode) {
             try {
                 if (DBServerIP != null) {
-                    registry = LocateRegistry.getRegistry(DBServerIP );
+                    registry = LocateRegistry.getRegistry(DBServerIP, 5000);
                 } else {
                     registry = LocateRegistry.getRegistry(5000);
                 }
