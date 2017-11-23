@@ -21,15 +21,23 @@ public class LoadBalancer {
     public static void main(String args[]) throws Exception {
 
         Registry registry;
+        Registry registryAppS1;
+        Registry registryAppS2;
+        LoadBalancerImpl loadbalancer;
         try {
             // Bind the remote object's stub in the registry
             if (args.length > 0) {
-                registry = LocateRegistry.getRegistry(args[0]);
+                registry = LocateRegistry.createRegistry(5000);
+                registryAppS1 = LocateRegistry.getRegistry(args[0], 5000);
+                registryAppS2 = LocateRegistry.getRegistry(args[1], 5000);
+
+                loadbalancer = new LoadBalancerImpl(registryAppS1, registryAppS2);
             } else {
                 registry = LocateRegistry.getRegistry(5000);
+                loadbalancer = new LoadBalancerImpl(registry, registry);
             }
 
-            LoadBalancerImpl loadbalancer = new LoadBalancerImpl(registry);
+
 
 
             registry.rebind("WideBoxServer", loadbalancer);
@@ -49,11 +57,11 @@ public class LoadBalancer {
         //cache the Theater Names
         String[] theaterNames = null;
 
-        protected LoadBalancerImpl(Registry registry) throws RemoteException {
+        protected LoadBalancerImpl(Registry registryAppS1, Registry registryAppS2) throws RemoteException {
 
             try {
-                this.wideboxStub1 = (WideBoxIF) registry.lookup("AppServer1");
-                this.wideboxStub2 = (WideBoxIF) registry.lookup("AppServer2");
+                this.wideboxStub1 = (WideBoxIF) registryAppS1.lookup("AppServer1");
+                this.wideboxStub2 = (WideBoxIF) registryAppS2.lookup("AppServer2");
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             } catch (NotBoundException e1) {
