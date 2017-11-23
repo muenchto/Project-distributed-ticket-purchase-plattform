@@ -20,7 +20,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	//that the replica is responsible, as a primary and as a backup of other.
 	public int[] theaterIndexPrim = new int [2];
 	public int[] theaterIndexBack = new int [2];
-	public Storage storageFile;
+	public static Storage storageFile;
 	
 	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) future use
 	public int mode;
@@ -32,32 +32,38 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		mode=writingMode;
 		//checkDBfile();
 		//checkDBlogfilme();
-		theaters = new ConcurrentHashMap<String, Theater>();
-		for (int i = 0; i < num_theaters; i++) {
+		//theaters = new ConcurrentHashMap<String, Theater>();
+		/*
+		 for (int i = 0; i < num_theaters; i++) {
+		 
 			theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
-			System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
-		}
+			System.out.println("Theater -> "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).theaterName+" added to hashmap"); //DEBUG USE
+		}*/
 		
-/*
+
+		
 		storageFile = new Storage ("dbfile.txt","dblogfile.txt", num_theaters, mode);
+		
 		//if there isn't an existant storage file, create clean theaters hashmap and make first dump to create a new file
 		if (storageFile.existentDBfile()) {
+			System.out.println("DB file present, loading DB");
 			//Creation of the theaters hashmap
 			theaters = storageFile.loadDBfile();
 
 		}
 		else {
 			//Creation of the theaters hashmap
+			System.out.println("DB file NOT present, creating new hashmap");
 			theaters = new ConcurrentHashMap<String, Theater>();
 			for (int i = 0; i < num_theaters; i++) {
 				theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
-				System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
+				//System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
 			}
 			//dump newly createad hashmap to file
-			storageFile.writeToFile(theaters);
+			storageFile.saveToFile(theaters);
 			
 		}
-		*/
+		
 		
 		//theaters = new ConcurrentHashMap<String, Theater>();
 		//theatersBackup = new ConcurrentHashMap<String, Theater>(); //not used yet
@@ -69,15 +75,20 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		//System.out.println("tamanho do mapa é "+theaters.size());
 	}
 
-	private void checkDBfile() {
-		// TODO Auto-generated method stub
-		
-	}
+
 
 	//TESTING PROPOSES DELETE BEFORE EACH DELIVERIES
 	public static void main(String[] args) throws IOException {
 		DBServerImpl db = new DBServerImpl(1500, 0);
-		
+
+		storageFile = new Storage ("dbfile.txt","dblogfile.txt", 1500, 2);
+		storageFile.saveToFile(theaters);
+		//storageFile.loadDBfile();
+		System.out.println("\n\n\n");
+		db.occupySeat("TheaterNr1",new Seat(Seat.SeatStatus.OCCUPIED,'A',1));
+		db.occupySeat("TheaterNr2",new Seat(Seat.SeatStatus.OCCUPIED,'B',2));
+		db.occupySeat("TheaterNr3",new Seat(Seat.SeatStatus.OCCUPIED,'C',3));
+		db.occupySeat("TheaterNr4",new Seat(Seat.SeatStatus.OCCUPIED,'D',4));
 		
 		
 		
@@ -125,12 +136,12 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	//ONLY CALL THIS FUCTION IF EXIST A PRIOR RESERVATION.
 	//This validation should be done at appserver 
 	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException{
+		System.out.println("DBServerImpl: occupySeat");
 		//Theater theater = theaters.get(theaterName).seats
 		if(theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
 			synchronized(this){
 				theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status=SeatStatus.OCCUPIED;
-				if(mode>1)
-					storageFile.buySeat(theaterName,theaterSeat);
+				storageFile.buySeat(theaterName,theaterSeat);
 			}
 			return true;
 		}
