@@ -24,8 +24,8 @@ public class TrafficGenerator {
     volatile int purchased;
     volatile int errors;
 */
-    //requests, purchased, cancelled, errors, average latency
-    static volatile int[] stats = new int[5];
+    //requests, purchased, cancelled, errors, average latency, complete request average latency
+    static volatile int[] stats = new int[6];
 
     public static void main(String[] args) {
 
@@ -85,7 +85,8 @@ public class TrafficGenerator {
                                     "Num of purchases made: " + stats[1] + "\n" +
                                     "Num of cancels made: " + stats[2] + "\n" +
                                     "Num of errors gotten: " + stats[3] + "\n" +
-                                    "Average latenty per request: " + stats[4] + "\n";
+                                    "Average latenty per request: " + stats[4]+ "\n" +
+                                    "Average latency per completed request: "+ stats[5]+"\n";
                             System.out.println(s);
                         }
                     }

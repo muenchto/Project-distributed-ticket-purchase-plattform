@@ -14,7 +14,9 @@ import java.util.concurrent.Callable;
  * @author group: psd002 ; members: 42560-50586-30360
  */
 public class Result implements Callable {
+	
     private long latencyCounter;
+    private long completeRequestLatencyCounter;
     private WideBoxIF wideBoxStub;
     private int numTheaters;
     private int rate;
@@ -170,7 +172,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             latencyBeg = System.currentTimeMillis();
@@ -179,7 +181,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             if (m.getType() == MessageType.AVAILABLE) {
@@ -190,7 +192,9 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                addToLatency(latencydif);
+                this.completeRequestLatencyCounter++;
+                addToCompleteRequestLatency(mainRequestLatency);
+                addToAverageLatency(latencydif);
                 this.stats[0]++;
                 this.stats[2]++;
             } else {
@@ -230,7 +234,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             latencyBeg = System.currentTimeMillis();
@@ -239,7 +243,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             if (m.getType() == MessageType.AVAILABLE) {
@@ -250,7 +254,9 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                addToLatency(latencydif);
+                this.completeRequestLatencyCounter++;
+                addToCompleteRequestLatency(mainRequestLatency);
+                addToAverageLatency(latencydif);
                 this.stats[0]++;
                 this.stats[1]++;
             } else {
@@ -292,7 +298,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             latencyBeg = System.currentTimeMillis();
@@ -301,7 +307,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             if (m.getType() == MessageType.AVAILABLE) {
@@ -311,7 +317,9 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                addToLatency(latencydif);
+                this.completeRequestLatencyCounter++;
+                addToCompleteRequestLatency(mainRequestLatency);
+                addToAverageLatency(latencydif);
                 this.stats[0]++;
                 this.stats[2]++;
             } else {
@@ -352,7 +360,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             latencyBeg = System.currentTimeMillis();
@@ -361,7 +369,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
 
@@ -372,7 +380,9 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                addToLatency(latencydif);
+                this.completeRequestLatencyCounter++;
+                addToCompleteRequestLatency(mainRequestLatency);
+                addToAverageLatency(latencydif);
                 this.stats[0]++;
                 this.stats[1]++;
             } else {
@@ -412,7 +422,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             latencyBeg = System.currentTimeMillis();
@@ -421,7 +431,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             if (m.getType() == MessageType.AVAILABLE) {
@@ -432,7 +442,9 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                addToLatency(latencydif);
+                this.completeRequestLatencyCounter++;
+                addToCompleteRequestLatency(mainRequestLatency);
+                addToAverageLatency(latencydif);
                 this.stats[0]++;
                 this.stats[2]++;
             } else {
@@ -472,7 +484,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             latencyBeg = System.currentTimeMillis();
@@ -481,7 +493,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             if (m.getType() == MessageType.AVAILABLE) {
@@ -492,7 +504,9 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                addToLatency(latencydif);
+                this.completeRequestLatencyCounter++;
+                addToCompleteRequestLatency(mainRequestLatency);
+                addToAverageLatency(latencydif);
                 this.stats[0]++;
                 this.stats[1]++;
             } else {
@@ -533,7 +547,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             latencyBeg = System.currentTimeMillis();
@@ -542,7 +556,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             if (m.getType() == MessageType.AVAILABLE) {
@@ -552,7 +566,9 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                addToLatency(latencydif);
+                this.completeRequestLatencyCounter++;
+                addToCompleteRequestLatency(mainRequestLatency);
+                addToAverageLatency(latencydif);
                 this.stats[0]++;
                 this.stats[2]++;
             } else {
@@ -593,7 +609,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             latencyBeg = System.currentTimeMillis();
@@ -602,7 +618,7 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToLatency(latencydif);
+            addToAverageLatency(latencydif);
             this.stats[0]++;
 
             if (m.getType() == MessageType.AVAILABLE) {
@@ -612,7 +628,9 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                addToLatency(latencydif);
+                this.completeRequestLatencyCounter++;
+                addToCompleteRequestLatency(mainRequestLatency);
+                addToAverageLatency(latencydif);
                 this.stats[0]++;
                 this.stats[1]++;
             } else {
@@ -641,8 +659,12 @@ public class Result implements Callable {
 
 
 
-    private void addToLatency(long diff) {
+    private void addToAverageLatency(long diff) {
         this.stats[4] = Math.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.latencyCounter));
+    }
+    
+    private void addToCompleteRequestLatency(long diff) {
+        this.stats[4] = Math.toIntExact(this.stats[5] + ((diff - this.stats[5]) / this.completeRequestLatencyCounter));
     }
 
     @Override
@@ -652,6 +674,7 @@ public class Result implements Callable {
             "Num of purchases made: " + this.stats[1] + "\n" +
             "Num of cancels made: " + this.stats[2] + "\n" +
             "Num of errors gotten: " + this.stats[3] + "\n" +
-            "Average latenty per request: " + this.stats[4]+ "\n";
+            "Average latenty per request: " + this.stats[4]+ "\n" +
+            "Average latency per completed request: "+ this.stats[5]+"\n";
     }
 }
