@@ -8,9 +8,9 @@ import java.io.Serializable;
  */
 public class Seat implements Serializable{
     public enum SeatStatus  {
+        FREE,
         OCCUPIED,
         RESERVED,
-        FREE,
     }
 
     public SeatStatus status;

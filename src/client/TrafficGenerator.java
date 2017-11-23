@@ -32,9 +32,9 @@ public class TrafficGenerator {
         try {
             Registry reg;
             if (args.length > 0) {
-                reg = LocateRegistry.getRegistry(args[0], 5001);
+                reg = LocateRegistry.getRegistry(args[0], 5000);
             } else {
-                reg = LocateRegistry.getRegistry(5001);
+                reg = LocateRegistry.getRegistry(5000);
             }
             WideBoxIF wideBoxStub = (WideBoxIF) reg.lookup("WideBoxServer");
 
@@ -57,7 +57,7 @@ public class TrafficGenerator {
             ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 
             Result r;
-            Future<Result> futureR = ex.submit(new Result(wideBoxStub, numTheaters, rate,
+            final Future<Result> futureR = ex.submit(new Result(wideBoxStub, numTheaters, rate,
                     sleepRate, duration, stats));
             /*for (int i = 0; i < numThread; i++) {
                 TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,

@@ -132,9 +132,9 @@ public class Server implements WideBox {
 			// String myID = ("address" +":"+"WideBox");
 			Registry registry = LocateRegistry.createRegistry(PORT);
 			registry.bind("WideBox", widebox);
-			System.err.println("Server Ready");
+			System.err.println("AppServer Ready");
 		} catch (Exception e) {
-			System.err.print("Server Exception: " + e.toString());
+			System.err.print("AppServer Exception: " + e.toString());
 			e.printStackTrace();
 		}
 	}

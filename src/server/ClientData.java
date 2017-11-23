@@ -1,9 +1,10 @@
 package server;
 
-import auxiliary.*;
+import auxiliary.Seat;
 
 /**
  * PSD Project - Phase 1
+ *
  * @author group: psd002 ; members: 42560-50586-30360
  */
 public class ClientData {

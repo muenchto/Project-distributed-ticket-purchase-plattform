@@ -34,7 +34,7 @@ public class Client {
                 reg = LocateRegistry.getRegistry(args[0],5001);
             }
             else {
-                reg = LocateRegistry.getRegistry(5001);
+                reg = LocateRegistry.getRegistry(5000);
             }
             WideBoxIF wideboxStub = (WideBoxIF) reg.lookup("WideBoxServer");
             System.out.println("Client connected to WideBoxServer");

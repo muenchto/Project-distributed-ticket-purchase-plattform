@@ -28,7 +28,7 @@ public class Storage {
 	public static File log;
 	private static boolean SafeMode;
 	private int mode;	
-	final static String DELIMITER ="\n";
+	final static String DELIMITER =",";
 	private static Integer num_theathers=1500;
 	private boolean existDBFile; //flag to inform DBServer that exist or not a existant DBFile
 	private static ConcurrentHashMap<String, Theater> theatersTemp = null ;
@@ -113,7 +113,8 @@ public class Storage {
 		//KeySetView<String, Theater> keys = theaters.keySet();
 		//System.out.println(keys.toString());
 		System.out.println("STORAGE: Starting dumpping DB to file");
-		for (int t=0;t<num_theathers;t++) {
+
+		/*for (int t=0;t<num_theathers;t++) {
 			for (int i=0;i<26;i++){
 				for(int j = 0; j < 40; j++) {
 					try {				
@@ -138,7 +139,11 @@ public class Storage {
 			}
 			if(t%20==0)
 				System.out.print(".");
-		}	
+		}*/
+
+		for (Theater theater: theaters.values()) {
+			dbfosw.write(theater.createStringForDB()+"\n");
+		}
 		System.out.println("END");
 		if (mode>=2) dbfd.sync();
 		if (mode==3) dbfosw.flush();
@@ -179,7 +184,7 @@ public class Storage {
 
 
 	public boolean existentDBfile() {
-		return existDBFile;
+		return false;
 	}
 
 
@@ -191,6 +196,7 @@ public class Storage {
 
 	public ConcurrentHashMap<String, Theater> loadDBfile() {
 		theatersTemp = new ConcurrentHashMap<String, Theater> ();
+
 		return null;
 	}
 

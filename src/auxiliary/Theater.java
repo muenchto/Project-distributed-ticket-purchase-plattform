@@ -87,4 +87,17 @@ public class Theater implements Serializable{
         }
         return clone;
     }
+
+    public String createStringForDB() {
+        StringBuilder stringBuilder = new StringBuilder(4+26*40);
+        stringBuilder.append(theaterName+":");
+        for (char i = 0; i < 26; i++) {
+            for (int j = 0; j < 40; j++) {
+                stringBuilder.append(seats[i][j].status.ordinal());
+            }
+            stringBuilder.append(",");
+        }
+        return stringBuilder.toString();
+    }
+
 }
