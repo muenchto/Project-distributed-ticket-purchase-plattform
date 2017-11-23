@@ -8,14 +8,14 @@ import java.io.Serializable;
  */
 public class Theater implements Serializable{
     public String theaterName;
-    //public int freeSeats;
+    private int freeSeats;
+    public TheaterStatus status;
     public Seat[][] seats = new Seat[26][40];
-
-    //TODO: add logic to determine and set the theater status. Maybe via occupied/reserved counter
 
     public Theater(String theaterName) {
         this.theaterName = theaterName;
-        //this.freeSeats = 26*40;
+        this.freeSeats = 26*40;
+        this.status = TheaterStatus.FREE;
 
         char row = 'A';
         for (int i = 0; i < 26; i++) {
@@ -26,14 +26,35 @@ public class Theater implements Serializable{
         }
     }
 
+    public Seat.SeatStatus getSeatStatus(int row, int col) {
+        return seats[row-'A'][col].status;
+    }
+
     public void freeSeat(Seat seat) {
         this.seats[seat.rowNr-'A'][seat.colNr].status = Seat.SeatStatus.FREE;
-
+        freeSeats++;
+        status = TheaterStatus.FREE;
     }
 
     public boolean occupySeat(Seat seat) {
         if (this.seats[seat.rowNr-'A'][seat.colNr].status == Seat.SeatStatus.FREE) {
             this.seats[seat.rowNr-'A'][seat.colNr].status = Seat.SeatStatus.OCCUPIED;
+            freeSeats--;
+            if (freeSeats <= 0) {
+                status = TheaterStatus.FULL;
+            }
+            return true;
+        }
+        else return false;
+
+    }
+    public boolean occupySeat(int row, int col) {
+        if (this.seats[row][col].status == Seat.SeatStatus.FREE) {
+            this.seats[row][col].status = Seat.SeatStatus.OCCUPIED;
+            freeSeats--;
+            if (freeSeats <= 0) {
+                status = TheaterStatus.FULL;
+            }
             return true;
         }
         else return false;

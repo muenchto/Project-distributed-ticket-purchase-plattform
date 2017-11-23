@@ -16,8 +16,8 @@ public class AppServer {
 
         Registry registry;
         try {
-            if (args.length > 0) {
-                registry = LocateRegistry.getRegistry(args[0]);
+            if (args.length > 1) {
+                registry = LocateRegistry.createRegistry(5000);
             }
             else {
                 registry = LocateRegistry.getRegistry(5000);
@@ -25,21 +25,21 @@ public class AppServer {
 
             WideBoxImpl widebox;
             String dbServerIP;
-            if (args.length > 0) {
+            if (args.length > 1) {
                 dbServerIP = args[1];
             }
             else {
                 dbServerIP = null;
             }
-            if (Arrays.asList(registry.list()).contains("AppServer1")) {
-                widebox = new WideBoxImpl(dbServerIP);
-                registry.rebind("AppServer2", widebox);
-                System.err.println("AppServer2 ready");
-            }
-            else {
+            if (args[0].equals("1")) {
                 widebox = new WideBoxImpl(dbServerIP);
                 registry.rebind("AppServer1", widebox);
                 System.err.println("AppServer1 ready");
+            }
+            else {
+                widebox = new WideBoxImpl(dbServerIP);
+                registry.rebind("AppServer2", widebox);
+                System.err.println("AppServer2 ready");
             }
 
 

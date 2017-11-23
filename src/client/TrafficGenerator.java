@@ -24,8 +24,8 @@ public class TrafficGenerator {
     volatile int purchased;
     volatile int errors;
 */
-    //requests, purchased, cancelled, errors, average latency
-    static volatile int[] stats = new int[5];
+    //requests, purchased, cancelled, errors, average latency, complete request average latency
+    static volatile int[] stats = new int[6];
 
     public static void main(String[] args) {
 
@@ -52,28 +52,13 @@ public class TrafficGenerator {
             int numThread = ch.getNumThreads();
             long sleepRate = 1000;//going to be updated inside the thread     //rate/1000;
 
-            long startTime = System.currentTimeMillis();
             //ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 
             Result r;
+            long startTime = System.currentTimeMillis();
             final Future<Result> futureR = ex.submit(new Result(wideBoxStub, numTheaters, rate,
-                    sleepRate, duration, stats));
-            /*for (int i = 0; i < numThread; i++) {
-                TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
-                        op,numClients,numTheaters,duration,sleepRate, rate);
-                ex.execute(tgt);
-            }
-            ex.shutdown();
-            try {
-                ex.awaitTermination(duration * 3, TimeUnit.SECONDS);
-            }
-            catch (InterruptedException e){
-
-            }
-            */
-
-
+                    sleepRate, duration, stats, origin, target, op, targetTheater, numClients));
             try {
                 Timer t = new Timer();
                 t.schedule(new TimerTask() {
@@ -85,7 +70,8 @@ public class TrafficGenerator {
                                     "Num of purchases made: " + stats[1] + "\n" +
                                     "Num of cancels made: " + stats[2] + "\n" +
                                     "Num of errors gotten: " + stats[3] + "\n" +
-                                    "Average latenty per request: " + stats[4] + "\n";
+                                    "Average latenty per request: " + stats[4]+ "\n" +
+                                    "Average latency per completed request: "+ stats[5]+"\n";
                             System.out.println(s);
                         }
                     }

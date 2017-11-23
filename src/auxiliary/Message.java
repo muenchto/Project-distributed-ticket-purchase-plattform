@@ -1,10 +1,12 @@
 package auxiliary;
 
+import java.io.Serializable;
+
 /**
  * PSD Project - Phase 1
  * @author group: psd002 ; members: 42560-50586-30360
  */
-public class Message implements MessageIF {
+public class Message implements Serializable{
 
     private MessageType type;
     private Seat[][] theaterSeats = null;
