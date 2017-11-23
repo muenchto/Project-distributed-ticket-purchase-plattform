@@ -20,13 +20,9 @@ import java.util.Arrays;
 public class LoadBalancer {
 
     public static void main(String args[]) throws Exception {
-        try {
-            InetAddress ipAddr = InetAddress.getLocalHost();
-            System.out.println(ipAddr.getHostAddress());
-            System.setProperty("java.rmi.server.hostname", ipAddr.getHostAddress());
-        } catch (java.net.UnknownHostException ex) {
-            ex.printStackTrace();
-        }
+
+        System.setProperty("java.rmi.server.hostname", args[2]);
+
         Registry registry;
         Registry registryAppS1;
         Registry registryAppS2;
