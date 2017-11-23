@@ -22,8 +22,14 @@ public class Result implements Callable {
     private int duration;
     private int[] stats;
     private int rateCounter;
+    private String origin;
+    private String target;
+    private String op;
+    private String targetTheater;
+    private int numClients;
 
-    public Result(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration, int[] stats) {
+    public Result(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration, 
+    		int[] stats, String origin, String target, String op, String targetTheater, int numClients) {
         this.wideBoxStub = wideBoxStub;
         this.numTheaters = numTheaters;
         this.rate = rate;
@@ -31,19 +37,25 @@ public class Result implements Callable {
         this.duration = duration;
         this.stats = stats;
         this.rateCounter = 1;
+        this.origin = origin;
+        this.target = target;
+        this.op = op;
+        this.targetTheater = targetTheater;
+        this.numClients = numClients;
     }
 
     @Override
     public Result call() throws Exception {
         long endTime;
         Random r = new Random();
+        int clientId = 1;
         if (origin.equals("single")) {
             if (target.equals("single")) {
                 if (op.equals("query")) {
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
                         while (this.rateCounter % (this.rate + 1) != 0) {
-                            SSQRequests();
+                            SSQRequest();
                         }
                         if (this.rateCounter == this.rate + 1) {
                             this.rateCounter = 1;
@@ -53,7 +65,7 @@ public class Result implements Callable {
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
                         while (this.rateCounter % (this.rate + 1) != 0) {
-                            SSPRequests();
+                            SSPRequest();
                         }
                         if (this.rateCounter == this.rate + 1) {
                             this.rateCounter = 1;
@@ -86,66 +98,66 @@ public class Result implements Callable {
         } else { //origin = random
             if (target.equals("single")) {
                 if (op.equals("query")) {
-                    while (clientId <= numClients) {
+                    //while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
                             while (this.rateCounter % (this.rate + 1) != 0) {
-                                RSQRequests(clientId);
+                                RSQRequest(clientId);
                             }
                             if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
-                        clientId++;
-                    }
+                        //clientId++;
+                    //}
                 } else { //op = purchase
-                    while (clientId <= numClients) {
+                    //while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
                             while (this.rateCounter % (this.rate + 1) != 0) {
-                                RSPRequests(clientId);
+                                RSPRequest(clientId);
                             }
                             if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
-                        clientId++;
-                    }
+                        //clientId++;
+                    //}
                 }
             } else { //target = random
                 if (op.equals("query")) {
-                    while (clientId <= numClients) {
+                    //while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
                             while (this.rateCounter % (this.rate + 1) != 0) {
-                                RRQRequests(clientId, r);
+                                RRQRequest(r, clientId);
                             }
                             if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
-                        clientId++;
-                    }
+                        //clientId++;
+                    //}
                 } else { //op = purchase
-                    while (clientId <= numClients) {
+                    //while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() <= endTime) {
                             while (this.rateCounter % (this.rate + 1) != 0) {
-                                RRPRequests(clientId, r);
+                                RRPRequest(clientId, r);
                             }
                             if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
-                        clientId++;
-                    }
+                        //clientId++;
+                    //}
                 }
             }
         }
         return this;
     }
 
-    public void SSQRequests(){
+    public void SSQRequest(){
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -205,7 +217,7 @@ public class Result implements Callable {
         }
     }
 
-    public void SSPRequests(){
+    public void SSPRequest(){
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -266,7 +278,7 @@ public class Result implements Callable {
 
     }
 
-    public void SRQRequests(){
+    public void SRQRequest(Random r){
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -326,7 +338,7 @@ public class Result implements Callable {
         }
     }
 
-    public void SRPRequests(Random r){
+    public void SRPRequest(Random r){
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -387,7 +399,7 @@ public class Result implements Callable {
         }
     }
 
-    public void RSQRequests(){ 
+    public void RSQRequest(int clientId){ 
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -447,7 +459,7 @@ public class Result implements Callable {
         }
     }
 
-    public void RSPRequests(){
+    public void RSPRequest(int clientId){
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -507,7 +519,7 @@ public class Result implements Callable {
         }
     }
 
-    public void RRQRequests(){
+    public void RRQRequest(Random r, int clientId){
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -567,7 +579,7 @@ public class Result implements Callable {
         }
     }
 
-    public void RRPRequests(){
+    public void RRPRequest(int clientId, Random r){
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
