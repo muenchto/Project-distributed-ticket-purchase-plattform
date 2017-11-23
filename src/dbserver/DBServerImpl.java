@@ -35,7 +35,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		theaters = new ConcurrentHashMap<String, Theater>();
 		for (int i = 0; i < num_theaters; i++) {
 			theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
-			System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
+			//System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
 		}
 		
 /*
