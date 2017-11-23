@@ -269,7 +269,7 @@ public class Storage {
 				row=(scLog.next()).charAt(0);
 				col=scLog.nextInt();
 				scLog.skip("\n");	
-				theatersTemp.get(theaterName).occupySeat(row-'A', col);
+				//theatersTemp.get(theaterName).occupySeat(row-'A', col);
 			}
 			log.delete();
 			System.out.println("STORAGE: Log file processed and deleted");
