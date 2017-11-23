@@ -59,21 +59,6 @@ public class TrafficGenerator {
             long startTime = System.currentTimeMillis();
             final Future<Result> futureR = ex.submit(new Result(wideBoxStub, numTheaters, rate,
                     sleepRate, duration, stats, origin, target, op, targetTheater, numClients));
-            /*for (int i = 0; i < numThread; i++) {
-                TrafficGenThread tgt = new TrafficGenThread(wideBoxStub,targetTheater,origin,target,
-                        op,numClients,numTheaters,duration,sleepRate, rate);
-                ex.execute(tgt);
-            }
-            ex.shutdown();
-            try {
-                ex.awaitTermination(duration * 3, TimeUnit.SECONDS);
-            }
-            catch (InterruptedException e){
-
-            }
-            */
-
-
             try {
                 Timer t = new Timer();
                 t.schedule(new TimerTask() {

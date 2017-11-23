@@ -44,6 +44,8 @@ public class Result implements Callable {
         this.op = op;
         this.targetTheater = targetTheater;
         this.numClients = numClients;
+        
+        //this.latencyCounter = 1;
     }
 
     @Override
@@ -664,7 +666,7 @@ public class Result implements Callable {
     }
     
     private void addToCompleteRequestLatency(long diff) {
-        this.stats[4] = Math.toIntExact(this.stats[5] + ((diff - this.stats[5]) / this.completeRequestLatencyCounter));
+        this.stats[5] = Math.toIntExact(this.stats[5] + ((diff - this.stats[5]) / this.completeRequestLatencyCounter));
     }
 
     @Override
