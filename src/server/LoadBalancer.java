@@ -4,6 +4,7 @@ import auxiliary.Message;
 import auxiliary.Seat;
 import auxiliary.WideBoxIF;
 
+import java.net.InetAddress;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -19,7 +20,13 @@ import java.util.Arrays;
 public class LoadBalancer {
 
     public static void main(String args[]) throws Exception {
-
+        try {
+            InetAddress ipAddr = InetAddress.getLocalHost();
+            System.out.println(ipAddr.getHostAddress());
+            System.setProperty("java.rmi.server.hostname", ipAddr.getHostAddress());
+        } catch (java.net.UnknownHostException ex) {
+            ex.printStackTrace();
+        }
         Registry registry;
         Registry registryAppS1;
         Registry registryAppS2;

@@ -1,6 +1,7 @@
 package dbserver;
 
 
+import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -15,7 +16,13 @@ public class DBServer {
     	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) future use
     	int mode = 0;
         int num_theaters = 1500;
-
+        try {
+            InetAddress ipAddr = InetAddress.getLocalHost();
+            System.out.println(ipAddr.getHostAddress());
+            System.setProperty("java.rmi.server.hostname", ipAddr.getHostAddress());
+        } catch (java.net.UnknownHostException ex) {
+            ex.printStackTrace();
+        }
         Registry registry;
         try {
             // Bind the remote object's stub in the registry

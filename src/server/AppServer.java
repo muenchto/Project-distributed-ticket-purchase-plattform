@@ -1,5 +1,6 @@
 package server;
 
+import java.net.InetAddress;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Arrays;
@@ -12,7 +13,13 @@ import java.util.Arrays;
 public class AppServer {
 
     public static void main(String args[]) throws Exception {
-
+        try {
+            InetAddress ipAddr = InetAddress.getLocalHost();
+            System.out.println(ipAddr.getHostAddress());
+            System.setProperty("java.rmi.server.hostname", ipAddr.getHostAddress());
+        } catch (java.net.UnknownHostException ex) {
+            ex.printStackTrace();
+        }
 
         Registry registry;
         try {
