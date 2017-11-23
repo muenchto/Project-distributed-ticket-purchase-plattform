@@ -52,11 +52,11 @@ public class TrafficGenerator {
             int numThread = ch.getNumThreads();
             long sleepRate = 1000;//going to be updated inside the thread     //rate/1000;
 
-            long startTime = System.currentTimeMillis();
             //ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 
             Result r;
+            long startTime = System.currentTimeMillis();
             final Future<Result> futureR = ex.submit(new Result(wideBoxStub, numTheaters, rate,
                     sleepRate, duration, stats));
             /*for (int i = 0; i < numThread; i++) {
