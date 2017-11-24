@@ -68,6 +68,9 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	@Override
 	public synchronized Theater getTheater(String theaterName) throws RemoteException{
+		if(!theaters.contains(theaterName))
+			System.out.println("DBServer cannot find theater "+theaterName+
+					".This DBServer is only responsible for "+firstTheater+" to "+lastTheater+" theaters");
 		return theaters.get(theaterName);
 	}
 
