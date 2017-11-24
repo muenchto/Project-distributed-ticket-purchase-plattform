@@ -14,7 +14,7 @@ public class AppServer {
 
     public static void main(String args[]) throws Exception {
 
-        System.setProperty("java.rmi.server.hostname", args[1]);
+        System.setProperty("java.rmi.server.hostname", args[2]);
 
 
         Registry registry;

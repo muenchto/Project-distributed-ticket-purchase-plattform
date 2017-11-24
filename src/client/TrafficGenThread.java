@@ -3,64 +3,68 @@ package client;
 import auxiliary.Message;
 import auxiliary.MessageType;
 import auxiliary.WideBoxIF;
+import server.WideBoxImpl;
 
 import java.rmi.RemoteException;
 import java.util.Random;
-import java.util.concurrent.Callable;
 
 /**
- * PSD Project
- * 
+ * PSD Project - Phase 1
+ *
  * @author group: psd002 ; members: 42560-50586-30360
  */
-public class Result implements Callable {
-	
-    private long latencyCounter;
-    private long completeRequestLatencyCounter;
+public class TrafficGenThread extends Thread {
+
+    //performance
+    private int requests;
+    private int averageLatency;
+    private int cancelled;
+    private int purchased;
+    private int errors;
+    private int latencyCounter;
+
     private WideBoxIF wideBoxStub;
-    private int numTheaters;
-    private int rate;
-    private long sleepRate;
-    private int duration;
-    private int[] stats;
-    private int rateCounter;
+    private String targetTheater;
     private String origin;
     private String target;
     private String op;
-    private String targetTheater;
     private int numClients;
-    private int aux;
+    private int numTheaters;
+    private int duration;
+    private long sleepRate;
+    private int rate;
+    private int rateCounter;
 
-    public Result(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration, 
-    		int[] stats, String origin, String target, String op, String targetTheater, int numClients) {
-        this.wideBoxStub = wideBoxStub;
-        this.numTheaters = numTheaters;
-        this.rate = rate;
-        this.sleepRate = sleepRate;
-        this.duration = duration;
-        this.stats = stats;
-        this.rateCounter = 1;
+    public TrafficGenThread(WideBoxIF widebox, String targettheater, String origin,
+                            String target, String op, int numClients, int numTheaters
+            , int duration, long sleepRate, int rate) {
+        this.wideBoxStub = widebox;
+        this.targetTheater = targettheater;
         this.origin = origin;
         this.target = target;
         this.op = op;
-        this.targetTheater = targetTheater;
         this.numClients = numClients;
-        
-        //this.latencyCounter = 1;
+        this.numTheaters = numTheaters;
+        this.duration = duration;
+        this.sleepRate = sleepRate;
+        this.rate = rate;
+        this.rateCounter = 1;
     }
 
     @Override
-    public Result call() throws Exception {
-        long endTime;
+    public void run() {
         Random r = new Random();
+        long endTime;
         int clientId = 1;
+
         if (origin.equals("single")) {
             if (target.equals("single")) {
                 if (op.equals("query")) {
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
                         while (this.rateCounter % (this.rate + 1) != 0) {
-                            SSQRequest();
+                            SSQRequests();
+                            System.out.println(this.requests / 3);
                         }
                         if (this.rateCounter == this.rate + 1) {
                             this.rateCounter = 1;
@@ -70,7 +74,8 @@ public class Result implements Callable {
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
                         while (this.rateCounter % (this.rate + 1) != 0) {
-                            SSPRequest();
+                            SSPRequests();
+                            System.out.println(this.requests / 3);
                         }
                         if (this.rateCounter == this.rate + 1) {
                             this.rateCounter = 1;
@@ -83,16 +88,19 @@ public class Result implements Callable {
                     while (System.currentTimeMillis() < endTime) {
                         while (this.rateCounter % (this.rate + 1) != 0) {
                             SRQRequest(r);
+                            System.out.println(this.requests / 3);
                         }
                         if (this.rateCounter == this.rate + 1) {
                             this.rateCounter = 1;
                         }
                     }
                 } else { //op = purchase
+                    this.cancelled = 0;
                     endTime = System.currentTimeMillis() + duration;
                     while (System.currentTimeMillis() < endTime) {
                         while (this.rateCounter % (this.rate + 1) != 0) {
                             SRPRequest(r);
+                            //System.out.println(this.requests / 3);
                         }
                         if (this.rateCounter == this.rate + 1) {
                             this.rateCounter = 1;
@@ -103,72 +111,76 @@ public class Result implements Callable {
         } else { //origin = random
             if (target.equals("single")) {
                 if (op.equals("query")) {
-                    //while (clientId <= numClients) {
+                    while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
                             while (this.rateCounter % (this.rate + 1) != 0) {
-                                RSQRequest(clientId);
+                               RSQRequests(clientId);
+                                System.out.println(this.requests / 3);
                             }
                             if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
-                        //clientId++;
-                    //}
+                        clientId++;
+                    }
                 } else { //op = purchase
-                    //while (clientId <= numClients) {
+                    while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
                             while (this.rateCounter % (this.rate + 1) != 0) {
-                                RSPRequest(clientId);
+                                RSPRequests(clientId);
+                                System.out.println(this.requests / 3);
                             }
                             if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
-                        //clientId++;
-                    //}
+                        clientId++;
+                    }
                 }
             } else { //target = random
                 if (op.equals("query")) {
-                    //while (clientId <= numClients) {
+                    while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() < endTime) {
                             while (this.rateCounter % (this.rate + 1) != 0) {
-                                RRQRequest(r, clientId);
+                                RRQRequests(clientId, r);
+                                System.out.println(this.requests / 3);
                             }
                             if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
-                        //clientId++;
-                    //}
+                        clientId++;
+                    }
                 } else { //op = purchase
-                    //while (clientId <= numClients) {
+                    while (clientId <= numClients) {
                         endTime = System.currentTimeMillis() + duration;
                         while (System.currentTimeMillis() <= endTime) {
                             while (this.rateCounter % (this.rate + 1) != 0) {
-                                RRPRequest(clientId, r);
+                                RRPRequests(clientId, r);
+                                System.out.println(this.requests / 3);
                             }
                             if (this.rateCounter == this.rate + 1) {
                                 this.rateCounter = 1;
                             }
                         }
-                        //clientId++;
-                    //}
+                        clientId++;
+                    }
                 }
             }
         }
-        this.stats[4] = aux;
-        return this;
+        System.out.println(this.requests/3);
     }
 
-    public void SSQRequest(){
+    private void RRPRequests(int clientId, Random r) {
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
+        int aux = r.nextInt(this.numTheaters);
         try {
             latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
@@ -176,33 +188,30 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             latencyBeg = System.currentTimeMillis();
-            Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
+            Message m = wideBoxStub.query(theaters[aux]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
-                wideBoxStub.cancel(theaters[Integer.parseInt(targetTheater)],
-                        m.getClientsSeat(), m.getClientID());
+                wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                this.completeRequestLatencyCounter++;
-                addToCompleteRequestLatency(mainRequestLatency);
-                addToAverageLatency(latencydif);
-                this.stats[0]++;
-                this.stats[2]++;
+                addToLatency(latencydif);
+                this.requests++;
+                this.purchased++;
             } else {
-                this.stats[3]++;
+                this.errors++;
             }
 
             if (mainRequestLatency <= this.sleepRate) {
@@ -218,14 +227,75 @@ public class Result implements Callable {
             this.rateCounter++;
 
         } catch (RemoteException e) {
-            this.stats[3]++;
+            this.errors++;
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void SSPRequest(){
+    private void RRQRequests(int clientId, Random r) {
+        String[] theaters;
+        long latencyBeg;
+        long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
+        int aux = r.nextInt(this.numTheaters);
+        try {
+            latencyBeg = System.currentTimeMillis();
+            theaters = wideBoxStub.getNames();
+            latencyEnd = System.currentTimeMillis();
+            this.latencyCounter++;
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
+            this.requests++;
+
+            latencyBeg = System.currentTimeMillis();
+            Message m = wideBoxStub.query(theaters[aux]);
+            latencyEnd = System.currentTimeMillis();
+            this.latencyCounter++;
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
+            this.requests++;
+
+            if (m.getType() == MessageType.AVAILABLE) {
+                latencyBeg = System.currentTimeMillis();
+                wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
+                latencyEnd = System.currentTimeMillis();
+                this.latencyCounter++;
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
+                this.requests++;
+                this.cancelled++;
+            } else {
+                this.errors++;
+            }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
+        } catch (RemoteException e) {
+            this.errors++;
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    //does the same has SSPRequests........
+    private void RSPRequests(int clientId) {
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -238,8 +308,8 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
@@ -247,8 +317,8 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
@@ -258,13 +328,11 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                this.completeRequestLatencyCounter++;
-                addToCompleteRequestLatency(mainRequestLatency);
-                addToAverageLatency(latencydif);
-                this.stats[0]++;
-                this.stats[1]++;
+                addToLatency(latencydif);
+                this.requests++;
+                this.purchased++;
             } else {
-                this.stats[3]++;
+                this.errors++;
             }
 
             if (mainRequestLatency <= this.sleepRate) {
@@ -280,140 +348,15 @@ public class Result implements Callable {
             this.rateCounter++;
 
         } catch (RemoteException e) {
-            this.stats[3]++;
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void SRQRequest(Random r){
-        String[] theaters;
-        long latencyBeg;
-        long latencyEnd;
-        long mainRequestLatency = 0;
-        long latencydif;
-        int aux = r.nextInt(this.numTheaters);
-        try {
-            latencyBeg = System.currentTimeMillis();
-            theaters = wideBoxStub.getNames();
-            latencyEnd = System.currentTimeMillis();
-            this.latencyCounter++;
-            latencydif = latencyEnd - latencyBeg;
-            mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
-
-            latencyBeg = System.currentTimeMillis();
-            Message m = wideBoxStub.query(theaters[aux]);
-            latencyEnd = System.currentTimeMillis();
-            this.latencyCounter++;
-            latencydif = latencyEnd - latencyBeg;
-            mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
-
-            if (m.getType() == MessageType.AVAILABLE) {
-                latencyBeg = System.currentTimeMillis();
-                wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
-                latencyEnd = System.currentTimeMillis();
-                this.latencyCounter++;
-                latencydif = latencyEnd - latencyBeg;
-                mainRequestLatency += latencydif;
-                this.completeRequestLatencyCounter++;
-                addToCompleteRequestLatency(mainRequestLatency);
-                addToAverageLatency(latencydif);
-                this.stats[0]++;
-                this.stats[2]++;
-            } else {
-                this.stats[3]++;
-            }
-
-            if (mainRequestLatency <= this.sleepRate) {
-                this.sleepRate -= mainRequestLatency;
-            }
-
-            if (this.rateCounter == this.rate) {
-                if (this.sleepRate > 0) {
-                    Thread.sleep(this.sleepRate);
-                }
-                this.sleepRate = 1000;
-            }
-            this.rateCounter++;
-
-        } catch (RemoteException e) {
-            this.stats[3]++;
+            this.errors++;
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void SRPRequest(Random r){
-        String[] theaters;
-        long latencyBeg;
-        long latencyEnd;
-        long mainRequestLatency = 0;
-        long latencydif;
-        int aux = r.nextInt(this.numTheaters);
-        try {
-            latencyBeg = System.currentTimeMillis();
-            theaters = wideBoxStub.getNames();
-            latencyEnd = System.currentTimeMillis();
-            this.latencyCounter++;
-            latencydif = latencyEnd - latencyBeg;
-            mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
-
-            latencyBeg = System.currentTimeMillis();
-            Message m = wideBoxStub.query(theaters[aux]);
-            latencyEnd = System.currentTimeMillis();
-            this.latencyCounter++;
-            latencydif = latencyEnd - latencyBeg;
-            mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
-
-
-            if (m.getType() == MessageType.AVAILABLE) {
-                latencyBeg = System.currentTimeMillis();
-                wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
-                latencyEnd = System.currentTimeMillis();
-                this.latencyCounter++;
-                latencydif = latencyEnd - latencyBeg;
-                mainRequestLatency += latencydif;
-                this.completeRequestLatencyCounter++;
-                addToCompleteRequestLatency(mainRequestLatency);
-                addToAverageLatency(latencydif);
-                this.stats[0]++;
-                this.stats[1]++;
-            } else {
-                this.stats[3]++;
-            }
-
-            if (mainRequestLatency <= this.sleepRate) {
-                this.sleepRate -= mainRequestLatency;
-            }
-
-            if (this.rateCounter == this.rate) {
-                if (this.sleepRate > 0) {
-                    Thread.sleep(this.sleepRate);
-                }
-                this.sleepRate = 1000;
-            }
-            this.rateCounter++;
-
-        } catch (RemoteException e) {
-            this.stats[3]++;
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void RSQRequest(int clientId){ 
+    //does the same as SSQRequests.......... :/
+    private void RSQRequests(int clientId) {
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -426,8 +369,8 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
@@ -435,8 +378,8 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
@@ -446,13 +389,11 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                this.completeRequestLatencyCounter++;
-                addToCompleteRequestLatency(mainRequestLatency);
-                addToAverageLatency(latencydif);
-                this.stats[0]++;
-                this.stats[2]++;
+                addToLatency(latencydif);
+                this.requests++;
+                this.cancelled++;
             } else {
-                this.stats[3]++;
+                this.errors++;
             }
 
             if (mainRequestLatency <= this.sleepRate) {
@@ -468,14 +409,135 @@ public class Result implements Callable {
             this.rateCounter++;
 
         } catch (RemoteException e) {
-            this.stats[3]++;
+            this.errors++;
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void RSPRequest(int clientId){
+    private void SRPRequest(Random r) {
+        String[] theaters;
+        long latencyBeg;
+        long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
+        int aux = r.nextInt(this.numTheaters);
+        try {
+            latencyBeg = System.currentTimeMillis();
+            theaters = wideBoxStub.getNames();
+            latencyEnd = System.currentTimeMillis();
+            this.latencyCounter++;
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
+            this.requests++;
+
+            latencyBeg = System.currentTimeMillis();
+            Message m = wideBoxStub.query(theaters[aux]);
+            latencyEnd = System.currentTimeMillis();
+            this.latencyCounter++;
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
+            this.requests++;
+
+            if (m.getType() == MessageType.AVAILABLE) {
+                latencyBeg = System.currentTimeMillis();
+                wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
+                latencyEnd = System.currentTimeMillis();
+                this.latencyCounter++;
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
+                this.requests++;
+                this.purchased++;
+            } else {
+                this.errors++;
+            }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    //System.out.println("sleeping for "+sleepRate);
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
+        } catch (RemoteException e) {
+            this.errors++;
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void SRQRequest(Random r) {
+        String[] theaters;
+        long latencyBeg;
+        long latencyEnd;
+        long mainRequestLatency = 0;
+        long latencydif;
+        int aux = r.nextInt(this.numTheaters);
+        try {
+            latencyBeg = System.currentTimeMillis();
+            theaters = wideBoxStub.getNames();
+            latencyEnd = System.currentTimeMillis();
+            this.latencyCounter++;
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
+            this.requests++;
+
+            latencyBeg = System.currentTimeMillis();
+            Message m = wideBoxStub.query(theaters[aux]);
+            latencyEnd = System.currentTimeMillis();
+            this.latencyCounter++;
+            latencydif = latencyEnd - latencyBeg;
+            mainRequestLatency += latencydif;
+            addToLatency(latencydif);
+            this.requests++;
+
+            if (m.getType() == MessageType.AVAILABLE) {
+                latencyBeg = System.currentTimeMillis();
+                wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
+                latencyEnd = System.currentTimeMillis();
+                this.latencyCounter++;
+                latencydif = latencyEnd - latencyBeg;
+                mainRequestLatency += latencydif;
+                addToLatency(latencydif);
+                this.requests++;
+                this.cancelled++;
+            } else {
+                this.errors++;
+            }
+
+            if (mainRequestLatency <= this.sleepRate) {
+                this.sleepRate -= mainRequestLatency;
+            }
+
+            if (this.rateCounter == this.rate) {
+                if (this.sleepRate > 0) {
+                    Thread.sleep(this.sleepRate);
+                }
+                this.sleepRate = 1000;
+            }
+            this.rateCounter++;
+
+        } catch (RemoteException e) {
+            this.errors++;
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void SSPRequests() {
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
@@ -488,8 +550,8 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
@@ -497,8 +559,8 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
@@ -508,13 +570,11 @@ public class Result implements Callable {
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                this.completeRequestLatencyCounter++;
-                addToCompleteRequestLatency(mainRequestLatency);
-                addToAverageLatency(latencydif);
-                this.stats[0]++;
-                this.stats[1]++;
+                addToLatency(latencydif);
+                this.requests++;
+                this.purchased++;
             } else {
-                this.stats[3]++;
+                this.errors++;
             }
 
             if (mainRequestLatency <= this.sleepRate) {
@@ -530,20 +590,19 @@ public class Result implements Callable {
             this.rateCounter++;
 
         } catch (RemoteException e) {
-            this.stats[3]++;
+            this.errors++;
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void RRQRequest(Random r, int clientId){
+    private void SSQRequests() {
         String[] theaters;
         long latencyBeg;
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
-        int aux = r.nextInt(this.numTheaters);
         try {
             latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
@@ -551,32 +610,31 @@ public class Result implements Callable {
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             latencyBeg = System.currentTimeMillis();
-            Message m = wideBoxStub.query(theaters[aux]);
+            Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
+            addToLatency(latencydif);
+            this.requests++;
 
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
-                wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
+                wideBoxStub.cancel(theaters[Integer.parseInt(targetTheater)],
+                        m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
                 mainRequestLatency += latencydif;
-                this.completeRequestLatencyCounter++;
-                addToCompleteRequestLatency(mainRequestLatency);
-                addToAverageLatency(latencydif);
-                this.stats[0]++;
-                this.stats[2]++;
+                addToLatency(latencydif);
+                this.requests++;
+                this.cancelled++;
             } else {
-                this.stats[3]++;
+                this.errors++;
             }
 
             if (mainRequestLatency <= this.sleepRate) {
@@ -592,95 +650,24 @@ public class Result implements Callable {
             this.rateCounter++;
 
         } catch (RemoteException e) {
-            this.stats[3]++;
+            this.errors++;
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void RRPRequest(int clientId, Random r){
-        String[] theaters;
-        long latencyBeg;
-        long latencyEnd;
-        long mainRequestLatency = 0;
-        long latencydif;
-        int aux = r.nextInt(this.numTheaters);
-        try {
-            latencyBeg = System.currentTimeMillis();
-            theaters = wideBoxStub.getNames();
-            latencyEnd = System.currentTimeMillis();
-            this.latencyCounter++;
-            latencydif = latencyEnd - latencyBeg;
-            mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
-
-            latencyBeg = System.currentTimeMillis();
-            Message m = wideBoxStub.query(theaters[aux]);
-            latencyEnd = System.currentTimeMillis();
-            this.latencyCounter++;
-            latencydif = latencyEnd - latencyBeg;
-            mainRequestLatency += latencydif;
-            addToAverageLatency(latencydif);
-            this.stats[0]++;
-
-            if (m.getType() == MessageType.AVAILABLE) {
-                latencyBeg = System.currentTimeMillis();
-                wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
-                latencyEnd = System.currentTimeMillis();
-                this.latencyCounter++;
-                latencydif = latencyEnd - latencyBeg;
-                mainRequestLatency += latencydif;
-                this.completeRequestLatencyCounter++;
-                addToCompleteRequestLatency(mainRequestLatency);
-                addToAverageLatency(latencydif);
-                this.stats[0]++;
-                this.stats[1]++;
-            } else {
-                this.stats[3]++;
-            }
-
-            if (mainRequestLatency <= this.sleepRate) {
-                this.sleepRate -= mainRequestLatency;
-            }
-
-            if (this.rateCounter == this.rate) {
-                if (this.sleepRate > 0) {
-                    Thread.sleep(this.sleepRate);
-                }
-                this.sleepRate = 1000;
-            }
-            this.rateCounter++;
-
-        } catch (RemoteException e) {
-            this.stats[3]++;
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    private void addToLatency(long diff) {
+        this.averageLatency = Math.toIntExact(this.averageLatency + ((diff - this.averageLatency) / this.latencyCounter));
     }
 
 
-
-    private void addToAverageLatency(long diff) {
-    	System.out.print(diff+" ");
-        //this.stats[4] = Math.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.latencyCounter));
-    	aux = Math.toIntExact(aux + ((diff - aux) / this.latencyCounter));
-    }
-    
-    private void addToCompleteRequestLatency(long diff) {
-        this.stats[5] = Math.toIntExact(this.stats[5] + ((diff - this.stats[5]) / this.completeRequestLatencyCounter));
+    public int getRequests() {
+        return requests;
     }
 
-    @Override
-    public String toString() {
-        return "Num of requests made: " + this.stats[0] + "\n" +
-            "Num of completed requests: " + this.stats[0] / 3 + "\n" +
-            "Num of purchases made: " + this.stats[1] + "\n" +
-            "Num of cancels made: " + this.stats[2] + "\n" +
-            "Num of errors gotten: " + this.stats[3] + "\n" +
-            "Average latenty per request: " + this.stats[4]+ "\n" +
-            "Average latency per completed request: "+ this.stats[5]+"\n";
+    public long getLatency() {
+        return averageLatency;
     }
+
 }

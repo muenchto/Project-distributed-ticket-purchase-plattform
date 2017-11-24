@@ -72,7 +72,7 @@ public class TrafficGenerator {
                                     "Num of errors gotten: " + stats[3] + "\n" +
                                     "Average latenty per request: " + stats[4]+ "\n" +
                                     "Average latency per completed request: "+ stats[5]+"\n";
-                            System.out.println(s);
+                            //System.out.println(s);
                         }
                     }
                 }, 0, 1000);
