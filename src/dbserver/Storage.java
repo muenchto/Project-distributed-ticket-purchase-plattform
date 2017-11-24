@@ -11,13 +11,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-
 import auxiliary.Seat;
 import auxiliary.Theater;
-import auxiliary.Seat.SeatStatus;
 
 public class Storage {
-	
+
 	public static FileInputStream dbfis = null;
 	public static FileInputStream logfis = null;
 	public static FileDescriptor dbfd = null;
@@ -38,8 +36,6 @@ public class Storage {
 	//private boolean existDBFile=false; //flag to inform DBServer that exist or not a existant DBFile
 	private static ConcurrentHashMap<String, Theater> theatersTemp = null ;
 
-
-	
 	public Storage(String dbInputFile, String logInputFile, int firstTheater, int lastTheater, int mode) throws IOException{
 		//Storage.num_theathers=num_theathers;
 		db = new File (dbInputFile);
@@ -47,10 +43,8 @@ public class Storage {
 		this.firstTheater=firstTheater;
 		this.lastTheater=lastTheater;
 		this.mode = mode;
-	
 	}
-	
-	
+
 	public synchronized void buySeat(String theaterName, Seat theaterSeat) {
 		try {
 			logfos =new FileOutputStream(log,true);
@@ -73,7 +67,6 @@ public class Storage {
 			//e.printStackTrace();
 		}
 	}
-	
 
 	public boolean existentDBfile() {
 		return db.exists();
@@ -84,7 +77,7 @@ public class Storage {
 	}
 
 	//write the all hashmap to DBFILENAME
-	 public synchronized boolean saveToFile (ConcurrentHashMap<String, Theater> theaters) throws IOException {
+	public synchronized boolean saveToFile (ConcurrentHashMap<String, Theater> theaters) throws IOException {
 		// Instant is for perfomance metrics (mesures the time it takes to dump the memory to file)
 		Instant Start=null;
 		Instant End=null;
@@ -94,49 +87,10 @@ public class Storage {
 		dbfos = new FileOutputStream(db); //this command is deleting the file FIX
 		dbfosw = new OutputStreamWriter (dbfos);
 		dbfd = dbfos.getFD();
-		
 		// create a set with the keys(theaters)
-		//it's appearing without order
-		//KeySetView<String, Theater> keys = theaters.keySet();
-		//System.out.println(keys.toString());
 		System.out.print("STORAGE: Starting dumpping DB to file....");
-
-		/*for (int t=0;t<num_theathers;t++) {
-			for (int i=0;i<26;i++){
-				for(int j = 0; j < 40; j++) {
-					try {				
-						//Storing with teather as a int value, and the seat as a int value
-						dbfosw.write(t+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
-						//dbfosw.write(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
-						
-						//Stores seat with a int value and theaters string value
-						//System.out.println(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
-						
-						//Stores seats with the string value and theaters string value
-						//System.out.println(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+theaters.get("TheaterNr"+t).seats[i][j].status+DELIMITER);
-					}
-
-					catch (IOException e) {
-						System.err.println("DBSERVERImpl - ERROR WRITING TO FILE");
-						e.printStackTrace();
-						return false;
-					}//end catch
-
-				}
-			}
-			if(t%20==0)
-				System.out.print(".");
-		}*/
-		//int t=0;
 		for (Theater theater: theaters.values()) {
 			dbfosw.write(theater.createStringForDB());
-			//System.out.print(theater.createStringForDB()+"\n");
-			/*
-			 if(t%20==0)
-			
-				System.out.print(".");
-			t++;
-			*/
 		}
 		System.out.println("END");
 		if (mode>=2) dbfd.sync();
@@ -149,7 +103,7 @@ public class Storage {
 		System.out.println("STORAGE: Log file cleaned");
 		return true;
 	}
-	
+
 
 	public ConcurrentHashMap<String, Theater> loadDBfile() {
 		theatersTemp = new ConcurrentHashMap<String, Theater> ();
@@ -159,7 +113,6 @@ public class Storage {
 		try {
 			Scanner sc = new Scanner(db).useDelimiter("");
 			String  theaterName;
-			
 			for (int t=firstTheater; t<lastTheater;t++) {
 				theaterName = sc.nextLine();
 				//System.out.println("reading theater -> "+ theaterName);
@@ -182,27 +135,20 @@ public class Storage {
 			System.err.println("STORAGE: File not found");
 			return null;
 		}//end catch
-
 		End=Instant.now(); 
 		System.out.println("File loaded in "+Duration.between(Start,End).getSeconds()+" seconds");
-		
 		//if a log file exists, then process log file
 		if(existentLOGfile())
 			return processLog(theatersTemp);
 		else
 			return new ConcurrentHashMap<String, Theater>(theatersTemp);
-		
 	}
-
-	
-
 
 	private ConcurrentHashMap<String, Theater> processLog(ConcurrentHashMap<String, Theater> theatersTemp) {
 		String  theaterName = null;
 		char row = 0;
 		int col = 0;
 		int op = 0;
-		
 		try {
 			Scanner scLog = new Scanner(log).useDelimiter(LOGDELIMITER);
 			while(scLog.hasNext()) {
@@ -219,7 +165,6 @@ public class Storage {
 			System.err.println("File "+log.getName()+" dont exist");
 			e.printStackTrace();
 		}
-		
 		return new ConcurrentHashMap<String, Theater>(theatersTemp);
 	}
 

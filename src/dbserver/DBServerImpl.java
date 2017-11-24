@@ -5,14 +5,10 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-
-
 import auxiliary.*;
 import auxiliary.Seat.SeatStatus;
 
 public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
-	
 	private static final long serialVersionUID = -7370182827432554702L;
 	public static ConcurrentHashMap<String, Theater> theaters ;
 	public static ConcurrentHashMap<String, Theater> theatersBackup;
@@ -28,34 +24,26 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	private int firstTheater;
 	private int lastTheater;
 	private int opCount=0;
-	
+	final static int MAXOPERATIONS=100; //limit operations to create snapshot
 	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) future use
 	public int mode;
-
 	private int errors;
-	//public Storage storageFile = new Storage ("dbfileBack.txt","dblogfileBack.txt"); //FUTURE USE
-	
+
+
 	public DBServerImpl(int writingMode, int firstTheater, int lastTheater ) throws IOException{
 		mode=writingMode;
-		storageFile = new Storage (DBFILENAME, LOGFILENAME, firstTheater, lastTheater, mode);
+		storageFile = new Storage (DBFILENAME, LOGFILENAME, firstTheater, lastTheater, writingMode);
 		this.firstTheater=firstTheater;
 		this.lastTheater=lastTheater;
-		//storageFile = new Storage (DBFILENAMEBACKUP,LOGFILENAMEBACKUP, 1500, 2);
+
 
 		//if there is a db file, load the file to memory hashmap 
 		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
-
-		
-/*
-		storageFile = new Storage ("dbfile.txt","dblogfile.txt", num_theaters, mode);
-		//if there isn't an existant storage file, create clean theaters hashmap and make first dump to create a new file
->>>>>>> branch 'master' of https://hamieira@bitbucket.org/simplept/psd.git
 		if (storageFile.existentDBfile()) {
 			System.out.println("DB file present, loading DB");
 			//Creation of the theaters hashmap
 			theaters = storageFile.loadDBfile();
 		}
-		
 		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
 		else {
 			//Creation of the theaters hashmap
@@ -67,61 +55,15 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			}
 			//dump newly createad hashmap to file
 			storageFile.saveToFile(theaters);
-			
 		}
-		
-		
-		//not used yet
-		//theatersBackup = new ConcurrentHashMap<String, Theater>(); 
 	}
 
-
-
-	//TESTING PROPOSES DELETE BEFORE EACH DELIVERIES
-	/*
-	public static void main(String[] args) throws IOException {
-		DBServerImpl db = new DBServerImpl(1500, 0);
-	
-		storageFile = new Storage (DBFILENAME,LOGFILENAME, 1500, 2);
-		storageFile.saveToFile(theaters);
-		//storageFile.loadDBfile();
-		System.out.println("\n\n\n");
-		db.occupySeat("TheaterNr1",new Seat(Seat.SeatStatus.OCCUPIED,'A',1));
-		db.occupySeat("TheaterNr2",new Seat(Seat.SeatStatus.OCCUPIED,'B',2));
-		db.occupySeat("TheaterNr3",new Seat(Seat.SeatStatus.OCCUPIED,'C',3));
-		db.occupySeat("TheaterNr4",new Seat(Seat.SeatStatus.OCCUPIED,'D',4));
-		//storageFile.saveToFile(theaters);
-
-		//String teste[] = db.getTheaterNames();
-		//for (int i=0;i<theaters.size();i++)
-		//	System.out.print(teste[i]+";");
-		//System.out.println("testing write file");
-
-		//db.writeToFile();
-		//System.out.println("done");
-		//System.exit(0);
-
-	}
-
-	 */
-	}
-	
-	
-	
 	// RMI FUNCTIONS **********************************************************
 	@Override
 	public synchronized String[] getTheaterNames() throws RemoteException{
-		//System.out.println("getTheaterNames");
-		/* just in case a ordered array is needed
-			String names[] = null;
-			for (int i=0;i<theaters.size();i++)
-				names[i]=theaters.get("TheaterNr"+i).theaterName;
-			return names;
-		*/
 		Set<String> keys = theaters.keySet();
 		String[] names = (String[]) keys.toArray(new String[keys.size()]);
-		return names;
-		
+		return names;	
 	}
 
 	@Override
@@ -137,9 +79,12 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		//Theater theater = theaters.get(theaterName).seats
 		if(theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
 			synchronized(this){
-				theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status=SeatStatus.OCCUPIED;
+				//UPDATE Hashmap
+				theaters.get(theaterName).occupySeat(theaterSeat);
+				//log operation to file
 				storageFile.buySeat(theaterName,theaterSeat);
-				countOperation();// to count operations and save memory to file and delete log file
+				// to count operations to at x operations, save memory to file and delete log file
+				countOperation();
 			}
 			return true;
 		}
@@ -149,12 +94,12 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			return false;
 		}
 	}
-	
-	
+
+
 	//Count operations to at 100 operations, save memory to file and delete log file
 	private synchronized void countOperation() {
 		opCount++;
-		if (opCount>100) {
+		if (opCount>MAXOPERATIONS) {
 			try {
 				storageFile.saveToFile(theaters);
 			} catch (IOException e) {
@@ -162,10 +107,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 				e.printStackTrace();
 			}
 			opCount=0;
-			
-		}
-		
-		
+		}		
 	}
 
 
@@ -181,7 +123,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	@Override
 	public void killServer() throws RemoteException {
 		System.exit(0);
-		
+
 	}
 
 }

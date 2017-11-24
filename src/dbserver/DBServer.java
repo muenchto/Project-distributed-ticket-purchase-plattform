@@ -45,7 +45,6 @@ public class DBServer {
                 System.err.println("DBServer2 ready");
             }
         
-        
 
         } catch (Exception e) {
             System.err.println("AppServer exception: " + e.toString());
