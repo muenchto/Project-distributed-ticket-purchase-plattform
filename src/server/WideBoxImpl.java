@@ -100,7 +100,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 theater = dataStorageStub.getTheater(theaterName);
             }
 
-
+            if (theater.status == TheaterStatus.FULL) {
+                return new Message(MessageType.FULL);
+            }
             //add all reserved seats from one theater to the theaterObject as reserved
             for (String s : reservedSeats.get(theaterName).keySet()) {
                 theater.setSeatToReserved(s);
@@ -109,20 +111,14 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             Seat seat = theater.reserveSeat();
 
             if (seat == null) {
-                //TODO: how should the FULL Message be modeled?
+                //TODO: this is not entirly correct because maybe another client will delete its reservation and therefore
+                //the theater will be free again
                 return new Message(MessageType.FULL);
             }
 
             clientCounter++;
             int clientID = clientCounter;
 
-            //if (reservedSeats.get(theater.theaterName).containsKey(seat.getSeatName())) {
-            //    System.out.println("RESERVE ERROR: " + theaterName + " " + seat.getSeatName());
-            //}
-            //if (!dataStorageStub.isSeatFree(theater.theaterName, seat)) {
-            //  System.out.println("ALREADY COCCUPIED ERROR: " + theaterName + " " + seat.getSeatName());
-            //}
-            //add this seat to the list
             reservedSeats.get(theater.theaterName).put(seat.getSeatName(), clientID, EXPIRING_DURATION);
 
 
@@ -150,6 +146,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             }
             //try to reserve a new Seat for the client
             Seat new_seat = theater.reserveSeat(wish_seat);
+
             if (new_seat != null) {
                 reservedSeats.get(theaterName).put(new_seat.getSeatName(), clientID, EXPIRING_DURATION);
 
@@ -163,7 +160,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 theater.freeSeat(old_seat);
 
                 return new Message(MessageType.AVAILABLE, theater.seats, new_seat, clientID);
-            } else {
+            }
+            // if the wish seat was not free, just return the old seat
+            else {
                 return new Message(MessageType.AVAILABLE, theater.seats, old_seat, clientID);
             }
         }

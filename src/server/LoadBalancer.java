@@ -3,6 +3,7 @@ package server;
 import auxiliary.Message;
 import auxiliary.Seat;
 import auxiliary.WideBoxIF;
+import com.sun.deploy.util.ArrayUtil;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -84,9 +85,14 @@ public class LoadBalancer {
                 return theaterNames;
             }
             else {
-                 theaterNames = wideboxStub1.getNames();
-                 System.out.println(theaterNames[1]);
-                 return theaterNames;
+                String[] theaters1 = wideboxStub1.getNames();
+                String[] theaters2 = wideboxStub2.getNames();
+                int aLen = theaters1.length;
+                int bLen = theaters1.length;
+                theaterNames = new String[aLen+bLen];
+                System.arraycopy(theaters1, 0, theaterNames, 0, aLen);
+                System.arraycopy(theaters2, 0, theaterNames, aLen, bLen);
+                return theaterNames;
             }
         }
 
