@@ -44,6 +44,12 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 		//if there is a db file, load the file to memory hashmap 
 		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
+
+		
+/*
+		storageFile = new Storage ("dbfile.txt","dblogfile.txt", num_theaters, mode);
+		//if there isn't an existant storage file, create clean theaters hashmap and make first dump to create a new file
+>>>>>>> branch 'master' of https://hamieira@bitbucket.org/simplept/psd.git
 		if (storageFile.existentDBfile()) {
 			System.out.println("DB file present, loading DB");
 			//Creation of the theaters hashmap
@@ -98,7 +104,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	}
 
 	 */
-
+	}
 	
 	
 	

@@ -73,7 +73,10 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             return names;
 
         } else {
-            return dataStorageStub.getTheaterNames();
+        	System.out.println("getNames");
+            String[] temp = dataStorageStub.getTheaterNames();
+            System.out.println(temp[1]);
+            return temp;
         }
     }
 

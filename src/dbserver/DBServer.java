@@ -1,6 +1,7 @@
 package dbserver;
 
 
+import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -20,9 +21,8 @@ public class DBServer {
     public static void main(String args[]) throws RemoteException {
     	
     	
-
-    	 Registry registry;
-        
+        System.setProperty("java.rmi.server.hostname", args[0]);
+        Registry registry;
         try {
             if (args.length > 1) {
                 registry = LocateRegistry.createRegistry(5000);

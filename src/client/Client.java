@@ -3,6 +3,7 @@ package client;
 import auxiliary.*;
 
 import java.io.Console;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Arrays;
@@ -22,16 +23,15 @@ public class Client {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws RemoteException {
+        Registry reg;
 
         int clientID;
-
-        System.setProperty( "java.rmi.server.hostname", "192.168.RMIServer.IP" ) ;
-
+        
+        
         try {
-            Registry reg;
             if (args.length > 0) {
-                reg = LocateRegistry.getRegistry(args[0],5001);
+                reg = LocateRegistry.getRegistry(args[0],5000);
             }
             else {
                 reg = LocateRegistry.getRegistry(5000);

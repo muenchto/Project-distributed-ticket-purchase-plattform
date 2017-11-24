@@ -1,5 +1,6 @@
 package server;
 
+import java.net.InetAddress;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Arrays;
@@ -12,6 +13,8 @@ import java.util.Arrays;
 public class AppServer {
 
     public static void main(String args[]) throws Exception {
+
+        System.setProperty("java.rmi.server.hostname", args[2]);
 
 
         Registry registry;
