@@ -3,3 +3,4 @@
 *.ds_Store
 out/
 nohup.out
+/bin/
