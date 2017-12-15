@@ -1,6 +1,7 @@
 package server;
 
 import auxiliary.*;
+import zookeeperLib.ZooKeeperConnection;
 
 import com.stoyanr.evictor.map.ConcurrentHashMapWithTimedEviction;
 
@@ -13,13 +14,18 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
+
+import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.server.ZooKeeperServer;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.ZooDefs;
+
+
 
 /**
  * PSD Project - Phase 1
@@ -40,9 +46,13 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     private LinkedHashMap theaters;
 
     private boolean dbServerLocalMode;
-    
+
+    // create static instance for zookeeper class.
     private static ZooKeeper zk;
-    private static int numServersAtStart;
+
+    // create static instance for ZooKeeperConnection class.
+    private static ZooKeeperConnection conn;
+
 
     public WideBoxImpl(String DBServerIP) throws RemoteException {
 
@@ -52,33 +62,25 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMapWithTimedEviction<String, Integer>>(1500);
         this.theaters = new LinkedHashMap<String, Theater>();
-        
-        
+
+        final CountDownLatch connectedSignal = new CountDownLatch(1);
+
         try {
-			zk = new ZooKeeper("zoo.cfg", 1000, new ZKWatcher());
+            zk = conn.connect("localhost");
+            connectedSignal.await();
 			zk.create("/appserver", "root of appservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-			numServersAtStart = ZKUtils.getAllNodes(zk, "/appserver").size();
-			zk.create("appserver/server", 
-					(InetAddress.getLocalHost().toString().split("/")[1]+":"+(5000+numServersAtStart)).getBytes(),
+			int numServersAtStart = ZKUtils.getAllNodes(zk, "/appserver").size();
+			zk.create("appserver/AppServer",
+					(InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
 					ZooDefs.Ids.CREATOR_ALL_ACL, CreateMode.EPHEMERAL_SEQUENTIAL);
 			zk.getChildren("/dbserver", true);
 			
 		} catch (IOException | KeeperException | InterruptedException e1) {
-			// TODO Auto-generated catch block
+            if (e1.getClass().equals(KeeperException.class)) {
+                System.out.println("ZOOKEEPER: /appserver already exists");
+            }
 			e1.printStackTrace();
 		}
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
 
         if (!dbServerLocalMode) {
             try {
