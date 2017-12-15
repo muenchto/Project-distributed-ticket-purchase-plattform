@@ -1,12 +1,19 @@
 package dbserver;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import auxiliary.*;
 import auxiliary.Seat.SeatStatus;
+
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
+import zookeeperLib.ZooKeeperConnection;
 
 public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	private static final long serialVersionUID = -7370182827432554702L;
@@ -29,6 +36,8 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public int mode;
 	private int errors;
 
+	private static ZooKeeper zk;
+	private static ZooKeeperConnection zkcon;
 
 	public DBServerImpl(int writingMode, int firstTheater, int lastTheater ) throws IOException{
 		mode=writingMode;
@@ -56,6 +65,30 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			//dump newly createad hashmap to file
 			storageFile.saveToFile(theaters);
 		}
+		
+		//ZOOKEEPER
+		try {
+			zk = zkcon.connect("localhost");
+			zk.create("/dbserver", "root of dbservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			int numServersAtStart = ZKUtils.getAllNodes(zk, "/dbserver").size();
+			zk.create("dbserver/dbserver",
+					(InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
+					ZooDefs.Ids.CREATOR_ALL_ACL, CreateMode.EPHEMERAL_SEQUENTIAL);
+			zk.getChildren("/dbserver", true);
+			
+		} catch (InterruptedException | KeeperException e) {
+			if (e.getClass().equals(KeeperException.class)) {
+                System.out.println("ZOOKEEPER: /appserver already exists");
+            }else {
+            	e.printStackTrace();
+            }
+		}
+		
+		
+		
+		
+		
+		
 	}
 
 	// RMI FUNCTIONS **********************************************************

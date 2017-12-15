@@ -7,7 +7,6 @@ import com.stoyanr.evictor.map.ConcurrentHashMapWithTimedEviction;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -17,9 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.CreateMode;
@@ -63,14 +59,11 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMapWithTimedEviction<String, Integer>>(1500);
         this.theaters = new LinkedHashMap<String, Theater>();
 
-        final CountDownLatch connectedSignal = new CountDownLatch(1);
-
         try {
             zk = conn.connect("localhost");
-            connectedSignal.await();
 			zk.create("/appserver", "root of appservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			int numServersAtStart = ZKUtils.getAllNodes(zk, "/appserver").size();
-			zk.create("appserver/AppServer",
+			zk.create("appserver/appserver",
 					(InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
 					ZooDefs.Ids.CREATOR_ALL_ACL, CreateMode.EPHEMERAL_SEQUENTIAL);
 			zk.getChildren("/dbserver", true);
@@ -78,8 +71,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 		} catch (IOException | KeeperException | InterruptedException e1) {
             if (e1.getClass().equals(KeeperException.class)) {
                 System.out.println("ZOOKEEPER: /appserver already exists");
+            }else {
+            	e1.printStackTrace();
             }
-			e1.printStackTrace();
 		}
 
         if (!dbServerLocalMode) {
