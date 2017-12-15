@@ -21,19 +21,24 @@ public class ZooKeeperConnection {
     final CountDownLatch connectedSignal = new CountDownLatch(1);
 
     // Method to connect zookeeper ensemble.
-    public ZooKeeper connect(String host) throws IOException,InterruptedException {
+    public ZooKeeper connect(String host) /*throws IOException,InterruptedException*/ {
 
-        zoo = new ZooKeeper(host,5000,new Watcher() {
+        try {
+            zoo = new ZooKeeper(host,5000,new Watcher() {
 
-            public void process(WatchedEvent we) {
+                public void process(WatchedEvent we) {
 
-                if (we.getState() == KeeperState.SyncConnected) {
-                    connectedSignal.countDown();
+                    if (we.getState() == KeeperState.SyncConnected) {
+                        connectedSignal.countDown();
+                    }
                 }
-            }
-        });
-
-        connectedSignal.await();
+            });
+            connectedSignal.await();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return zoo;
     }
 

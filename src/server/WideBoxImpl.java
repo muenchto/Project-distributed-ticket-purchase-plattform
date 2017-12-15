@@ -49,8 +49,14 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     // create static instance for ZooKeeperConnection class.
     private static ZooKeeperConnection conn;
 
+    //the number of Servers that has been started before this one
+    private int numServersAtStart;
 
-    public WideBoxImpl(String DBServerIP) throws RemoteException {
+    public int getNumServersAtStart() {
+        return numServersAtStart;
+    }
+
+    public WideBoxImpl(String ZKadress) throws RemoteException {
 
         dbServerLocalMode = false;
 
@@ -60,9 +66,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         this.theaters = new LinkedHashMap<String, Theater>();
 
         try {
-            zk = conn.connect("localhost");
+            zk = conn.connect(ZKadress);
 			zk.create("/appserver", "root of appservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-			int numServersAtStart = ZKUtils.getAllNodes(zk, "/appserver").size();
+			numServersAtStart = ZKUtils.getAllNodes(zk, "/appserver").size();
 			zk.create("appserver/appserver",
 					(InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
 					ZooDefs.Ids.CREATOR_ALL_ACL, CreateMode.EPHEMERAL_SEQUENTIAL);
@@ -78,14 +84,13 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         if (!dbServerLocalMode) {
             try {
-                if (DBServerIP != null) {
-                    registry = LocateRegistry.getRegistry(DBServerIP, 5000);
-                } else {
-                    registry = LocateRegistry.getRegistry(5000);
-                }
-                System.out.println("WideBoxImpl got the registry");
+                String dbServerIP = zk.getData("/dbserver/dbserver0", false, null).toString().split(":")[0];
 
-                dataStorageStub = (DataStorageIF) registry.lookup("dbServer");
+                registry = LocateRegistry.getRegistry(dbServerIP, 5000);
+
+                System.out.println("WideBoxImpl got the registry at " + dbServerIP);
+
+                dataStorageStub = (DataStorageIF) registry.lookup("dbServer0");
                 System.err.println("WideBoxImpl found DBServer");
 
             } catch (Exception e) {
@@ -112,7 +117,6 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         } else {
         	System.out.println("getNames");
             String[] temp = dataStorageStub.getTheaterNames();
-            System.out.println(temp[1]);
             return temp;
         }
     }

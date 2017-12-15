@@ -38,8 +38,9 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	private static ZooKeeper zk;
 	private static ZooKeeperConnection zkcon;
+	private int numServersAtStart;
 
-	public DBServerImpl(int writingMode, int firstTheater, int lastTheater ) throws IOException{
+	public DBServerImpl(String ZKadress, int writingMode, int firstTheater, int lastTheater ) throws IOException{
 		mode=writingMode;
 		storageFile = new Storage (DBFILENAME, LOGFILENAME, firstTheater, lastTheater, writingMode);
 		this.firstTheater=firstTheater;
@@ -68,20 +69,20 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		
 		//ZOOKEEPER
 		try {
-			zk = zkcon.connect("localhost");
+			zk = zkcon.connect(ZKadress);
 			zk.create("/dbserver", "root of dbservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-			int numServersAtStart = ZKUtils.getAllNodes(zk, "/dbserver").size();
+			numServersAtStart = ZKUtils.getAllNodes(zk, "/dbserver").size();
 			zk.create("dbserver/dbserver",
 					(InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
 					ZooDefs.Ids.CREATOR_ALL_ACL, CreateMode.EPHEMERAL_SEQUENTIAL);
 			zk.getChildren("/dbserver", true);
 			
 		} catch (InterruptedException | KeeperException e) {
-			if (e.getClass().equals(KeeperException.class)) {
-                System.out.println("ZOOKEEPER: /appserver already exists");
-            }else {
+			//if (e.getClass().equals(KeeperException.class)) {
+            //    System.out.println("ZOOKEEPER: /appserver already exists");
+            //}else {
             	e.printStackTrace();
-            }
+            //}
 		}
 		
 		
@@ -161,5 +162,10 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		System.exit(0);
 
 	}
+
+	public int getNumServersAtStart() {
+		return numServersAtStart;
+	}
+
 
 }
