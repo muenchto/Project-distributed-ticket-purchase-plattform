@@ -10,7 +10,8 @@ import auxiliary.*;
 import auxiliary.Seat.SeatStatus;
 
 import org.apache.zookeeper.*;
-import zookeeperLib.ZooKeeperConnection;
+import zookeeperlib.ZKUtils;
+import zookeeperlib.ZooKeeperConnection;
 
 public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	private static final long serialVersionUID = -7370182827432554702L;

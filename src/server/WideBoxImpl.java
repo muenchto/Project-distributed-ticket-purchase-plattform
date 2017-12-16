@@ -6,7 +6,8 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
-import zookeeperLib.ZooKeeperConnection;
+import zookeeperlib.ZKUtils;
+import zookeeperlib.ZooKeeperConnection;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

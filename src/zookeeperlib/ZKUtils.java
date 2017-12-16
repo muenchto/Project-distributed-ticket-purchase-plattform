@@ -1,4 +1,4 @@
-package auxiliary;
+package zookeeperlib;
 
 import java.util.ArrayList;
 import java.util.List;
