@@ -1,5 +1,8 @@
 .idea/
 *.iml
 *.ds_Store
-out/
+/out/
+/bin/
 nohup.out
+dbfile.txt
+dblogfile.txt
