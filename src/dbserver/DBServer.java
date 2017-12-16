@@ -35,8 +35,8 @@ public class DBServer {
                 ZKadress = args[1];
             }
             else {
-                registry = LocateRegistry.getRegistry(5000);
-                ZKadress = "localhost";
+                registry = LocateRegistry.createRegistry(5000);
+                ZKadress = "127.0.0.1";
             }
 
             DBServerImpl dbServer = new DBServerImpl(ZKadress, MODE,1,1500);

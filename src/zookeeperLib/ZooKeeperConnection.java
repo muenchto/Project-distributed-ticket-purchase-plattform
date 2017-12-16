@@ -24,7 +24,7 @@ public class ZooKeeperConnection {
     public ZooKeeper connect(String host) /*throws IOException,InterruptedException*/ {
 
         try {
-            zoo = new ZooKeeper(host,5000,new Watcher() {
+            zoo = new ZooKeeper(host,5000, new Watcher() {
 
                 public void process(WatchedEvent we) {
 

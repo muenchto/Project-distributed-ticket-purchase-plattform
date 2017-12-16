@@ -47,7 +47,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     private static ZooKeeper zk;
 
     // create static instance for ZooKeeperConnection class.
-    private static ZooKeeperConnection conn;
+    private static ZooKeeperConnection zkconn;
 
     //the number of Servers that has been started before this one
     private int numServersAtStart;
@@ -65,8 +65,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMapWithTimedEviction<String, Integer>>(1500);
         this.theaters = new LinkedHashMap<String, Theater>();
 
+        zkconn = new ZooKeeperConnection();
         try {
-            zk = conn.connect(ZKadress);
+            zk = zkconn.connect(ZKadress);
 			zk.create("/appserver", "root of appservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			numServersAtStart = ZKUtils.getAllNodes(zk, "/appserver").size();
 			zk.create("appserver/appserver",

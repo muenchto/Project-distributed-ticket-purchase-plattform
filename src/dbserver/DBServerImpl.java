@@ -68,13 +68,14 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		}
 		
 		//ZOOKEEPER
+		zkcon = new ZooKeeperConnection();
 		try {
 			zk = zkcon.connect(ZKadress);
 			zk.create("/dbserver", "root of dbservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 			numServersAtStart = ZKUtils.getAllNodes(zk, "/dbserver").size();
-			zk.create("dbserver/dbserver",
+			zk.create("/dbserver/dbserver",
 					(InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
-					ZooDefs.Ids.CREATOR_ALL_ACL, CreateMode.EPHEMERAL_SEQUENTIAL);
+					ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
 			zk.getChildren("/dbserver", true);
 			
 		} catch (InterruptedException | KeeperException e) {
@@ -84,12 +85,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
             	e.printStackTrace();
             //}
 		}
-		
-		
-		
-		
-		
-		
+
 	}
 
 	// RMI FUNCTIONS **********************************************************
