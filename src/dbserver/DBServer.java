@@ -41,7 +41,7 @@ public class DBServer {
 
             DBServerImpl dbServer = new DBServerImpl(ZKadress, MODE,1,1500);
             registry.rebind("dbServer" + dbServer.getNumServersAtStart(), dbServer);
-            System.out.println("DBServer" + dbServer.getNumServersAtStart() + "ready");
+            System.out.println("DBServer" + dbServer.getNumServersAtStart() + " ready");
 
         } catch (Exception e) {
             System.err.println("DBServer exception: " + e.toString());

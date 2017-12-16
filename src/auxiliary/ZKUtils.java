@@ -1,5 +1,6 @@
 package auxiliary;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.zookeeper.KeeperException;
@@ -12,7 +13,7 @@ public class ZKUtils {
 		Stat node;
 		try {
 			node = zk.exists(path, false);
-			List<String> children = null;
+			List<String> children = new ArrayList<>();
 			if (node != null) {
 				children = zk.getChildren(path, false);
 				java.util.Collections.sort(children);

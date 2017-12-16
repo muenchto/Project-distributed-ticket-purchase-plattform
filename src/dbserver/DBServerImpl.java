@@ -9,10 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import auxiliary.*;
 import auxiliary.Seat.SeatStatus;
 
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.*;
 import zookeeperLib.ZooKeeperConnection;
 
 public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
@@ -69,22 +66,35 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		
 		//ZOOKEEPER
 		zkcon = new ZooKeeperConnection();
+		zk = zkcon.connect(ZKadress);
+		try{
+			if (zk.exists("/zookeeper/dbserver",false) != null && ZKUtils.getAllNodes(zk, "/zookeeper/dbserver").size() == 0) {
+				zk.delete("/zookeeper/dbserver", 0);
+				zk.create("/zookeeper/dbserver", "root of dbservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			} else if (zk.exists("/zookeeper/dbserver",false) == null) {
+				zk.create("/zookeeper/dbserver", "root of dbservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			}
+		}
+		catch(KeeperException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		numServersAtStart = ZKUtils.getAllNodes(zk, "/zookeeper/dbserver").size();
+
 		try {
-			zk = zkcon.connect(ZKadress);
-			zk.create("/dbserver", "root of dbservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-			numServersAtStart = ZKUtils.getAllNodes(zk, "/dbserver").size();
-			zk.create("/dbserver/dbserver",
+			zk.create("/zookeeper/dbserver/dbserver",
 					(InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
 					ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
-			zk.getChildren("/dbserver", true);
-			
-		} catch (InterruptedException | KeeperException e) {
-			//if (e.getClass().equals(KeeperException.class)) {
-            //    System.out.println("ZOOKEEPER: /appserver already exists");
-            //}else {
-            	e.printStackTrace();
-            //}
+			zk.getChildren("/zookeeper/dbserver", true);
 		}
+		catch(KeeperException e1){
+			e1.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 
 	}
 
