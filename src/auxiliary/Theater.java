@@ -111,12 +111,12 @@ public class Theater implements Serializable{
 
     public String createStringForDB() {
         StringBuilder stringBuilder = new StringBuilder(4+26*40);
-        stringBuilder.append(theaterName+":");
+        stringBuilder.append(theaterName+"\n");
         for (char i = 0; i < 26; i++) {
             for (int j = 0; j < 40; j++) {
                 stringBuilder.append(seats[i][j].status.ordinal());
             }
-            stringBuilder.append(",");
+            stringBuilder.append("\n");
         }
         return stringBuilder.toString();
     }

@@ -29,6 +29,7 @@ public class Result implements Callable {
     private String op;
     private String targetTheater;
     private int numClients;
+    private int aux;
 
     public Result(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration, 
     		int[] stats, String origin, String target, String op, String targetTheater, int numClients) {
@@ -158,6 +159,7 @@ public class Result implements Callable {
                 }
             }
         }
+        this.stats[4] = aux;
         return this;
     }
 
@@ -662,7 +664,9 @@ public class Result implements Callable {
 
 
     private void addToAverageLatency(long diff) {
-        this.stats[4] = Math.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.latencyCounter));
+    	System.out.print(diff+" ");
+        //this.stats[4] = Math.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.latencyCounter));
+    	aux = Math.toIntExact(aux + ((diff - aux) / this.latencyCounter));
     }
     
     private void addToCompleteRequestLatency(long diff) {

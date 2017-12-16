@@ -3,19 +3,19 @@ package dbserver;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-
 import auxiliary.Seat;
 import auxiliary.Theater;
-import auxiliary.Seat.SeatStatus;
 
 public class Storage {
-	
+
 	public static FileInputStream dbfis = null;
 	public static FileInputStream logfis = null;
 	public static FileDescriptor dbfd = null;
@@ -28,136 +28,31 @@ public class Storage {
 	public static File log;
 	private static boolean SafeMode;
 	private int mode;	
-	final static String DELIMITER =",";
-	private static Integer num_theathers=1500;
-	private boolean existDBFile; //flag to inform DBServer that exist or not a existant DBFile
+	final static String DELIMITER = ",";
+	final static String LOGDELIMITER = "\n";
+	//private static Integer num_theathers;
+	private int firstTheater;
+	private int lastTheater;
+	//private boolean existDBFile=false; //flag to inform DBServer that exist or not a existant DBFile
 	private static ConcurrentHashMap<String, Theater> theatersTemp = null ;
 
-	public Storage(String dbInputFile, String logInputFile, int num_theathers, int mode) throws IOException{
-		Storage.num_theathers=num_theathers;
+	public Storage(String dbInputFile, String logInputFile, int firstTheater, int lastTheater, int mode) throws IOException{
+		//Storage.num_theathers=num_theathers;
 		db = new File (dbInputFile);
 		log = new File (logInputFile);
-		
-		
-		if(db.exists()) {
-			System.out.println("DB file present");
-			existDBFile=true;
-			if (log.exists()) {
-				System.out.println("log file present, initiate log processing");
-				//processLog();
-			}
-			else
-				try {
-					log.createNewFile();
-					System.out.println("Log file not present, a new log file was created");
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-
-		}
-		else
-			try {
-				existDBFile=false;
-				db.createNewFile();
-				System.out.println("BD file not present, a new file was created");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-
-
-
-
-		/*
-		logfos =new FileOutputStream(logInputFile,true); //este comando esta a apagar o ficheiro
-		logfosw = new OutputStreamWriter (logfos);
-		logfd = logfos.getFD();
-		*/
+		this.firstTheater=firstTheater;
+		this.lastTheater=lastTheater;
+		this.mode = mode;
 	}
-	
 
-	
-
-
-	//TESTING PROPOSES DELETE BEFORE EACH DELIVERIES
-	public static void main(String[] args) {
-		if(db.exists())
-			System.out.println("DB file present");
-		else
-			try {
-				db.createNewFile();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-
-	}
-	
-	
-	
-	//write the all hashmap to DBFILENAME
-	public boolean writeToFile (ConcurrentHashMap<String, Theater> theaters) throws IOException {
-		// Instant is for perfomance metrics (mesures the time it takes to dump the memory to file)
-		Instant Start=null;
-		Instant End=null;
-		Start= Instant.now();
-		//mode=1;
-		//Inicializacao do ficheiro para leitura
-		dbfos = new FileOutputStream(db); //this command is deleting the file FIX
-		dbfosw = new OutputStreamWriter (dbfos);
-		dbfd = dbfos.getFD();
-		
-		// create a set with the keys(theaters)
-		//it's appearing without order
-		//KeySetView<String, Theater> keys = theaters.keySet();
-		//System.out.println(keys.toString());
-		System.out.println("STORAGE: Starting dumpping DB to file");
-
-		/*for (int t=0;t<num_theathers;t++) {
-			for (int i=0;i<26;i++){
-				for(int j = 0; j < 40; j++) {
-					try {				
-						//Storing with teather as a int value, and the seat as a int value
-						dbfosw.write(t+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
-						//dbfosw.write(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
-						
-						//Stores seat with a int value and theaters string value
-						//System.out.println(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+intValueSeat(theaters.get("TheaterNr"+t).seats[i][j])+DELIMITER);
-						
-						//Stores seats with the string value and theaters string value
-						//System.out.println(theaters.get("TheaterNr"+t).theaterName+DELIMITER+i+DELIMITER+j+DELIMITER+theaters.get("TheaterNr"+t).seats[i][j].status+DELIMITER);
-					}
-
-					catch (IOException e) {
-						System.err.println("DBSERVERImpl - ERROR WRITING TO FILE");
-						e.printStackTrace();
-						return false;
-					}//end catch
-
-				}
-			}
-			if(t%20==0)
-				System.out.print(".");
-		}*/
-
-		for (Theater theater: theaters.values()) {
-			dbfosw.write(theater.createStringForDB()+"\n");
-		}
-		System.out.println("END");
-		if (mode>=2) dbfd.sync();
-		if (mode==3) dbfosw.flush();
-		dbfosw.close();
-		dbfos.close();
-		End=Instant.now();
-		System.out.println("Writing memory state to file took  "+Duration.between(Start,End).getSeconds()+" seconds or "+Duration.between(Start,End).getNano()/1000000+"M nanos");
-		return true;
-	}
-	
 	public synchronized void buySeat(String theaterName, Seat theaterSeat) {
 		try {
-			logfosw.append(theaterName+DELIMITER+theaterSeat.rowNr+DELIMITER+theaterSeat.colNr+DELIMITER+intValueSeat(theaterSeat));
-			System.out.println("LOG> purchase made");
+			logfos =new FileOutputStream(log,true);
+			logfosw = new OutputStreamWriter (logfos);
+			logfd = logfos.getFD();
+			//logfosw.append(theaterName+DELIMITER+theaterSeat.rowNr+DELIMITER+theaterSeat.colNr+DELIMITER+intValueSeat(theaterSeat)+"\n");
+			logfosw.append(theaterName+LOGDELIMITER+theaterSeat.rowNr+LOGDELIMITER+theaterSeat.colNr+LOGDELIMITER);
+			System.out.println("STORAGE:LOG> purchase made");
 			if (mode>=2) {
 				logfosw.flush();
 				//System.out.println("LOG> Flushing log");
@@ -172,37 +67,105 @@ public class Storage {
 			//e.printStackTrace();
 		}
 	}
-	
-	//Auxiliary fuction to prevent writing the whole words to file
-	int intValueSeat (Seat seat) {
-		int resp=-1;
-		if (seat.status==SeatStatus.FREE) resp=1;
-		if (seat.status==SeatStatus.RESERVED) resp=2;
-		if (seat.status==SeatStatus.OCCUPIED) resp=3;
-		return resp;
-	}
-
 
 	public boolean existentDBfile() {
-		return false;
+		return db.exists();
 	}
 
+	public boolean existentLOGfile() {
+		return log.exists();
+	}
 
-	public void saveToFile(ConcurrentHashMap<String, Theater> theaters) {
-		// TODO Auto-generated method stub
-		
+	//write the all hashmap to DBFILENAME
+	public synchronized boolean saveToFile (ConcurrentHashMap<String, Theater> theaters) throws IOException {
+		// Instant is for perfomance metrics (mesures the time it takes to dump the memory to file)
+		Instant Start=null;
+		Instant End=null;
+		Start= Instant.now();
+		//mode=1;
+		//Initialization of the file to writing
+		dbfos = new FileOutputStream(db); //this command is deleting the file FIX
+		dbfosw = new OutputStreamWriter (dbfos);
+		dbfd = dbfos.getFD();
+		// create a set with the keys(theaters)
+		System.out.print("STORAGE: Starting dumpping DB to file....");
+		for (Theater theater: theaters.values()) {
+			dbfosw.write(theater.createStringForDB());
+		}
+		System.out.println("END");
+		if (mode>=2) dbfd.sync();
+		if (mode==3) dbfosw.flush();
+		dbfosw.close();
+		dbfos.close();
+		End=Instant.now();
+		System.out.println("STORAGE: Writing memory state to file took  "+Duration.between(Start,End).getSeconds()+" seconds or "+Duration.between(Start,End).getNano()/1000000+"M nanos");
+		log.delete();
+		System.out.println("STORAGE: Log file cleaned");
+		return true;
 	}
 
 
 	public ConcurrentHashMap<String, Theater> loadDBfile() {
 		theatersTemp = new ConcurrentHashMap<String, Theater> ();
-
-		return null;
+		Instant Start=null;
+		Instant End=null;
+		Start = Instant.now();
+		try {
+			Scanner sc = new Scanner(db).useDelimiter("");
+			String  theaterName;
+			for (int t=firstTheater; t<lastTheater;t++) {
+				theaterName = sc.nextLine();
+				//System.out.println("reading theater -> "+ theaterName);
+				theatersTemp.put(theaterName,  new  Theater(theaterName));
+				for (int i = 0; i < 26; i++) {
+					for (int j = 0; j < 40; j++) {
+						if (sc.nextInt()==1){
+							//theatersTemp.get(theaterName).seats[i][j].status=Seat.SeatStatus.values()[sc.nextInt()];
+							theatersTemp.get(theaterName).occupySeat(i, j);
+							//System.out.println(" reading from file at ["+i+"]["+j+"] the value ->"+ theatersTemp.get(theaterName).seats[i][j].status );
+						}
+					}
+					sc.skip("\n");
+				}
+			}
+			sc.close();
+			System.out.println("Ending reading file");
+		}
+		catch (FileNotFoundException e) {
+			System.err.println("STORAGE: File not found");
+			return null;
+		}//end catch
+		End=Instant.now(); 
+		System.out.println("File loaded in "+Duration.between(Start,End).getSeconds()+" seconds");
+		//if a log file exists, then process log file
+		if(existentLOGfile())
+			return processLog(theatersTemp);
+		else
+			return new ConcurrentHashMap<String, Theater>(theatersTemp);
 	}
 
-	private void processLog() {
-		// TODO Auto-generated method stub
-		
+	private ConcurrentHashMap<String, Theater> processLog(ConcurrentHashMap<String, Theater> theatersTemp) {
+		String  theaterName = null;
+		char row = 0;
+		int col = 0;
+		int op = 0;
+		try {
+			Scanner scLog = new Scanner(log).useDelimiter(LOGDELIMITER);
+			while(scLog.hasNext()) {
+				theaterName=scLog.next();
+				row=(scLog.next()).charAt(0);
+				col=scLog.nextInt();
+				scLog.skip("\n");	
+				theatersTemp.get(theaterName).occupySeat(row-'A', col);
+				op++;
+			}
+			log.delete();
+			System.out.println("STORAGE: Log file processed, with " + op + "operations pending and deleted");
+		} catch (FileNotFoundException e) {
+			System.err.println("File "+log.getName()+" dont exist");
+			e.printStackTrace();
+		}
+		return new ConcurrentHashMap<String, Theater>(theatersTemp);
 	}
 
 
