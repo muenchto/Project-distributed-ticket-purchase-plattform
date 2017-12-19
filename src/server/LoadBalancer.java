@@ -3,7 +3,6 @@ package server;
 import auxiliary.Message;
 import auxiliary.Seat;
 import auxiliary.WideBoxIF;
-import com.sun.deploy.util.ArrayUtil;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;

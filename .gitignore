@@ -2,8 +2,11 @@
 .classpath
 .project
 *.iml
-*.DS_Store
-out/
+*.ds_Store
+/out/
+/bin/
 nohup.out
-bin/
+dbfile.txt
+dblogfile.txt
 *.txt
+/Final Version Optimized v2.0/

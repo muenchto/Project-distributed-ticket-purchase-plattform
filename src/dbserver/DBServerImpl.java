@@ -8,6 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import auxiliary.*;
 import auxiliary.Seat.SeatStatus;
 
+import org.apache.zookeeper.*;
+import zookeeperlib.ZKUtils;
+import zookeeperlib.ZooKeeperConnection;
+
 public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	private static final long serialVersionUID = -7370182827432554702L;
 	public static ConcurrentHashMap<String, Theater> theaters ;
@@ -29,8 +33,11 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public int mode;
 	private int errors;
 
+	private static ZooKeeper zk;
+	private static ZooKeeperConnection zkcon;
+	private int numServersAtStart;
 
-	public DBServerImpl(int writingMode, int firstTheater, int lastTheater ) throws IOException{
+	public DBServerImpl(String ZKadress, int writingMode, int firstTheater, int lastTheater ) throws IOException{
 		mode=writingMode;
 		storageFile = new Storage (DBFILENAME, LOGFILENAME, firstTheater, lastTheater, writingMode);
 		this.firstTheater=firstTheater;
@@ -56,6 +63,39 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			//dump newly createad hashmap to file
 			storageFile.saveToFile(theaters);
 		}
+		
+		//ZOOKEEPER
+		zkcon = new ZooKeeperConnection();
+		zk = zkcon.connect(ZKadress);
+		try{
+			if (zk.exists("/zookeeper/dbserver",false) != null && ZKUtils.getAllNodes(zk, "/zookeeper/dbserver").size() == 0) {
+				zk.delete("/zookeeper/dbserver", 0);
+				zk.create("/zookeeper/dbserver", "root of dbservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			} else if (zk.exists("/zookeeper/dbserver",false) == null) {
+				zk.create("/zookeeper/dbserver", "root of dbservers".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+			}
+		}
+		catch(KeeperException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		numServersAtStart = ZKUtils.getAllNodes(zk, "/zookeeper/dbserver").size();
+
+		try {
+			zk.create("/zookeeper/dbserver/dbserver",
+					(InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
+					ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+			zk.getChildren("/zookeeper/dbserver", true);
+		}
+		catch(KeeperException e1){
+			e1.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+
 	}
 
 	// RMI FUNCTIONS **********************************************************
@@ -146,5 +186,10 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		
 		return false;
 	}
+
+	public int getNumServersAtStart() {
+		return numServersAtStart;
+	}
+
 
 }

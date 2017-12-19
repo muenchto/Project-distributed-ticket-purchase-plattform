@@ -2,13 +2,22 @@ package server;
 
 import auxiliary.*;
 import com.stoyanr.evictor.map.ConcurrentHashMapWithTimedEviction;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
+import zookeeperlib.ZKUtils;
+import zookeeperlib.ZooKeeperConnection;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * PSD Project - Phase 1
@@ -30,7 +39,20 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private boolean dbServerLocalMode;
 
-    public WideBoxImpl(String DBServerIP) throws RemoteException {
+    // create static instance for zookeeper class.
+    private static ZooKeeper zk;
+
+    // create static instance for ZooKeeperConnection class.
+    private static ZooKeeperConnection zkconn;
+
+    //the number of Servers that has been started before this one
+    private int numServersAtStart;
+
+    public int getNumServersAtStart() {
+        return numServersAtStart;
+    }
+
+    public WideBoxImpl(String ZKadress) throws RemoteException {
 
         dbServerLocalMode = false;
 
@@ -39,23 +61,53 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMapWithTimedEviction<String, Integer>>(1500);
         this.theaters = new LinkedHashMap<String, Theater>();
 
+        zkconn = new ZooKeeperConnection();
+        zk = zkconn.connect(ZKadress);
+        try {
+            if (zk.exists("/zookeeper/appserver", false) != null && ZKUtils.getAllNodes(zk, "/zookeeper/appserver").size() == 0) {
+                zk.delete("/zookeeper/appserver", 0);
+                zk.create("/zookeeper/appserver", "root of appserver".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            } else if (zk.exists("/zookeeper/appserver", false) == null) {
+                zk.create("/zookeeper/appserver", "root of appserver".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            }
+        }
+        catch (KeeperException | InterruptedException e1) {
+            if (e1.getClass().equals(KeeperException.class)) {
+            } else {
+                e1.printStackTrace();
+            }
+        }
+        numServersAtStart = ZKUtils.getAllNodes(zk, "/zookeeper/appserver").size();
+        try {
+            zk.create("/zookeeper/appserver/appserver",
+                    (InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
+                    ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
+            zk.getChildren("/zookeeper/dbserver", true);
+        } catch (UnknownHostException | KeeperException | InterruptedException e1) {
+            if (e1.getClass().equals(KeeperException.class)) {
+                e1.printStackTrace();
+            } else {
+                e1.printStackTrace();
+            }
+        }
+
         if (!dbServerLocalMode) {
             try {
-                if (DBServerIP != null) {
-                    registry = LocateRegistry.getRegistry(DBServerIP, 5000);
-                } else {
-                    registry = LocateRegistry.getRegistry(5000);
-                }
-                System.out.println("WideBoxImpl got the registry");
+                byte [] zk_data = zk.getData("/zookeeper/dbserver/dbserver0000000000", false, null);
+                String dbServerIP = new String(zk_data).split(":")[0];
+                System.out.println("ZooKeeper data dbServer: " + dbServerIP);
+                registry = LocateRegistry.getRegistry(dbServerIP, 5000);
 
-                dataStorageStub = (DataStorageIF) registry.lookup("dbServer");
+                System.out.println("WideBoxImpl got the registry at " + dbServerIP);
+
+                dataStorageStub = (DataStorageIF) registry.lookup("dbServer0");
                 System.err.println("WideBoxImpl found DBServer");
 
             } catch (Exception e) {
                 System.err.println("WideBoxImpl exception: " + e.toString());
                 e.printStackTrace();
             }
-        }else {
+        } else {
             for (int i = 0; i < 1500; i++) {
                 this.theaters.put("TheaterNr" + i, new Theater("TheaterNr" + i));
             }
@@ -63,22 +115,21 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
         System.out.println("WideBox ready..");
 
-    }
-
-
-    public String[] getNames() throws RemoteException {
-        if (dbServerLocalMode) {
-            java.util.Set keys = this.theaters.keySet();
-            String[] names = (String[]) keys.toArray(new String[keys.size()]);
-            return names;
-
-        } else {
-        	System.out.println("getNames");
-            String[] temp = dataStorageStub.getTheaterNames();
-            System.out.println(temp[1]);
-            return temp;
         }
-    }
+
+
+        public String[] getNames () throws RemoteException {
+            if (dbServerLocalMode) {
+                java.util.Set keys = this.theaters.keySet();
+                String[] names = (String[]) keys.toArray(new String[keys.size()]);
+                return names;
+
+            } else {
+                System.out.println("getNames");
+                String[] temp = dataStorageStub.getTheaterNames();
+                return temp;
+            }
+        }
 
     public Message query(String theaterName) throws RemoteException {
 

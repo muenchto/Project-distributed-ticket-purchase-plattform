@@ -19,16 +19,24 @@ public class DBServer {
 	final static int NUM_THEATERS = 1500; // not used now, using index insted
 
     public static void main(String args[]) throws RemoteException {
-    	
-    	
-        System.setProperty("java.rmi.server.hostname", args[0]);
+
+        //args[0] = own IP
+        //args[1] = zookeeper IP
+
+        if (args.length > 0) {
+            System.setProperty("java.rmi.server.hostname", args[0]);
+        }
+
         Registry registry;
+        String ZKadress;
         try {
-            if (args.length > 1) {
+            if (args.length > 0) {
                 registry = LocateRegistry.createRegistry(5000);
+                ZKadress = args[1];
             }
             else {
-                registry = LocateRegistry.getRegistry(5000);
+                registry = LocateRegistry.createRegistry(5000);
+                ZKadress = "127.0.0.1";
             }
 
            // WideBoxImpl widebox;
@@ -53,9 +61,12 @@ public class DBServer {
                 System.err.println("DBServer2 ready");
             }
         
+            DBServerImpl dbServer = new DBServerImpl(ZKadress, MODE,1,1500);
+            registry.rebind("dbServer" + dbServer.getNumServersAtStart(), dbServer);
+            System.out.println("DBServer" + dbServer.getNumServersAtStart() + " ready");
 
         } catch (Exception e) {
-            System.err.println("AppServer exception: " + e.toString());
+            System.err.println("dbserver exception: " + e.toString());
             e.printStackTrace();
         }
     }

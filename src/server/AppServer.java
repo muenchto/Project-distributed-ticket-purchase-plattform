@@ -14,39 +14,30 @@ public class AppServer {
 
     public static void main(String args[]) throws Exception {
 
-        System.setProperty("java.rmi.server.hostname", args[2]);
+        //args[0] = own IP
+        //args[1] = zookeeper IP
 
+        if (args.length > 0) {
+            System.setProperty("java.rmi.server.hostname", args[0]);
+        }
 
         Registry registry;
+        String ZKadress;
         try {
-            if (args.length > 1) {
+            //case distributed
+            if (args.length > 0) {
                 registry = LocateRegistry.createRegistry(5000);
+                ZKadress = args[1];
             }
+            //case local
             else {
                 registry = LocateRegistry.getRegistry(5000);
+                ZKadress = "localhost";
             }
 
-            WideBoxImpl widebox;
-            String dbServerIP;
-            if (args.length > 1) {
-                dbServerIP = args[1];
-            }
-            else {
-                dbServerIP = null;
-            }
-            if (args[0].equals("1")) {
-                widebox = new WideBoxImpl(dbServerIP);
-                registry.rebind("AppServer1", widebox);
-                System.err.println("AppServer1 ready");
-            }
-            else {
-                widebox = new WideBoxImpl(dbServerIP);
-                registry.rebind("AppServer2", widebox);
-                System.err.println("AppServer2 ready");
-            }
-
-
-
+            WideBoxImpl widebox = new WideBoxImpl(ZKadress);
+            registry.rebind("AppServer" + widebox.getNumServersAtStart(), widebox);
+            System.out.println("AppServer "+widebox.getNumServersAtStart()+" ready");
 
         } catch (Exception e) {
             System.err.println("AppServer exception: " + e.toString());
