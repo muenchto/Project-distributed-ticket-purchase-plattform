@@ -33,12 +33,20 @@ public class DBServer {
 
            // WideBoxImpl widebox;
             
-            
+            /* when the dbserver is divided switch this with the one under
             if (args[0].equals("1")) {
             	DBServerImpl dbServer = new DBServerImpl(MODE,1,750);
                 registry.rebind("dbServer1", dbServer);
                 System.err.println("DBServer1 ready");
             }
+            */
+            
+            if (args[0].equals("1")) {
+            	DBServerImpl dbServer = new DBServerImpl(MODE,1,1500);
+                registry.rebind("dbServer1", dbServer);
+                System.err.println("DBServer1 ready");
+            }
+            
             else {
             	DBServerImpl dbServer = new DBServerImpl(MODE,751,1499);
                 registry.rebind("dbServer2", dbServer);
@@ -52,20 +60,3 @@ public class DBServer {
         }
     }
 }
-/*
-if (args.length==1) {
-	mode = Integer.parseInt(args[0]);
-	if(mode<1&&mode>3) 
-	{
-		System.out.println("Must execute with an argument between 1 and 3, "
-				+ "Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync)");
-		System.exit(0);
-	}
-	else {
-		System.out.println("Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync)\n"
-				+ "Initiating DBServer in mode "+mode);
-	}
-}
-else
-	System.out.println("Using default mode 1 - Buffer");
-*/

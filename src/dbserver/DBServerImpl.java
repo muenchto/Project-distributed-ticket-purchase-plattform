@@ -129,4 +129,22 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	}
 
+	@Override
+	public int updateSoldSeat(String theaterName, Seat theaterSeat) throws RemoteException {
+		//theatersBackup.get(theaterName).
+		return 0;
+	}
+
+	@Override
+	public int[] updateSoldSeat(String[] theaterName, Seat[] theaterSeat) throws RemoteException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean sendSnapshot(ConcurrentHashMap<String, Theater> snapShot) throws RemoteException {
+		
+		return false;
+	}
+
 }
