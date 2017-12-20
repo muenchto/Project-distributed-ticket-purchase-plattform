@@ -29,11 +29,11 @@ public class ConnectionHandler {
 
     public enum type {
         DBServer,
-        AppServer
+        AppServer,
+        LoadBalancer
     }
 
     private ZooKeeper zk;
-    ZooKeeperConnection zkconn;
     String zkFolder;
     String zkPath;
 
@@ -47,9 +47,13 @@ public class ConnectionHandler {
         if (serverType == type.AppServer) {
             zkFolder = "appserver";
             reg_port = 6000;
-        } else {
+        } else if (serverType == type.DBServer){
             zkFolder = "dbserver";
             reg_port = 5000;
+        }
+        else {
+            zkFolder = "loadbalancer";
+            reg_port = 7000;
         }
         zkPath = "/" + zkFolder;
 
@@ -148,5 +152,9 @@ public class ConnectionHandler {
             }
         }
         System.out.println("created ZooKeeper node " + zkFolder + numServersAtStart);
+    }
+
+    public int getNrOfNodesOnPath(String path){
+        return ZKUtils.getAllNodes(zk, path).size();
     }
 }

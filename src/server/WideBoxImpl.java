@@ -28,7 +28,6 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private final long EXPIRING_DURATION = 15000;
 
-    private Registry registry;
     private DataStorageIF dataStorageStub;
 
     private int clientCounter;
@@ -39,67 +38,18 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private boolean dbServerLocalMode;
 
-    // create static instance for zookeeper class.
-    private static ZooKeeper zk;
-
-    // create static instance for ZooKeeperConnection class.
-    private static ZooKeeperConnection zkconn;
-
-   private String zkAddress;
-
-    public WideBoxImpl(String ZKadress, ConnectionHandler connector) throws RemoteException {
+    public WideBoxImpl(ConnectionHandler connector) throws RemoteException {
 
         dbServerLocalMode = false;
 
         System.out.println("Widebox starting");
 
-        zkAddress = ZKadress;
-
         this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMapWithTimedEviction<String, Integer>>(1500);
         this.theaters = new LinkedHashMap<String, Theater>();
 
-        /*zkconn = new ZooKeeperConnection();
-        zk = zkconn.connect(ZKadress);
-        try {
-            if (zk.exists("/zookeeper/appserver", false) != null && ZKUtils.getAllNodes(zk, "/zookeeper/appserver").size() == 0) {
-                zk.delete("/zookeeper/appserver", 0);
-                zk.create("/zookeeper/appserver", "root of appserver".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            } else if (zk.exists("/zookeeper/appserver", false) == null) {
-                zk.create("/zookeeper/appserver", "root of appserver".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            }
-        }
-        catch (KeeperException | InterruptedException e1) {
-            if (e1.getClass().equals(KeeperException.class)) {
-            } else {
-                e1.printStackTrace();
-            }
-        }
-        numServersAtStart = ZKUtils.getAllNodes(zk, "/zookeeper/appserver").size();
-        try {
-            zk.create("/zookeeper/appserver/appserver",
-                    (InetAddress.getLocalHost().getHostAddress() + ":" + (5000 + numServersAtStart)).getBytes(),
-                    ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
-            zk.getChildren("/zookeeper/dbserver", true);
-        } catch (UnknownHostException | KeeperException | InterruptedException e1) {
-            if (e1.getClass().equals(KeeperException.class)) {
-                e1.printStackTrace();
-            } else {
-                e1.printStackTrace();
-            }
-        }*/
 
         if (!dbServerLocalMode) {
             try {
-                /*byte [] zk_data = zk.getData("/zookeeper/dbserver/dbserver0000000000", false, null);
-                String dbServerIP = new String(zk_data).split(":")[0];
-                System.out.println("ZooKeeper data dbServer: " + dbServerIP);
-                registry = LocateRegistry.getRegistry(dbServerIP, 5000);
-
-                System.out.println("WideBoxImpl got the registry at " + dbServerIP);
-
-                dataStorageStub = (DataStorageIF) registry.lookup("dbServer0");
-                System.err.println("WideBoxImpl found DBServer");*/
-
                 dataStorageStub = (DataStorageIF) connector.get("dbserver" + connector.numServersAtStart, "/dbserver");
                 System.err.println("WideBoxImpl found dbserver" + connector.numServersAtStart);
             } catch (Exception e) {

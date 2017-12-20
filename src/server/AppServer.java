@@ -2,11 +2,6 @@ package server;
 
 import auxiliary.ConnectionHandler;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.util.Arrays;
 
 /**
  * PSD Project - Phase 1
@@ -31,7 +26,7 @@ public class AppServer {
         }
         String zkAddress = zkIP + ":" + zkPort;
         ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
-        WideBoxImpl widebox = new WideBoxImpl(zkAddress, connector);
+        WideBoxImpl widebox = new WideBoxImpl(connector);
 
         connector.register(widebox);
         System.out.println("AppServer ready");

@@ -1,14 +1,19 @@
 package server;
 
+import auxiliary.ConnectionHandler;
 import auxiliary.Message;
 import auxiliary.Seat;
 import auxiliary.WideBoxIF;
+import com.sun.tools.javac.util.ArrayUtils;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * PSD Project - Phase 2
@@ -19,63 +24,58 @@ public class LoadBalancer {
 
     public static void main(String args[]) throws Exception {
 
-        System.setProperty("java.rmi.server.hostname", args[2]);
-        System.out.println(System.getProperty("java.rmi.server.hostname"));
+        String zkIP = "localhost";
+        String zkPort = "";
 
-        Registry registry;
-        LoadBalancerImpl loadbalancer;
-        try {
-            // Bind the remote object's stub in the registry
-            if (args.length > 0) {
-                registry = LocateRegistry.createRegistry(5000);
-                
-                loadbalancer = new LoadBalancerImpl(args[0], args[1]);
-            } else {
-                registry = LocateRegistry.getRegistry(5000);
-                String localhost = "127.0.0.1";
-                loadbalancer = new LoadBalancerImpl(localhost, localhost);
-            }
+        if (args.length > 0) {
+            //args[0] = own IP
+            System.setProperty("java.rmi.server.hostname", args[0]);
 
-            registry.rebind("WideBoxServer", loadbalancer);
-            System.err.println("LoadBalancer ready");
-
-        } catch (Exception e) {
-            System.err.println("LoadBalancer exception: " + e.toString());
-            e.printStackTrace();
+            //args[1] = zookeeper IP
+            zkIP = args[1];
+            //args[2] = zookeeper Port
+            zkPort = args[2];
         }
+        String zkAddress = zkIP + ":" + zkPort;
+        ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.LoadBalancer);
+        LoadBalancerImpl loadBalancer = new LoadBalancerImpl(connector);
+
+        connector.register(loadBalancer);
+        System.out.println("LoadBalancer ready");
     }
 
     public static class LoadBalancerImpl extends UnicastRemoteObject implements WideBoxIF{
 
-        WideBoxIF wideboxStub1;
-        WideBoxIF wideboxStub2;
+        ArrayList<WideBoxIF> appserverList;
+        int num_appserver;
 
         //cache the Theater Names
         String[] theaterNames = null;
 
 
-        protected LoadBalancerImpl(String appS1IP, String appS2IP) throws RemoteException {
+        protected LoadBalancerImpl(ConnectionHandler connector) throws RemoteException {
 
+            num_appserver = connector.getNrOfNodesOnPath("/appserver");
+            appserverList = new ArrayList<>(num_appserver);
             try {
-            	Registry registryAppS1 = LocateRegistry.getRegistry(appS1IP, 5000);
-            	Registry registryAppS2 = LocateRegistry.getRegistry(appS2IP, 5000);
-                this.wideboxStub1 = (WideBoxIF) registryAppS1.lookup("AppServer1");
-                this.wideboxStub2 = (WideBoxIF) registryAppS2.lookup("AppServer2");
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            } catch (NotBoundException e1) {
+                for (int i = 0; i < num_appserver; i++) {
+                   appserverList.add((WideBoxIF) connector.get("appserver" + i, "/appserver"));
+                    System.out.println("LoadBalancer connected to AppServer" + i);
+                }
+
+            } catch (Exception e1) {
                 e1.printStackTrace();
             }
         }
 
 		private WideBoxIF forwardServer(String theaterName) {
             int theaterNR = Integer.parseInt(theaterName.substring(9));
-            if (theaterNR < theaterNames.length/2) {
-               return this.wideboxStub1;
-            }
-            else {
-                return this.wideboxStub2;
-            }
+            int num_theaters_per_server = theaterNames.length/num_appserver;
+
+            System.out.println("theaterNames length: "+theaterNames.length +", "+num_appserver +", "+num_theaters_per_server);
+            int appServerNr = theaterNR / num_theaters_per_server;
+            System.out.println("Forward Theater" + theaterNR + " to appserver" + appServerNr);
+            return appserverList.get(appServerNr);
         }
 
         @Override
@@ -84,13 +84,11 @@ public class LoadBalancer {
                 return theaterNames;
             }
             else {
-                String[] theaters1 = wideboxStub1.getNames();
-                String[] theaters2 = wideboxStub2.getNames();
-                int aLen = theaters1.length;
-                int bLen = theaters1.length;
-                theaterNames = new String[aLen+bLen];
-                System.arraycopy(theaters1, 0, theaterNames, 0, aLen);
-                System.arraycopy(theaters2, 0, theaterNames, aLen, bLen);
+                List<String> theaterList = new ArrayList<>();
+                for (WideBoxIF aS : appserverList) {
+                    theaterList.addAll(Arrays.asList(aS.getNames()));
+                }
+                theaterNames = theaterList.toArray(new String[0]);
                 return theaterNames;
             }
         }

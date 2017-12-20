@@ -1,7 +1,9 @@
 package client;
 
 import auxiliary.ConfigHandler;
+import auxiliary.ConnectionHandler;
 import auxiliary.WideBoxIF;
+import server.LoadBalancer;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -30,13 +32,21 @@ public class TrafficGenerator {
     public static void main(String[] args) {
 
         try {
-            Registry reg;
+            String zkIP = "localhost";
+            String zkPort = "";
+
             if (args.length > 0) {
-                reg = LocateRegistry.getRegistry(args[0], 5000);
-            } else {
-                reg = LocateRegistry.getRegistry(5000);
+                //args[0] = own IP
+                System.setProperty("java.rmi.server.hostname", args[0]);
+
+                //args[1] = zookeeper IP
+                zkIP = args[1];
+                //args[2] = zookeeper Port
+                zkPort = args[2];
             }
-            WideBoxIF wideBoxStub = (WideBoxIF) reg.lookup("WideBoxServer");
+            String zkAddress = zkIP + ":" + zkPort;
+            ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.LoadBalancer);
+            WideBoxIF wideBoxStub = (WideBoxIF) connector.get("loadbalancer0", "/loadbalancer");
 
 
             ConfigHandler ch = new ConfigHandler();
@@ -88,9 +98,7 @@ public class TrafficGenerator {
             ex.shutdown();
 
             System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime) / 1000));
-        } catch (RemoteException e1) {
-            e1.printStackTrace();
-        } catch (NotBoundException e1) {
+        } catch (Exception e1) {
             e1.printStackTrace();
         }
     }
