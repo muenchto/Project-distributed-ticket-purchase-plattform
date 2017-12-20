@@ -1,6 +1,7 @@
 package dbserver;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Set;
@@ -37,7 +38,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	private static ZooKeeperConnection zkcon;
 	private int numServersAtStart;
 
-	public DBServerImpl(String ZKadress, int writingMode, int firstTheater, int lastTheater ) throws IOException{
+	public DBServerImpl(int writingMode, int firstTheater, int lastTheater ) throws IOException{
 		mode=writingMode;
 		storageFile = new Storage (DBFILENAME, LOGFILENAME, firstTheater, lastTheater, writingMode);
 		this.firstTheater=firstTheater;
@@ -64,7 +65,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			storageFile.saveToFile(theaters);
 		}
 		
-		//ZOOKEEPER
+		/*//ZOOKEEPER
 		zkcon = new ZooKeeperConnection();
 		zk = zkcon.connect(ZKadress);
 		try{
@@ -93,7 +94,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			e1.printStackTrace();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-		}
+		}*/
 
 
 	}

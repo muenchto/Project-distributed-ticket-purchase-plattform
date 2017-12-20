@@ -1,11 +1,13 @@
 package dbserver;
 
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import auxiliary.ConnectionHandler;
 import server.WideBoxImpl;
 
 /**
@@ -20,14 +22,21 @@ public class DBServer {
 
     public static void main(String args[]) throws RemoteException {
 
-        //args[0] = own IP
-        //args[1] = zookeeper IP
+
+        String zkIP = "localhost";
+        String zkPort = "";
 
         if (args.length > 0) {
+            //args[0] = own IP
             System.setProperty("java.rmi.server.hostname", args[0]);
+
+            //args[1] = zookeeper IP
+            zkIP = args[1];
+            //args[2] = zookeeper Port
+            zkPort = args[2];
         }
 
-        Registry registry;
+        /*Registry registry;
         String ZKadress;
         try {
             if (args.length > 0) {
@@ -37,7 +46,7 @@ public class DBServer {
             else {
                 registry = LocateRegistry.createRegistry(5000);
                 ZKadress = "127.0.0.1";
-            }
+            }*/
 
            // WideBoxImpl widebox;
             
@@ -48,7 +57,7 @@ public class DBServer {
                 System.err.println("DBServer1 ready");
             }
             */
-            
+            /*
             if (args[0].equals("1")) {
             	DBServerImpl dbServer = new DBServerImpl(MODE,1,1500);
                 registry.rebind("dbServer1", dbServer);
@@ -60,14 +69,16 @@ public class DBServer {
                 registry.rebind("dbServer2", dbServer);
                 System.err.println("DBServer2 ready");
             }
-        
-            DBServerImpl dbServer = new DBServerImpl(ZKadress, MODE,1,1500);
-            registry.rebind("dbServer" + dbServer.getNumServersAtStart(), dbServer);
-            System.out.println("DBServer" + dbServer.getNumServersAtStart() + " ready");
-
-        } catch (Exception e) {
-            System.err.println("dbserver exception: " + e.toString());
-            e.printStackTrace();
+            */
+        ConnectionHandler connector = new ConnectionHandler(zkIP + ":" + zkPort, ConnectionHandler.type.DBServer);
+        DBServerImpl dbServer = null;
+        try {
+            dbServer = new DBServerImpl(MODE,1,1500);
+        } catch (IOException e1) {
+            e1.printStackTrace();
         }
+        connector.register(dbServer);
+        System.out.println("DBServer ready");
+
     }
 }

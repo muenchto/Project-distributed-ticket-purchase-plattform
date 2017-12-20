@@ -45,23 +45,20 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     // create static instance for ZooKeeperConnection class.
     private static ZooKeeperConnection zkconn;
 
-    //the number of Servers that has been started before this one
-    private int numServersAtStart;
+   private String zkAddress;
 
-    public int getNumServersAtStart() {
-        return numServersAtStart;
-    }
-
-    public WideBoxImpl(String ZKadress) throws RemoteException {
+    public WideBoxImpl(String ZKadress, ConnectionHandler connector) throws RemoteException {
 
         dbServerLocalMode = false;
 
         System.out.println("Widebox starting");
 
+        zkAddress = ZKadress;
+
         this.reservedSeats = new ConcurrentHashMap<String, ConcurrentHashMapWithTimedEviction<String, Integer>>(1500);
         this.theaters = new LinkedHashMap<String, Theater>();
 
-        zkconn = new ZooKeeperConnection();
+        /*zkconn = new ZooKeeperConnection();
         zk = zkconn.connect(ZKadress);
         try {
             if (zk.exists("/zookeeper/appserver", false) != null && ZKUtils.getAllNodes(zk, "/zookeeper/appserver").size() == 0) {
@@ -89,11 +86,11 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             } else {
                 e1.printStackTrace();
             }
-        }
+        }*/
 
         if (!dbServerLocalMode) {
             try {
-                byte [] zk_data = zk.getData("/zookeeper/dbserver/dbserver0000000000", false, null);
+                /*byte [] zk_data = zk.getData("/zookeeper/dbserver/dbserver0000000000", false, null);
                 String dbServerIP = new String(zk_data).split(":")[0];
                 System.out.println("ZooKeeper data dbServer: " + dbServerIP);
                 registry = LocateRegistry.getRegistry(dbServerIP, 5000);
@@ -101,8 +98,10 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 System.out.println("WideBoxImpl got the registry at " + dbServerIP);
 
                 dataStorageStub = (DataStorageIF) registry.lookup("dbServer0");
-                System.err.println("WideBoxImpl found DBServer");
+                System.err.println("WideBoxImpl found DBServer");*/
 
+                dataStorageStub = (DataStorageIF) connector.get("dbserver" + connector.numServersAtStart, "/dbserver");
+                System.err.println("WideBoxImpl found dbserver" + connector.numServersAtStart);
             } catch (Exception e) {
                 System.err.println("WideBoxImpl exception: " + e.toString());
                 e.printStackTrace();

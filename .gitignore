@@ -2,7 +2,7 @@
 .classpath
 .project
 *.iml
-*.ds_Store
+*.DS_Store
 /out/
 /bin/
 nohup.out

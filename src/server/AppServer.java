@@ -1,5 +1,8 @@
 package server;
 
+import auxiliary.ConnectionHandler;
+
+import java.io.IOException;
 import java.net.InetAddress;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -14,34 +17,23 @@ public class AppServer {
 
     public static void main(String args[]) throws Exception {
 
-        //args[0] = own IP
-        //args[1] = zookeeper IP
+        String zkIP = "localhost";
+        String zkPort = "";
 
         if (args.length > 0) {
+            //args[0] = own IP
             System.setProperty("java.rmi.server.hostname", args[0]);
+
+            //args[1] = zookeeper IP
+            zkIP = args[1];
+            //args[2] = zookeeper Port
+            zkPort = args[2];
         }
+        String zkAddress = zkIP + ":" + zkPort;
+        ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
+        WideBoxImpl widebox = new WideBoxImpl(zkAddress, connector);
 
-        Registry registry;
-        String ZKadress;
-        try {
-            //case distributed
-            if (args.length > 0) {
-                registry = LocateRegistry.createRegistry(5000);
-                ZKadress = args[1];
-            }
-            //case local
-            else {
-                registry = LocateRegistry.getRegistry(5000);
-                ZKadress = "localhost";
-            }
-
-            WideBoxImpl widebox = new WideBoxImpl(ZKadress);
-            registry.rebind("AppServer" + widebox.getNumServersAtStart(), widebox);
-            System.out.println("AppServer "+widebox.getNumServersAtStart()+" ready");
-
-        } catch (Exception e) {
-            System.err.println("AppServer exception: " + e.toString());
-            e.printStackTrace();
-        }
+        connector.register(widebox);
+        System.out.println("AppServer ready");
     }
 }
