@@ -4,7 +4,6 @@ import auxiliary.DataStorageIF;
 import auxiliary.Seat;
 import auxiliary.Seat.SeatStatus;
 import auxiliary.Theater;
-import org.apache.zookeeper.ZooKeeper;
 import zookeeperlib.ZooKeeperConnection;
 
 import java.io.IOException;
@@ -24,6 +23,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public static Storage storageFile;
 	final static String DBFILENAME = "DBfile.txt";
 	final static String LOGFILENAME = "LOGfile.txt";
+	public static Storage storageBkFile;
 	final static String DBFILENAMEBACKUP = "DB_BACKUPfile.txt";
 	final static String LOGFILENAMEBACKUP = "LOG_BACKUPfile.txt";
 	private int firstTheater;
@@ -34,13 +34,12 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public int mode;
 	private int errors;
 
-	private static ZooKeeper zk;
-	private static ZooKeeperConnection zkcon;
 	private int numServersAtStart;
 
 	public DBServerImpl(int writingMode, int firstTheater, int lastTheater ) throws IOException{
 		mode=writingMode;
 		storageFile = new Storage (DBFILENAME, LOGFILENAME, firstTheater, lastTheater, writingMode);
+		//storageBkFile =  new Storage (DBFILENAMEBACKUP,LOGFILENAMEBACKUP);
 		this.firstTheater=firstTheater;
 		this.lastTheater=lastTheater;
 
@@ -93,6 +92,8 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			synchronized(this){
 				//UPDATE Hashmap
 				theaters.get(theaterName).occupySeat(theaterSeat);
+				updateBackup(theaterName,theaterSeat);
+				//TODO update the replica backup 
 				//log operation to file
 				storageFile.buySeat(theaterName,theaterSeat);
 				// to count operations to at x operations, save memory to file and delete log file
@@ -108,19 +109,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	}
 
 
-	//Count operations to at 100 operations, save memory to file and delete log file
-	private synchronized void countOperation() {
-		opCount++;
-		if (opCount>MAXOPERATIONS) {
-			try {
-				storageFile.saveToFile(theaters);
-			} catch (IOException e) {
-				System.err.println("DBSERVER: Error in couting operations");
-				e.printStackTrace();
-			}
-			opCount=0;
-		}		
-	}
+	
 
 
 
@@ -138,26 +127,75 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	}
 
+
+	//one update
 	@Override
-	public int updateSoldSeat(String theaterName, Seat theaterSeat) throws RemoteException {
-		//theatersBackup.get(theaterName).
-		return 0;
+	public int updateSoldSeat(String theaterName, Seat theaterSeat) throws RemoteException {		
+		int response;
+		response=updateSoldSeatAux( theaterName,  theaterSeat);
+		return response;
 	}
 
+	//set of updates
 	@Override
 	public int[] updateSoldSeat(String[] theaterName, Seat[] theaterSeat) throws RemoteException {
-		// TODO Auto-generated method stub
-		return null;
+		int[] response = new int[theaterName.length];
+		for (int i=0; i<theaterName.length;i++) {
+			response[i]=updateSoldSeatAux( theaterName[i],  theaterSeat[i]);
+		}
+		return response;
+
 	}
 
+	
 	@Override
-	public boolean sendSnapshot(ConcurrentHashMap<String, Theater> snapShot) throws RemoteException {
-		
-		return false;
+	public ConcurrentHashMap<String, Theater> Snapshot() throws RemoteException {
+		return theaters;
 	}
+
+	
+	// Auxiliary methods ******************************************************
 
 	public int getNumServersAtStart() {
 		return numServersAtStart;
+	}
+	
+
+	private synchronized int updateSoldSeatAux(String theaterName, Seat theaterSeat) {
+		if (theatersBackup.contains(theaterName)) {
+			if(theatersBackup.get(theaterName).occupySeat(theaterSeat))
+				// operation sucesseful
+				return 1;
+			else
+				// seat not available
+				return 0;
+		}
+		else
+			if (theaters.contains(theaterName))
+				//theater found on primarys theater, something it's not alright 
+				//This should not happen but if it happens you know
+				return -2;
+			else
+				//theater does not exist in theaterbackup, something it's not alright 
+				return -1;
+	}
+
+	//Count operations to at 100 operations, save memory to file and delete log file
+	private synchronized void countOperation() {
+		opCount++;
+		if (opCount>MAXOPERATIONS) {
+			try {
+				storageFile.saveToFile(theaters);
+			} catch (IOException e) {
+				System.err.println("DBSERVER: Error in couting operations");
+				e.printStackTrace();
+			}
+			opCount=0;
+		}		
+	}
+
+	private void updateBackup(String theaterName, Seat theaterSeat) {
+		//TODO
 	}
 
 

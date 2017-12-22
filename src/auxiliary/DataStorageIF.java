@@ -3,7 +3,6 @@ package auxiliary;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -12,21 +11,21 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 public interface DataStorageIF extends Remote{
-
+		//AppServer communication *********************************************
 		String[] getTheaterNames() throws RemoteException;
 		Theater getTheater(String theaterName) throws RemoteException;
 		boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException;
+		
+		//Fault generattor communication **************************************
 		void killServer() throws RemoteException;
 		//boolean isSeatFree(String theaterName, Seat theaterSeat) throws RemoteException;
 		
+		//DBServer's communication ********************************************
 		//Methods for communication updates among dbservers **only** !!!
-		/*
-		boolean updateSoldSeat (String theaterName, Seat theaterSeat) throws RemoteException;
-		boolean[] updateSoldSeat(String theaterName[], Seat theaterSeat[]) throws RemoteException;
-		*/
 		//insted of boolean use int initially for debug propose (to use several error codes)
+		//updates are only applied to backup hashmap
 		int updateSoldSeat (String theaterName, Seat theaterSeat) throws RemoteException;
 		int[] updateSoldSeat(String theaterName[], Seat theaterSeat[]) throws RemoteException;
-		boolean sendSnapshot (ConcurrentHashMap<String, Theater> snapShot) throws RemoteException;
+		ConcurrentHashMap<String, Theater> Snapshot() throws RemoteException;
 		
 	}

@@ -1,8 +1,6 @@
 package dbserver;
 
-
 import auxiliary.ConnectionHandler;
-
 import java.io.IOException;
 import java.rmi.RemoteException;
 
@@ -19,14 +17,12 @@ public class DBServer {
 
     public static void main(String args[]) throws RemoteException {
 
-
         String zkIP = "localhost";
         String zkPort = "";
 
         if (args.length > 0) {
             //args[0] = own IP
             System.setProperty("java.rmi.server.hostname", args[0]);
-
             //args[1] = zookeeper IP
             zkIP = args[1];
             //args[2] = zookeeper Port
@@ -43,6 +39,5 @@ public class DBServer {
         }
         connector.register(dbServer);
         System.out.println("DBServer ready");
-
     }
 }
