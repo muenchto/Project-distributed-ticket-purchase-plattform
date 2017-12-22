@@ -1,12 +1,12 @@
-.idea/
-.classpath
-.project
-*.iml
-*.DS_Store
 /out/
 /bin/
 nohup.out
 dbfile.txt
 dblogfile.txt
+.idea/
+*.classpath
+*.project
+*.iml
+*.DS_Store
 *.txt
 /Final Version Optimized v2.0/
