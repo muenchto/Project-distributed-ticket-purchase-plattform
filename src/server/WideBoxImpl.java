@@ -3,18 +3,8 @@ package server;
 
 import auxiliary.*;
 import com.stoyanr.evictor.map.ConcurrentHashMapWithTimedEviction;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.ZooKeeper;
-import zookeeperlib.ZKUtils;
-import zookeeperlib.ZooKeeperConnection;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,8 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private final long EXPIRING_DURATION = 15000;
+    private int ID;
 
-    private DataStorageIF dataStorageStub;
+    private DataStorageIF dataStorageStubPrimary;
+    private  DataStorageIF dataStorageStubBackup;
 
     private int clientCounter;
 
@@ -39,9 +31,11 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private boolean dbServerLocalMode;
 
-    public WideBoxImpl(ConnectionHandler connector) throws RemoteException {
+    public WideBoxImpl(ConnectionHandler connector, int NUM_SERVERS) throws RemoteException {
 
         dbServerLocalMode = false;
+
+        this.ID = connector.numServersAtStart;
 
         System.out.println("Widebox starting");
 
@@ -51,8 +45,10 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         if (!dbServerLocalMode) {
             try {
-                dataStorageStub = (DataStorageIF) connector.get("dbserver" + connector.numServersAtStart, "/dbserver");
-                System.err.println("WideBoxImpl found dbserver" + connector.numServersAtStart);
+                dataStorageStubPrimary = (DataStorageIF) connector.get("dbserver" + ID, "/dbserver");
+                System.err.println("WideBoxImpl found primary dbserver" + ID);
+                dataStorageStubBackup = (DataStorageIF) connector.get("dbserver" + ID, "/dbserver");
+                System.err.println("WideBoxImpl found backup dbserver" + ID);
             } catch (Exception e) {
                 System.err.println("WideBoxImpl exception: " + e.toString());
                 e.printStackTrace();
@@ -76,7 +72,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
             } else {
                 System.out.println("getNames");
-                String[] temp = dataStorageStub.getTheaterNames();
+                String[] temp = dataStorageStubPrimary.getTheaterNames();
                 return temp;
             }
         }
@@ -98,7 +94,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 theater = (Theater) this.theaters.get(theaterName);
                 theater = theater.clone();
             } else {
-                theater = dataStorageStub.getTheater(theaterName);
+                theater = dataStorageStubPrimary.getTheater(theaterName);
             }
 
             if (theater.status == TheaterStatus.FULL) {
@@ -137,7 +133,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 theater = (Theater) this.theaters.get(theaterName);
                 theater = theater.clone();
             } else {
-                theater = dataStorageStub.getTheater(theaterName);
+                theater = dataStorageStubPrimary.getTheater(theaterName);
             }
 
 
@@ -188,7 +184,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             }
         } else {
             synchronized (reservedSeats.get(theaterName)) {
-                if (dataStorageStub.occupySeat(theaterName, acceptedSeat)) {
+                if (dataStorageStubPrimary.occupySeat(theaterName, acceptedSeat)) {
                     reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
                     return new Message(MessageType.ACCEPT_OK);
                 } else {

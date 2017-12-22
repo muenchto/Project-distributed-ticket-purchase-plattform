@@ -4,8 +4,9 @@ nohup.out
 dbfile.txt
 dblogfile.txt
 .idea/
-*.classpath
-*.project
+.classpath
+.project
+*.out
 *.iml
 *.DS_Store
 *.txt
