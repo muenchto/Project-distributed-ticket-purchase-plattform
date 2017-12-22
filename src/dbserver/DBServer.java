@@ -13,7 +13,7 @@ public class DBServer {
 	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) 
 	final static int MODE = 3; 
 	final static int NUM_THEATERS = 1500; // not used now, using index insted
-    final static int NUM_DBSERVER = 2;
+    final static int NUM_DBSERVER = 4;
 
     public static void main(String args[]) throws RemoteException {
 
@@ -32,12 +32,12 @@ public class DBServer {
         ConnectionHandler connector = new ConnectionHandler(zkIP + ":" + zkPort, ConnectionHandler.type.DBServer);
         DBServerImpl dbServer = null;
         try {
-            int dbServerID = connector.getNrOfNodesOnPath("/zookeeper");
-            dbServer = new DBServerImpl(MODE,dbServerID*NUM_THEATERS/NUM_DBSERVER,(dbServerID+1)*NUM_THEATERS/NUM_DBSERVER);
+            int dbServerID = connector.getNrOfNodesOnPath("/dbserver");
+            dbServer = new DBServerImpl(dbServerID, NUM_DBSERVER, connector, MODE ,dbServerID*NUM_THEATERS/NUM_DBSERVER,(dbServerID+1)*NUM_THEATERS/NUM_DBSERVER);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
-        connector.register(dbServer);
+
         System.out.println("DBServer ready");
     }
 }

@@ -1,10 +1,10 @@
 package dbserver;
 
+import auxiliary.ConnectionHandler;
 import auxiliary.DataStorageIF;
 import auxiliary.Seat;
 import auxiliary.Seat.SeatStatus;
 import auxiliary.Theater;
-import zookeeperlib.ZooKeeperConnection;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
@@ -34,19 +34,28 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public int mode;
 	private int errors;
 
+	private ConnectionHandler connector;
+	private DataStorageIF backupServerStub;
+	private DataStorageIF primaryServerStub;
+
+
 	private int numServersAtStart;
 
-	public DBServerImpl(int writingMode, int firstTheater, int lastTheater ) throws IOException{
+	public DBServerImpl(int ID, int NUM_DBSERVER, ConnectionHandler connector, int writingMode, int firstTheater, int lastTheater ) throws IOException{
 		mode=writingMode;
 		storageFile = new Storage (DBFILENAME, LOGFILENAME, firstTheater, lastTheater, writingMode);
 		//storageBkFile =  new Storage (DBFILENAMEBACKUP,LOGFILENAMEBACKUP);
 		this.firstTheater=firstTheater;
 		this.lastTheater=lastTheater;
 
+		this.connector = connector;
+
+
+
 
 		//if there is a db file, load the file to memory hashmap 
 		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
-		if (storageFile.existentDBfile()) {
+		/*if (storageFile.existentDBfile()) {
 			System.out.println("DB file present, loading DB");
 			//Creation of the theaters hashmap
 			theaters = storageFile.loadDBfile();
@@ -62,8 +71,25 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			}
 			//dump newly createad hashmap to file
 			storageFile.saveToFile(theaters);
-		}
+		}*/
 
+        connector.register(this);
+        //if this db server is the last one
+        if (ID == NUM_DBSERVER-1) {
+            System.out.println("last one");
+            primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
+            System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");
+            primaryServerStub.notifyBackupAlive(ID);
+            backupServerStub = (DataStorageIF) connector.get("dbserver0", "/dbserver");
+            System.out.println("Connection to BACKUP SERVER0 established");
+            backupServerStub.notifyPrimaryAlive(NUM_DBSERVER);
+        }
+        else if (ID > 0){
+            System.out.println("middle");
+            primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
+            System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");
+            primaryServerStub.notifyBackupAlive(ID);
+        }
 	}
 
 	// RMI FUNCTIONS **********************************************************
@@ -153,8 +179,20 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		return theaters;
 	}
 
-	
-	// Auxiliary methods ******************************************************
+    @Override
+    public void notifyBackupAlive(int backupServerID) throws RemoteException {
+        backupServerStub = (DataStorageIF) connector.get("dbserver" + backupServerID, "/dbserver");
+        System.out.println("Connection to BACKUP SERVER" + backupServerID + " established");
+    }
+
+    @Override
+    public void notifyPrimaryAlive(int NUM_DBSERVER) throws RemoteException {
+        primaryServerStub = (DataStorageIF) connector.get("dbserver" + (NUM_DBSERVER - 1), "/dbserver");
+        System.out.println("Connection to PRIMARY SERVER" + (NUM_DBSERVER - 1)+" established");
+    }
+
+
+    // Auxiliary methods ******************************************************
 
 	public int getNumServersAtStart() {
 		return numServersAtStart;

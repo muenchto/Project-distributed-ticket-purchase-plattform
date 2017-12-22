@@ -19,7 +19,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Created by tobiasmuench on 19.12.17.
  */
-public class ConnectionHandler {
+public class ConnectionHandler  {
 
     final CountDownLatch connectedSignal = new CountDownLatch(1);
 
