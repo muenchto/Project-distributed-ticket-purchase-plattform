@@ -2,6 +2,7 @@ package client;
 
 import auxiliary.ConfigHandler;
 import auxiliary.ConnectionHandler;
+import auxiliary.LoadBalancerIF;
 import auxiliary.WideBoxIF;
 import server.LoadBalancer;
 
@@ -46,8 +47,12 @@ public class TrafficGenerator {
             }
             String zkAddress = zkIP + ":" + zkPort;
             ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.LoadBalancer);
-            WideBoxIF wideBoxStub = (WideBoxIF) connector.get("loadbalancer0", "/loadbalancer");
-
+            LoadBalancerIF loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer0", "/loadbalancer");
+            
+            /*
+            ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
+            WideBoxIF wideBoxStub = (WideBoxIF) connector.get("loadbalancer0", "/appserver");
+			*/
 
             ConfigHandler ch = new ConfigHandler();
             System.out.println(ch.toString());
@@ -65,10 +70,10 @@ public class TrafficGenerator {
             //ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 
-            Result r;
+            TrafficGeneratorThread r;
             long startTime = System.currentTimeMillis();
-            final Future<Result> futureR = ex.submit(new Result(wideBoxStub, numTheaters, rate,
-                    sleepRate, duration, stats, origin, target, op, targetTheater, numClients));
+            final Future<TrafficGeneratorThread> futureR = ex.submit(new TrafficGeneratorThread(loadBalancerStub, numTheaters, rate,
+                    sleepRate, duration, stats, origin, target, op, targetTheater, numClients, zkAddress));
             try {
                 Timer t = new Timer();
                 t.schedule(new TimerTask() {

@@ -1,11 +1,21 @@
 package server;
 
-
 import auxiliary.*;
 import com.stoyanr.evictor.map.ConcurrentHashMapWithTimedEviction;
+import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.ZooKeeper;
+import zookeeperlib.ZKUtils;
+import zookeeperlib.ZooKeeperConnection;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,10 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private final long EXPIRING_DURATION = 15000;
-    private int ID;
 
-    private DataStorageIF dataStorageStubPrimary;
-    private  DataStorageIF dataStorageStubBackup;
+    private DataStorageIF dataStorageStub;
 
     private int clientCounter;
 
@@ -31,11 +39,9 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     private boolean dbServerLocalMode;
 
-    public WideBoxImpl(ConnectionHandler connector, int NUM_SERVERS) throws RemoteException {
+    public WideBoxImpl(ConnectionHandler connector) throws RemoteException {
 
         dbServerLocalMode = false;
-
-        this.ID = connector.numServersAtStart;
 
         System.out.println("Widebox starting");
 
@@ -45,10 +51,8 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         if (!dbServerLocalMode) {
             try {
-                dataStorageStubPrimary = (DataStorageIF) connector.get("dbserver" + ID, "/dbserver");
-                System.err.println("WideBoxImpl found primary dbserver" + ID);
-                dataStorageStubBackup = (DataStorageIF) connector.get("dbserver" + ID, "/dbserver");
-                System.err.println("WideBoxImpl found backup dbserver" + ID);
+                dataStorageStub = (DataStorageIF) connector.get("dbserver" + connector.numServersAtStart, "/dbserver");
+                System.err.println("WideBoxImpl found dbserver" + connector.numServersAtStart);
             } catch (Exception e) {
                 System.err.println("WideBoxImpl exception: " + e.toString());
                 e.printStackTrace();
@@ -72,12 +76,14 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
             } else {
                 System.out.println("getNames");
-                String[] temp = dataStorageStubPrimary.getTheaterNames();
+                String[] temp = dataStorageStub.getTheaterNames();
                 return temp;
             }
         }
 
     public Message query(String theaterName) throws RemoteException {
+    	
+    	System.out.println("WB "+theaterName);
 
         //if the theater is queried the first time, the name is added to the HasMap
         //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
@@ -94,7 +100,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 theater = (Theater) this.theaters.get(theaterName);
                 theater = theater.clone();
             } else {
-                theater = dataStorageStubPrimary.getTheater(theaterName);
+                theater = dataStorageStub.getTheater(theaterName);
             }
 
             if (theater.status == TheaterStatus.FULL) {
@@ -133,7 +139,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 theater = (Theater) this.theaters.get(theaterName);
                 theater = theater.clone();
             } else {
-                theater = dataStorageStubPrimary.getTheater(theaterName);
+                theater = dataStorageStub.getTheater(theaterName);
             }
 
 
@@ -184,7 +190,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             }
         } else {
             synchronized (reservedSeats.get(theaterName)) {
-                if (dataStorageStubPrimary.occupySeat(theaterName, acceptedSeat)) {
+                if (dataStorageStub.occupySeat(theaterName, acceptedSeat)) {
                     reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
                     return new Message(MessageType.ACCEPT_OK);
                 } else {
