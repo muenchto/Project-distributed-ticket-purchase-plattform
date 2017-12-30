@@ -1,12 +1,14 @@
 package appserver;
 
-
 import auxiliary.*;
 import appserver.expringmap.map.ConcurrentHashMapWithTimedEviction;
 
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,12 +35,12 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
 
     private boolean dbServerLocalMode;
 
-    public WideBoxImpl(ConnectionHandler connector, int NUM_SERVERS) throws RemoteException {
+    public WideBoxImpl(ConnectionHandler connector, int total_num_of_servers) throws RemoteException {
 
         dbServerLocalMode = false;
 
         this.ID = connector.numServersAtStart;
-        this.NUM_SERVERS = NUM_SERVERS;
+        this.NUM_SERVERS = total_num_of_servers;
 
         System.out.println("Widebox starting");
 
@@ -83,6 +85,8 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
 
     @Override
     public Message query(String theaterName) throws RemoteException {
+    	
+    	System.out.println("WB "+theaterName);
 
         //if the theater is queried the first time, the name is added to the HasMap
         //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
@@ -212,7 +216,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
             }
         } else {
             synchronized (reservedSeats.get(theaterName)) {
-
+            
                 //try to buy the seat at the DB Server
                 boolean success;
                 try {

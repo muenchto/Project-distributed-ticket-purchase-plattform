@@ -118,13 +118,7 @@ public class ConnectionHandler implements Watcher {
             remote_registry = LocateRegistry.getRegistry(dbServerIP, Integer.parseInt(dbServerPort));
             System.out.println("CONNECTION HANDLER: registered successfully at " + Arrays.toString(remote_registry.list()));
             return remote_registry.lookup(serverName);
-        } catch (KeeperException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        } catch (NotBoundException e) {
+        } catch (KeeperException | InterruptedException | RemoteException | NotBoundException e) {
             e.printStackTrace();
         }
         return null; //TODO: make it better

@@ -1,10 +1,14 @@
 package client;
 
+import auxiliary.ConnectionHandler;
+import auxiliary.LoadBalancerIF;
 import auxiliary.Message;
 import auxiliary.MessageType;
 import auxiliary.WideBoxIF;
 
 import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
@@ -18,6 +22,8 @@ public class TrafficGeneratorThread implements Callable {
     private long latencyCounter;
     private long completeRequestLatencyCounter;
     private WideBoxIF wideBoxStub;
+    private LoadBalancerIF loadBalancerStub;
+    private ConnectionHandler connector;
     private int numTheaters;
     private int rate;
     private long sleepRate;
@@ -30,10 +36,13 @@ public class TrafficGeneratorThread implements Callable {
     private String targetTheater;
     private int numClients;
     private int aux;
-
-    public TrafficGeneratorThread(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration,
-                                  int[] stats, String origin, String target, String op, String targetTheater, int numClients) {
-        this.wideBoxStub = wideBoxStub;
+    
+	
+    public TrafficGeneratorThread(LoadBalancerIF loadBalancerStub, int numTheaters, int rate, long sleepRate, int duration, 
+    		int[] stats, String origin, String target, String op, String targetTheater, int numClients,
+    		String zkAddress) {
+        this.wideBoxStub = null;
+        this.loadBalancerStub = loadBalancerStub;
         this.numTheaters = numTheaters;
         this.rate = rate;
         this.sleepRate = sleepRate;
@@ -45,6 +54,8 @@ public class TrafficGeneratorThread implements Callable {
         this.op = op;
         this.targetTheater = targetTheater;
         this.numClients = numClients;
+        
+        this.connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
         
         //this.latencyCounter = 1;
     }
@@ -351,25 +362,31 @@ public class TrafficGeneratorThread implements Callable {
     }
 
     public void SRPRequest(Random r){
-        String[] theaters;
+        HashMap<String,String[]> theaters;
         long latencyBeg;
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
-        int aux = r.nextInt(1000);
+        int aux = r.nextInt(this.numTheaters);
+        String theaterName = "TheaterNr"+aux;
         try {
             latencyBeg = System.currentTimeMillis();
-            theaters = wideBoxStub.getNames();
+            theaters = loadBalancerStub.getNames();
             latencyEnd = System.currentTimeMillis();
+            
+            String targetAppServer = getAppServerWithTheater(theaters, aux);
+            wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+            
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
             mainRequestLatency += latencydif;
             addToAverageLatency(latencydif);
             this.stats[0]++;
-
+            
             latencyBeg = System.currentTimeMillis();
-            Message m = wideBoxStub.query(theaters[aux]);
-            System.out.println(theaters[aux]);
+            Message m = wideBoxStub.query(theaterName);
+            //check for null if the theater doesnt exist in the message m
+            
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
@@ -380,7 +397,7 @@ public class TrafficGeneratorThread implements Callable {
 
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
-                wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
+                wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
@@ -662,16 +679,27 @@ public class TrafficGeneratorThread implements Callable {
         }
     }
 
-
-
     private void addToAverageLatency(long diff) {
-    	System.out.print(diff+" ");
-        //this.stats[4] = Math.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.latencyCounter));
-    	aux = Math.toIntExact(aux + ((diff - aux) / this.latencyCounter));
+    	System.out.print(diff+" "+"\n");
+        this.stats[4] = Math.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.latencyCounter));
+    	//aux = Math.toIntExact(aux + ((diff - aux) / this.latencyCounter));
     }
     
     private void addToCompleteRequestLatency(long diff) {
         this.stats[5] = Math.toIntExact(this.stats[5] + ((diff - this.stats[5]) / this.completeRequestLatencyCounter));
+    }
+    
+    private String getAppServerWithTheater(HashMap<String, String[]> theaters, int aux) {
+    	String targetTheater = "TheaterNr"+aux;
+    	System.out.println("target theater "+targetTheater);
+    	for (Entry<String, String[]> e : theaters.entrySet()) {
+			for (String s : e.getValue()) {
+				if(s.equals(targetTheater)) {
+					return e.getKey();
+				}
+			}
+		}
+    	return null;
     }
 
     @Override

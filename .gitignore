@@ -1,4 +1,4 @@
-/out/
+out/
 /bin/
 nohup.out
 dbfile.txt
@@ -10,4 +10,6 @@ dblogfile.txt
 *.iml
 *.DS_Store
 *.txt
-/Final Version Optimized v2.0/
+Final Version Optimized v2.0/
+last_year_example/1st Phase
+target/generated-sources/annotations/
