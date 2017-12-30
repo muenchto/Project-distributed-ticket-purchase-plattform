@@ -33,12 +33,12 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
 
     private boolean dbServerLocalMode;
 
-    public WideBoxImpl(ConnectionHandler connector, int NUM_SERVERS) throws RemoteException {
+    public WideBoxImpl(ConnectionHandler connector, int total_num_of_servers) throws RemoteException {
 
         dbServerLocalMode = false;
 
         this.ID = connector.numServersAtStart;
-        this.NUM_SERVERS = NUM_SERVERS;
+        this.NUM_SERVERS = total_num_of_servers;
 
         System.out.println("Widebox starting");
 
