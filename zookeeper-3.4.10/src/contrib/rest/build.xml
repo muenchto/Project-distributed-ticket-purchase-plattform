@@ -152,7 +152,7 @@
 
   <target name="run" depends="jar">
     <echo message="contrib: ${name}"/>
-    <java classname="org.apache.zookeeper.server.jersey.RestMain" fork="true">
+    <java classname="org.apache.zookeeper.appserver.jersey.RestMain" fork="true">
       <classpath>
         <pathelement path="${jarname}" />
         <fileset dir="${build.dir}/lib" includes="*.jar"/>

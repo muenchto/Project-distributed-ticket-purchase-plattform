@@ -93,14 +93,14 @@
     </para>
     
     <programlisting>
-      server.1:localhost:2181:3181:observer
+        appserver.1:localhost:2181:3181:observer
     </programlisting>
     
     <para>
-      This tells every other server that server.1 is an Observer, and that they
-      should not expect it to vote. This is all the configuration you need to do
-      to add an Observer to your ZooKeeper cluster. Now you can connect to it as
-      though it were an ordinary Follower. Try it out, by running:</para>
+        This tells every other server that appserver.1 is an Observer, and that they
+        should not expect it to vote. This is all the configuration you need to do
+        to add an Observer to your ZooKeeper cluster. Now you can connect to it as
+        though it were an ordinary Follower. Try it out, by running:</para>
     <programlisting>
       $ bin/zkCli.sh -server localhost:2181
     </programlisting>

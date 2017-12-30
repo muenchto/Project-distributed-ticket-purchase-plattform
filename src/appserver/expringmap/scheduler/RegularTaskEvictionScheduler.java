@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor.scheduler;
+package appserver.expringmap.scheduler;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -25,8 +25,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.stoyanr.evictor.EvictionQueue;
-import com.stoyanr.evictor.map.EvictibleEntry;
+import appserver.expringmap.EvictionQueue;
+import appserver.expringmap.map.EvictibleEntry;
 
 /**
  * A concrete implementation of {@link AbstractQueueEvictionScheduler} which

@@ -159,7 +159,7 @@ public class ZooKeeperMain {
         public static final Pattern QUOTED_PATTERN = Pattern.compile("^([\'\"])(.*)(\\1)$");
 
         public MyCommandOptions() {
-          options.put("server", "localhost:2181");
+          options.put("appserver", "localhost:2181");
           options.put("timeout", "30000");
         }
 
@@ -197,7 +197,7 @@ public class ZooKeeperMain {
                 String opt = it.next();
                 try {
                     if (opt.equals("-server")) {
-                        options.put("server", it.next());
+                        options.put("appserver", it.next());
                     } else if (opt.equals("-timeout")) {
                         options.put("timeout", it.next());
                     } else if (opt.equals("-r")) {
@@ -292,8 +292,8 @@ public class ZooKeeperMain {
 
     public ZooKeeperMain(String args[]) throws IOException, InterruptedException {
         cl.parseOptions(args);
-        System.out.println("Connecting to " + cl.getOption("server"));
-        connectToZK(cl.getOption("server"));
+        System.out.println("Connecting to " + cl.getOption("appserver"));
+        connectToZK(cl.getOption("appserver"));
         //zk = new ZooKeeper(cl.getOption("server"),
 //                Integer.parseInt(cl.getOption("timeout")), new MyWatcher());
     }

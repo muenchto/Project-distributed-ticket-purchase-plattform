@@ -14,8 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	private static final long serialVersionUID = -7370182827432554702L;
-	public static ConcurrentHashMap<String, Theater> theaters ;
-	public static ConcurrentHashMap<String, Theater> theatersBackup;
+	public ConcurrentHashMap<String, Theater> theaters ;
+	public ConcurrentHashMap<String, Theater> theatersBackup;
 	//For sharding. Array with the starting and end index of the piece of data
 	//that the replica is responsible, as a primary and as a backup of other.
 	public int[] theaterIndexPrim = new int [2];
@@ -55,7 +55,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 		//if there is a db file, load the file to memory hashmap 
 		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
-		/*if (storageFile.existentDBfile()) {
+		if (storageFile.existentDBfile() && false) {
 			System.out.println("DB file present, loading DB");
 			//Creation of the theaters hashmap
 			theaters = storageFile.loadDBfile();
@@ -69,14 +69,14 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 				theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
 				//System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
 			}
+			System.out.println("created theaters from "+theaters.get("TheaterNr"+firstTheater).theaterName + " until "+theaters.get("TheaterNr"+(lastTheater-1)).theaterName);
 			//dump newly createad hashmap to file
-			storageFile.saveToFile(theaters);
-		}*/
+			//storageFile.saveToFile(theaters);
+		}
 
         connector.register(this);
-        //if this db server is the last one
+        //if this db server is the last one, he has to inform the dbserver0 that he is alive an will have dbserver0 as backup
         if (ID == NUM_DBSERVER-1) {
-            System.out.println("last one");
             primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
             System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");
             primaryServerStub.notifyBackupAlive(ID);
@@ -84,8 +84,8 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
             System.out.println("Connection to BACKUP SERVER0 established");
             backupServerStub.notifyPrimaryAlive(NUM_DBSERVER);
         }
+        // if dbserver is not the first one (and not the last one), only connect to its primary server and notify this one that the backup server is up
         else if (ID > 0){
-            System.out.println("middle");
             primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
             System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");
             primaryServerStub.notifyBackupAlive(ID);
@@ -102,9 +102,10 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	@Override
 	public synchronized Theater getTheater(String theaterName) throws RemoteException{
-		if(!theaters.contains(theaterName))
-			System.out.println("DBServer cannot find theater "+theaterName+
-					".This DBServer is only responsible for "+firstTheater+" to "+lastTheater+" theaters");
+		if(!theaters.containsKey(theaterName)) {
+			System.out.println("DBServer cannot find theater " + theaterName +
+					".This DBServer is only responsible for " + firstTheater + " to " + lastTheater + " theaters");
+		}
 		return theaters.get(theaterName);
 	}
 

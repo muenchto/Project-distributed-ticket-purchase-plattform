@@ -65,7 +65,7 @@
     <title>Starting ZooKeeper with JMX enabled</title>
 
     <para>The class
-      <emphasis>org.apache.zookeeper.server.quorum.QuorumPeerMain</emphasis>
+      <emphasis>org.apache.zookeeper.appserver.quorum.QuorumPeerMain</emphasis>
       will start a JMX manageable ZooKeeper server. This class
       registers the proper MBeans during initalization to support JMX
       monitoring and management of the
@@ -157,19 +157,19 @@
             <entry>Leader</entry>
             <entry>Leader</entry>
             <entry>Indicates that the parent replica is the leader and
-            provides attributes/operations for that server. Note that
-            Leader is a subclass of ZooKeeperServer, so it provides
-            all of the information normally associated with a
-            ZooKeeperServer node.</entry>
+                provides attributes/operations for that appserver. Note that
+                Leader is a subclass of ZooKeeperServer, so it provides
+                all of the information normally associated with a
+                ZooKeeperServer node.</entry>
           </row>
           <row>
             <entry>Follower</entry>
             <entry>Follower</entry>
             <entry>Indicates that the parent replica is a follower and
-            provides attributes/operations for that server. Note that
-            Follower is a subclass of ZooKeeperServer, so it provides
-            all of the information normally associated with a
-            ZooKeeperServer node.</entry>
+                provides attributes/operations for that appserver. Note that
+                Follower is a subclass of ZooKeeperServer, so it provides
+                all of the information normally associated with a
+                ZooKeeperServer node.</entry>
           </row>
           <row>
             <entry>DataTree</entry>
@@ -190,8 +190,8 @@
           </row>
     </tbody></tgroup></table>
 
-    <para>This table details JMX for a standalone server. Typically
-    standalone is only used in development situations.</para>
+    <para>This table details JMX for a standalone appserver. Typically
+        standalone is only used in development situations.</para>
 
     <table>
       <title>MBeans, their names and description</title>

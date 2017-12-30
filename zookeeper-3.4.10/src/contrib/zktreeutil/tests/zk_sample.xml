@@ -20,7 +20,7 @@
   <zknode name="myapp">
     <zknode name="version-1.0">
       <zknode name="clientConfig">
-        <zknode name="testClient" value="cluster.id=local;server.host=localhost;server.port=4080"/>
+        <zknode name="testClient" value="cluster.id=local;appserver.host=localhost;appserver.port=4080"/>
       </zknode>
       <zknode name="configuration" value="v4.0">
         <zknode name="cacheControl" value="on"/>

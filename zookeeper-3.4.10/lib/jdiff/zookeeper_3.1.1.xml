@@ -1878,9 +1878,9 @@
       deprecated="not deprecated">
       <exception name="IOException" type="java.io.IOException"/>
       <doc>
-      <![CDATA[To create a client(ZooKeeper) object, the application needs to pass a
+          <![CDATA[To create a client(ZooKeeper) object, the application needs to pass a
  string containing a comma separated list of host:port pairs, each 
- corresponding to a ZooKeeper server.
+ corresponding to a ZooKeeper appserver.
  <p>
  The client object will pick an arbitrary server and try to connect to it.
  If failed, it will try the next one in the list, until a connection is
@@ -1888,7 +1888,7 @@
 
  @param host
             comma separated host:port pairs, each corresponding to a zk
-            server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+            appserver. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
  @param sessionTimeout
             session timeout in milliseconds
  @param watcher
@@ -1903,9 +1903,9 @@
       deprecated="not deprecated">
       <exception name="IOException" type="java.io.IOException"/>
       <doc>
-      <![CDATA[To create a client(ZooKeeper) object, the application needs to pass a
+          <![CDATA[To create a client(ZooKeeper) object, the application needs to pass a
  string containing a comma separated list of host:port pairs, each
- corresponding to a ZooKeeper server.
+ corresponding to a ZooKeeper appserver.
  <p>
  The client object will pick an arbitrary server and try to connect to it.
  If failed, it will try the next one in the list, until a connection is
@@ -1919,7 +1919,7 @@
 
  @param host
             comma separated host:port pairs, each corresponding to a zk
-            server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+            appserver. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
  @param sessionTimeout
             session timeout in milliseconds
  @param watcher
@@ -2555,7 +2555,7 @@
       deprecated="not deprecated">
     </field>
     <doc>
-    <![CDATA[This is the main class of ZooKeeper client library. To use a ZooKeeper
+        <![CDATA[This is the main class of ZooKeeper client library. To use a ZooKeeper
  service, an application must first instantiate an object of ZooKeeper class.
  All the iterations will be done by calling the methods of ZooKeeper class.
  <p>
@@ -2578,7 +2578,7 @@
  continue to use the client.
  <p>
  Some successful ZooKeeper API calls can leave watches on the "data nodes" in
- the ZooKeeper server. Other successful ZooKeeper API calls can trigger those
+ the ZooKeeper appserver. Other successful ZooKeeper API calls can trigger those
  watches. Once a watch is triggered, an event will be delivered to the client
  which left the watch at the first place. Each watch can be triggered only
  once. Thus, up to one event will be delivered to a client for every watch it

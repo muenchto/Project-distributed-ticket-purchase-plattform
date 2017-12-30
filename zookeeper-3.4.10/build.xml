@@ -549,7 +549,7 @@ xmlns:cs="antlib:com.puppycrawl.tools.checkstyle">
             <fileset dir="${java.src.dir}"/>
             <fileset dir="${src_generated.dir}" excludes="**/.generated"/>
             <manifest>
-                <attribute name="Main-Class" value="org.apache.zookeeper.server.quorum.QuorumPeer" />
+                <attribute name="Main-Class" value="org.apache.zookeeper.appserver.quorum.QuorumPeer" />
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Built-At" value="${build.time}"/>
                 <attribute name="Built-On" value="${host.name}" />
@@ -568,7 +568,7 @@ xmlns:cs="antlib:com.puppycrawl.tools.checkstyle">
                 <attribute name="Bundle-License" value="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
                 <attribute name="Bundle-DocURL" value="http://hadoop.apache.org/zookeeper"/>
                 <attribute name="Import-Package" value='javax.management;resolution:=optional,javax.security.auth.callback,javax.security.auth.login,javax.security.sasl,org.slf4j;version="[1.6,2)",org.jboss.netty.buffer;resolution:=optional;version="[3.2,4)",org.jboss.netty.channel;resolution:=optional;version="[3.2,4)",org.jboss.netty.channel.group;resolution:=optional;version="[3.2,4)",org.jboss.netty.channel.socket.nio;resolution:=optional;version="[3.2,4)",org.osgi.framework;resolution:=optional;version="[1.5,2)",org.osgi.util.tracker;resolution:=optional;version="[1.4,2)",org.ietf.jgss'/>
-                <attribute name="Export-Package" value='org.apache.zookeeper;version="${version}",org.apache.zookeeper.client;version="${version}",org.apache.zookeeper.data;version="${version}",org.apache.zookeeper.version;version="${version}",org.apache.zookeeper.server;version="${version}",org.apache.zookeeper.server.auth;version="${version}",org.apache.zookeeper.server.persistence;version="${version}",org.apache.zookeeper.server.quorum;version="${version}",org.apache.zookeeper.common;version="${version}"'/>
+                <attribute name="Export-Package" value='org.apache.zookeeper;version="${version}",org.apache.zookeeper.client;version="${version}",org.apache.zookeeper.data;version="${version}",org.apache.zookeeper.version;version="${version}",org.apache.zookeeper.server;version="${version}",org.apache.zookeeper.appserver.auth;version="${version}",org.apache.zookeeper.appserver.persistence;version="${version}",org.apache.zookeeper.appserver.quorum;version="${version}",org.apache.zookeeper.common;version="${version}"'/>
             </manifest>
         </jar>
     </target>
@@ -590,7 +590,7 @@ xmlns:cs="antlib:com.puppycrawl.tools.checkstyle">
             <fileset file="LICENSE.txt" />
             <fileset dir="${build.classes}" excludes="**/.generated"/>
             <manifest>
-                <attribute name="Main-Class" value="org.apache.zookeeper.server.quorum.QuorumPeer" />
+                <attribute name="Main-Class" value="org.apache.zookeeper.appserver.quorum.QuorumPeer" />
                 <attribute name="Built-By" value="${user.name}"/>
                 <attribute name="Built-At" value="${build.time}"/>
                 <attribute name="Built-On" value="${host.name}" />
@@ -609,7 +609,7 @@ xmlns:cs="antlib:com.puppycrawl.tools.checkstyle">
                 <attribute name="Bundle-License" value="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
                 <attribute name="Bundle-DocURL" value="http://hadoop.apache.org/zookeeper"/>
                 <attribute name="Import-Package" value='javax.management;resolution:=optional,javax.security.auth.callback,javax.security.auth.login,javax.security.sasl,org.slf4j;version="[1.6,2)",org.jboss.netty.buffer;resolution:=optional;version="[3.2,4)",org.jboss.netty.channel;resolution:=optional;version="[3.2,4)",org.jboss.netty.channel.group;resolution:=optional;version="[3.2,4)",org.jboss.netty.channel.socket.nio;resolution:=optional;version="[3.2,4)",org.osgi.framework;resolution:=optional;version="[1.5,2)",org.osgi.util.tracker;resolution:=optional;version="[1.4,2)",org.ietf.jgss'/>
-                <attribute name="Export-Package" value='org.apache.zookeeper;version="${version}",org.apache.zookeeper.client;version="${version}",org.apache.zookeeper.data;version="${version}",org.apache.zookeeper.version;version="${version}",org.apache.zookeeper.server;version="${version}",org.apache.zookeeper.server.auth;version="${version}",org.apache.zookeeper.server.persistence;version="${version}",org.apache.zookeeper.server.quorum;version="${version}",org.apache.zookeeper.common;version="${version}"'/>
+                <attribute name="Export-Package" value='org.apache.zookeeper;version="${version}",org.apache.zookeeper.client;version="${version}",org.apache.zookeeper.data;version="${version}",org.apache.zookeeper.version;version="${version}",org.apache.zookeeper.server;version="${version}",org.apache.zookeeper.appserver.auth;version="${version}",org.apache.zookeeper.appserver.persistence;version="${version}",org.apache.zookeeper.appserver.quorum;version="${version}",org.apache.zookeeper.common;version="${version}"'/>
             </manifest>
         </jar>
     </target>

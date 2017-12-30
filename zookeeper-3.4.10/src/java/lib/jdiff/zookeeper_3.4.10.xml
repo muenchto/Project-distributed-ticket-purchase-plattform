@@ -157,7 +157,7 @@
       <param name="data" type="byte[]"/>
       <param name="stat" type="org.apache.zookeeper.data.Stat"/>
       <doc>
-      <![CDATA[Process the result of the asynchronous call.
+          <![CDATA[Process the result of the asynchronous call.
  <p/>
  On success, rc is
  {@link org.apache.zookeeper.KeeperException.Code#OK}.
@@ -175,7 +175,7 @@
  @param path The path that we passed to asynchronous calls.
  @param ctx  Whatever context object that we passed to
              asynchronous calls.
- @param data The {@link org.apache.zookeeper.server.DataNode#data}
+ @param data The {@link org.apache.zookeeper.appserver.DataNode#data}
              of the node.
  @param stat {@link org.apache.zookeeper.data.Stat} object of
              the node on given path.]]>
@@ -2306,12 +2306,12 @@
       <exception name="UnsupportedCallbackException" type="javax.security.auth.callback.UnsupportedCallbackException"/>
     </method>
     <doc>
-    <![CDATA[This is used by the SASL mechanisms to get further information to complete
+        <![CDATA[This is used by the SASL mechanisms to get further information to complete
  the authentication. For example, a SASL mechanism might use this callback
  handler to do verification operation. The CallbackHandler interface here
  refers to javax.security.auth.callback.CallbackHandler. It should not be
  confused with ZooKeeper packet callbacks like
- org.apache.zookeeper.server.auth.SaslServerCallbackHandler.]]>
+ org.apache.zookeeper.appserver.auth.SaslServerCallbackHandler.]]>
     </doc>
   </class>
   <!-- end class org.apache.zookeeper.SaslClientCallbackHandler -->
@@ -3475,9 +3475,9 @@
       deprecated="not deprecated">
       <exception name="IOException" type="java.io.IOException"/>
       <doc>
-      <![CDATA[To create a ZooKeeper client object, the application needs to pass a
+          <![CDATA[To create a ZooKeeper client object, the application needs to pass a
  connection string containing a comma separated list of host:port pairs,
- each corresponding to a ZooKeeper server.
+ each corresponding to a ZooKeeper appserver.
  <p>
  Session establishment is asynchronous. This constructor will initiate
  connection to the server and return immediately - potentially (usually)
@@ -3499,7 +3499,7 @@
 
  @param connectString
             comma separated host:port pairs, each corresponding to a zk
-            server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002" If
+            appserver. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002" If
             the optional chroot suffix is used the example would look
             like: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002/app/a"
             where the client would be rooted at "/app/a" and all paths
@@ -3523,9 +3523,9 @@
       deprecated="not deprecated">
       <exception name="IOException" type="java.io.IOException"/>
       <doc>
-      <![CDATA[To create a ZooKeeper client object, the application needs to pass a
+          <![CDATA[To create a ZooKeeper client object, the application needs to pass a
  connection string containing a comma separated list of host:port pairs,
- each corresponding to a ZooKeeper server.
+ each corresponding to a ZooKeeper appserver.
  <p>
  Session establishment is asynchronous. This constructor will initiate
  connection to the server and return immediately - potentially (usually)
@@ -3547,7 +3547,7 @@
 
  @param connectString
             comma separated host:port pairs, each corresponding to a zk
-            server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002" If
+            appserver. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002" If
             the optional chroot suffix is used the example would look
             like: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002/app/a"
             where the client would be rooted at "/app/a" and all paths
@@ -3579,9 +3579,9 @@
       deprecated="not deprecated">
       <exception name="IOException" type="java.io.IOException"/>
       <doc>
-      <![CDATA[To create a ZooKeeper client object, the application needs to pass a
+          <![CDATA[To create a ZooKeeper client object, the application needs to pass a
  connection string containing a comma separated list of host:port pairs,
- each corresponding to a ZooKeeper server.
+ each corresponding to a ZooKeeper appserver.
  <p>
  Session establishment is asynchronous. This constructor will initiate
  connection to the server and return immediately - potentially (usually)
@@ -3609,7 +3609,7 @@
 
  @param connectString
             comma separated host:port pairs, each corresponding to a zk
-            server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+            appserver. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
             If the optional chroot suffix is used the example would look
             like: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002/app/a"
             where the client would be rooted at "/app/a" and all paths
@@ -3636,9 +3636,9 @@
       deprecated="not deprecated">
       <exception name="IOException" type="java.io.IOException"/>
       <doc>
-      <![CDATA[To create a ZooKeeper client object, the application needs to pass a
+          <![CDATA[To create a ZooKeeper client object, the application needs to pass a
  connection string containing a comma separated list of host:port pairs,
- each corresponding to a ZooKeeper server.
+ each corresponding to a ZooKeeper appserver.
  <p>
  Session establishment is asynchronous. This constructor will initiate
  connection to the server and return immediately - potentially (usually)
@@ -3666,7 +3666,7 @@
 
  @param connectString
             comma separated host:port pairs, each corresponding to a zk
-            server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
+            appserver. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002"
             If the optional chroot suffix is used the example would look
             like: "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002/app/a"
             where the client would be rooted at "/app/a" and all paths
@@ -4577,7 +4577,7 @@
       deprecated="not deprecated">
     </field>
     <doc>
-    <![CDATA[This is the main class of ZooKeeper client library. To use a ZooKeeper
+        <![CDATA[This is the main class of ZooKeeper client library. To use a ZooKeeper
  service, an application must first instantiate an object of ZooKeeper class.
  All the iterations will be done by calling the methods of ZooKeeper class.
  The methods of this class are thread-safe unless otherwise noted.
@@ -4607,7 +4607,7 @@
  an appropriate return code (rc) indicating the error.
  <p>
  Some successful ZooKeeper API calls can leave watches on the "data nodes" in
- the ZooKeeper server. Other successful ZooKeeper API calls can trigger those
+ the ZooKeeper appserver. Other successful ZooKeeper API calls can trigger those
  watches. Once a watch is triggered, an event will be delivered to the client
  which left the watch at the first place. Each watch can be triggered only
  once. Thus, up to one event will be delivered to a client for every watch it

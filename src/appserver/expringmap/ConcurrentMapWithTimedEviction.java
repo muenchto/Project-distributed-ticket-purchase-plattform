@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor;
+package appserver.expringmap;
 
 import java.util.concurrent.ConcurrentMap;
 

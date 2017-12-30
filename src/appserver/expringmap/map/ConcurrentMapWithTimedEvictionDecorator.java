@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor.map;
+package appserver.expringmap.map;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -23,8 +23,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
-import com.stoyanr.evictor.ConcurrentMapWithTimedEviction;
-import com.stoyanr.evictor.EvictionScheduler;
+import appserver.expringmap.ConcurrentMapWithTimedEviction;
+import appserver.expringmap.EvictionScheduler;
 
 /**
  * A {@link ConcurrentMapWithTimedEviction} implementation which decorates an

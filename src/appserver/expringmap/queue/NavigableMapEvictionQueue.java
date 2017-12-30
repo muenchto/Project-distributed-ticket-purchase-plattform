@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor.queue;
+package appserver.expringmap.queue;
 
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import com.stoyanr.evictor.EvictionQueue;
-import com.stoyanr.evictor.map.EvictibleEntry;
+import appserver.expringmap.EvictionQueue;
+import appserver.expringmap.map.EvictibleEntry;
 
 /**
  * An {@link EvictionQueue} which uses a

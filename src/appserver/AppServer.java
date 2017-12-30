@@ -1,4 +1,4 @@
-package server;
+package appserver;
 
 import auxiliary.ConnectionHandler;
 
@@ -9,6 +9,8 @@ import auxiliary.ConnectionHandler;
  * @author group: psd002 ; members: 42560-50586-30360
  */
 public class AppServer {
+    final static int NUM_DBSERVER = 2;
+
 
     public static void main(String args[]) throws Exception {
 
@@ -26,7 +28,7 @@ public class AppServer {
         }
         String zkAddress = zkIP + ":" + zkPort;
         ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
-        WideBoxImpl widebox = new WideBoxImpl(connector);
+        WideBoxImpl widebox = new WideBoxImpl(connector, NUM_DBSERVER);
 
         connector.register(widebox);
         System.out.println("AppServer ready");
