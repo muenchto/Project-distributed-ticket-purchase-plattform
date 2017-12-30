@@ -2,8 +2,14 @@ package client;
 
 import auxiliary.ConfigHandler;
 import auxiliary.ConnectionHandler;
+import auxiliary.LoadBalancerIF;
 import auxiliary.WideBoxIF;
+import server.LoadBalancer;
 
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.*;
@@ -41,9 +47,12 @@ public class TrafficGenerator {
             }
             String zkAddress = zkIP + ":" + zkPort;
             ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.LoadBalancer);
-            WideBoxIF wideBoxStub = (WideBoxIF) connector.get("loadbalancer0", "/loadbalancer");
-            System.out.println("TrafficGen found loadbalancer");
-
+            LoadBalancerIF loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer0", "/loadbalancer");
+            
+            /*
+            ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
+            WideBoxIF wideBoxStub = (WideBoxIF) connector.get("loadbalancer0", "/appserver");
+			*/
 
             ConfigHandler ch = new ConfigHandler();
             System.out.println(ch.toString());
@@ -63,8 +72,8 @@ public class TrafficGenerator {
 
             TrafficGeneratorThread r;
             long startTime = System.currentTimeMillis();
-            final Future<TrafficGeneratorThread> futureR = ex.submit(new TrafficGeneratorThread(wideBoxStub, numTheaters, rate,
-                    sleepRate, duration, stats, origin, target, op, targetTheater, numClients));
+            final Future<TrafficGeneratorThread> futureR = ex.submit(new TrafficGeneratorThread(loadBalancerStub, numTheaters, rate,
+                    sleepRate, duration, stats, origin, target, op, targetTheater, numClients, zkAddress));
             try {
                 Timer t = new Timer();
                 t.schedule(new TimerTask() {

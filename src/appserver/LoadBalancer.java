@@ -1,14 +1,17 @@
 package appserver;
 
 import auxiliary.ConnectionHandler;
+import auxiliary.LoadBalancerIF;
 import auxiliary.Message;
 import auxiliary.Seat;
+import auxiliary.TheaterStatus;
 import auxiliary.WideBoxIF;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
