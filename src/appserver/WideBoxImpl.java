@@ -35,7 +35,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
 
     private boolean dbServerLocalMode;
 
-    public WideBoxImpl(ConnectionHandler connector) throws RemoteException {
+    public WideBoxImpl(ConnectionHandler connector, int NUM_SERVERS) throws RemoteException {
 
         dbServerLocalMode = false;
 

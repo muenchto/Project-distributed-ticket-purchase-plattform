@@ -36,7 +36,6 @@ public class TrafficGeneratorThread implements Callable {
     private String targetTheater;
     private int numClients;
     private int aux;
-<<<<<<< HEAD:src/client/TrafficGeneratorThread.java
     
 	
     public TrafficGeneratorThread(LoadBalancerIF loadBalancerStub, int numTheaters, int rate, long sleepRate, int duration, 
@@ -44,12 +43,6 @@ public class TrafficGeneratorThread implements Callable {
     		String zkAddress) {
         this.wideBoxStub = null;
         this.loadBalancerStub = loadBalancerStub;
-=======
-
-    public TrafficGeneratorThread(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration,
-                                  int[] stats, String origin, String target, String op, String targetTheater, int numClients) {
-        this.wideBoxStub = wideBoxStub;
->>>>>>> master:src/client/TrafficGeneratorThread.java
         this.numTheaters = numTheaters;
         this.rate = rate;
         this.sleepRate = sleepRate;
@@ -374,7 +367,8 @@ public class TrafficGeneratorThread implements Callable {
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
-        int aux = r.nextInt(1000);
+        int aux = r.nextInt(this.numTheaters);
+        String theaterName = "TheaterNr"+aux;
         try {
             latencyBeg = System.currentTimeMillis();
             theaters = loadBalancerStub.getNames();
@@ -390,12 +384,9 @@ public class TrafficGeneratorThread implements Callable {
             this.stats[0]++;
             
             latencyBeg = System.currentTimeMillis();
-<<<<<<< HEAD:src/client/TrafficGeneratorThread.java
-            Message m = wideBoxStub.query(targetAppServer);
-=======
-            Message m = wideBoxStub.query(theaters[aux]);
-            System.out.println(theaters[aux]);
->>>>>>> master:src/client/TrafficGeneratorThread.java
+            Message m = wideBoxStub.query(theaterName);
+            //check for null if the theater doesnt exist in the message m
+            
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;
@@ -406,7 +397,7 @@ public class TrafficGeneratorThread implements Callable {
 
             if (m.getType() == MessageType.AVAILABLE) {
                 latencyBeg = System.currentTimeMillis();
-                wideBoxStub.accept(targetAppServer, m.getClientsSeat(), m.getClientID());
+                wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
                 latencyEnd = System.currentTimeMillis();
                 this.latencyCounter++;
                 latencydif = latencyEnd - latencyBeg;
