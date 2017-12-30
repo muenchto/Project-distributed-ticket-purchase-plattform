@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-package expringMap.queue;
+package appserver.expringmap.queue;
 
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import expringMap.EvictionQueue;
-import expringMap.map.EvictibleEntry;
+import appserver.expringmap.EvictionQueue;
+import appserver.expringmap.map.EvictibleEntry;
 
 /**
  * An {@link EvictionQueue} which uses a

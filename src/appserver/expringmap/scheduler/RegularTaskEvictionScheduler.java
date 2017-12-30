@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package expringMap.scheduler;
+package appserver.expringmap.scheduler;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -25,8 +25,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import expringMap.EvictionQueue;
-import expringMap.map.EvictibleEntry;
+import appserver.expringmap.EvictionQueue;
+import appserver.expringmap.map.EvictibleEntry;
 
 /**
  * A concrete implementation of {@link AbstractQueueEvictionScheduler} which

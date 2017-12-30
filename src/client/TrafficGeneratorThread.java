@@ -13,7 +13,7 @@ import java.util.concurrent.Callable;
  * 
  * @author group: psd002 ; members: 42560-50586-30360
  */
-public class Result implements Callable {
+public class TrafficGeneratorThread implements Callable {
 	
     private long latencyCounter;
     private long completeRequestLatencyCounter;
@@ -31,8 +31,8 @@ public class Result implements Callable {
     private int numClients;
     private int aux;
 
-    public Result(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration, 
-    		int[] stats, String origin, String target, String op, String targetTheater, int numClients) {
+    public TrafficGeneratorThread(WideBoxIF wideBoxStub, int numTheaters, int rate, long sleepRate, int duration,
+                                  int[] stats, String origin, String target, String op, String targetTheater, int numClients) {
         this.wideBoxStub = wideBoxStub;
         this.numTheaters = numTheaters;
         this.rate = rate;
@@ -50,7 +50,7 @@ public class Result implements Callable {
     }
 
     @Override
-    public Result call() throws Exception {
+    public TrafficGeneratorThread call() throws Exception {
         long endTime;
         Random r = new Random();
         int clientId = 1;

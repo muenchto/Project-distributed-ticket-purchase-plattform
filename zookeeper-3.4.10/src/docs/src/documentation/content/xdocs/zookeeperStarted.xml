@@ -333,14 +333,14 @@ numChildren = 0
    </para>
 
 <programlisting>
-tickTime=2000
-dataDir=/var/lib/zookeeper
-clientPort=2181
-initLimit=5
-syncLimit=2
-server.1=zoo1:2888:3888
-server.2=zoo2:2888:3888
-server.3=zoo3:2888:3888
+    tickTime=2000
+    dataDir=/var/lib/zookeeper
+    clientPort=2181
+    initLimit=5
+    syncLimit=2
+    appserver.1=zoo1:2888:3888
+    appserver.2=zoo2:2888:3888
+    appserver.3=zoo3:2888:3888
 </programlisting>
 
       <para>The new entry, <emphasis role="bold">initLimit</emphasis> is
@@ -354,7 +354,7 @@ server.3=zoo3:2888:3888
       for initLimit is 5 ticks at 2000 milleseconds a tick, or 10
       seconds.</para>
 
-      <para>The entries of the form <emphasis>server.X</emphasis> list the
+      <para>The entries of the form <emphasis>appserver.X</emphasis> list the
       servers that make up the ZooKeeper service. When the server starts up,
       it knows which server it is by looking for the file
       <emphasis>myid</emphasis> in the data directory. That file has the 
@@ -388,7 +388,7 @@ server.3=zoo3:2888:3888
             happen which caused the machine to die, all of the zookeeper
             servers would be offline. Full redundancy requires that each
             server have its own machine. It must be a completely separate
-            physical server. Multiple virtual machines on the same physical
+            physical appserver. Multiple virtual machines on the same physical
             host are still vulnerable to the complete failure of that host.</para>
       </note>
     </section>

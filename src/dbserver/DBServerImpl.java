@@ -75,7 +75,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		}
 
         connector.register(this);
-        //if this db server is the last one
+        //if this db server is the last one, he has to inform the dbserver0 that he is alive an will have dbserver0 as backup
         if (ID == NUM_DBSERVER-1) {
             primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
             System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");
@@ -84,6 +84,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
             System.out.println("Connection to BACKUP SERVER0 established");
             backupServerStub.notifyPrimaryAlive(NUM_DBSERVER);
         }
+        // if dbserver is not the first one (and not the last one), only connect to its primary server and notify this one that the backup server is up
         else if (ID > 0){
             primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
             System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");

@@ -242,7 +242,7 @@ public abstract class ClientBase extends ZKTestCase {
                 }
             } catch (IOException e) {
                 // ignore as this is expected
-                LOG.info("server " + hp + " not up " + e);
+                LOG.info("appserver " + hp + " not up " + e);
             }
 
             if (System.currentTimeMillis() > start + timeout) {

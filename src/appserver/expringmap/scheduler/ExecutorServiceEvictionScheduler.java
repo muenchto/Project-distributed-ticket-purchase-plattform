@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package expringMap.scheduler;
+package appserver.expringmap.scheduler;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,8 +23,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import expringMap.EvictionScheduler;
-import expringMap.map.EvictibleEntry;
+import appserver.expringmap.EvictionScheduler;
+import appserver.expringmap.map.EvictibleEntry;
 
 /**
  * An {@link EvictionScheduler} which uses a

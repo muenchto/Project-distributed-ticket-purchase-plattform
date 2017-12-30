@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-package expringMap;
+package appserver.expringmap;
 
-import expringMap.map.ConcurrentMapWithTimedEvictionDecorator;
-import expringMap.map.EvictibleEntry;
+import appserver.expringmap.map.ConcurrentMapWithTimedEvictionDecorator;
+import appserver.expringmap.map.EvictibleEntry;
 
 /**
  * An eviction scheduler used by {@link ConcurrentMapWithTimedEvictionDecorator}

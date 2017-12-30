@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package expringMap.map;
+package appserver.expringmap.map;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;

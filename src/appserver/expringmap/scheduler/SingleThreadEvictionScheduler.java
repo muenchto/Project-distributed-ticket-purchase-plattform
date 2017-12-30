@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-package expringMap.scheduler;
+package appserver.expringmap.scheduler;
 
-import expringMap.EvictionQueue;
-import expringMap.map.EvictibleEntry;
+import appserver.expringmap.EvictionQueue;
+import appserver.expringmap.map.EvictibleEntry;
 
 /**
  * A concrete implementation of {@link AbstractQueueEvictionScheduler} which

@@ -3,12 +3,7 @@ package client;
 import auxiliary.ConfigHandler;
 import auxiliary.ConnectionHandler;
 import auxiliary.WideBoxIF;
-import server.LoadBalancer;
 
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.*;
@@ -66,9 +61,9 @@ public class TrafficGenerator {
             //ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
             ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 
-            Result r;
+            TrafficGeneratorThread r;
             long startTime = System.currentTimeMillis();
-            final Future<Result> futureR = ex.submit(new Result(wideBoxStub, numTheaters, rate,
+            final Future<TrafficGeneratorThread> futureR = ex.submit(new TrafficGeneratorThread(wideBoxStub, numTheaters, rate,
                     sleepRate, duration, stats, origin, target, op, targetTheater, numClients));
             try {
                 Timer t = new Timer();

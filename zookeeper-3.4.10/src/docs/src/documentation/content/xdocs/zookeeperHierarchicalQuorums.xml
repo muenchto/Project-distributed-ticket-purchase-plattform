@@ -40,9 +40,9 @@
   </articleinfo>
 
     <para>
-    This document gives an example of how to use hierarchical quorums. The basic idea is
-    very simple. First, we split servers into groups, and add a line for each group listing
-    the servers that form this group. Next we have to assign a weight to each server.  
+        This document gives an example of how to use hierarchical quorums. The basic idea is
+        very simple. First, we split servers into groups, and add a line for each group listing
+        the servers that form this group. Next we have to assign a weight to each appserver.
     </para>
     
     <para>

@@ -10,7 +10,7 @@
        In particular we want to make sure we exit if this occurs
        Also notice logged as fatal error -->
   <Match>
-    <Class name="org.apache.zookeeper.server.ZooKeeperCriticalThread" />
+    <Class name="org.apache.zookeeper.appserver.ZooKeeperCriticalThread" />
     <Method name="handleException" />
     <Bug pattern="DM_EXIT" />
   </Match>
@@ -18,7 +18,7 @@
   <!-- In particular we want to make sure we exit if this occurs, unrecoverable.
        Also notice logged as fatal error -->
   <Match>
-    <Class name="org.apache.zookeeper.server.ZooKeeperServer" />
+    <Class name="org.apache.zookeeper.appserver.ZooKeeperServer" />
     <Method name="takeSnapshot" />
     <Bug pattern="DM_EXIT" />
   </Match>
@@ -35,7 +35,7 @@
    <!-- If we cannot open a socket to elect a leader, then we should
             simply exit -->
    <Match>
-     <Class name="org.apache.zookeeper.server.quorum.LeaderElection" />
+     <Class name="org.apache.zookeeper.appserver.quorum.LeaderElection" />
        <Method name="lookForLeader" />
        <Bug pattern="DM_EXIT" />
    </Match>
@@ -43,14 +43,14 @@
    <!-- Committing out of order is an unrecoverable error, so we should
               really exit  -->
    <Match>
-     <Class name="org.apache.zookeeper.server.quorum.FollowerZooKeeperServer" />
+     <Class name="org.apache.zookeeper.appserver.quorum.FollowerZooKeeperServer" />
        <Method name="commit" />
        <Bug pattern="DM_EXIT" />
      </Match>
 
    <!-- Two unrecoverable errors while following the leader  -->
    <Match>
-     <Class name="org.apache.zookeeper.server.quorum.Learner" />
+     <Class name="org.apache.zookeeper.appserver.quorum.Learner" />
        <Method name="syncWithLeader" />
        <Bug pattern="DM_EXIT" />
    </Match>
@@ -65,12 +65,12 @@
   </Match>
 
   <Match>
-    <Class name="org.apache.zookeeper.server.DataNode" />
+    <Class name="org.apache.zookeeper.appserver.DataNode" />
       <Bug code="EI2"/>
   </Match>
 
   <Match>
-    <Class name="org.apache.zookeeper.server.quorum.QuorumPacket" />
+    <Class name="org.apache.zookeeper.appserver.quorum.QuorumPacket" />
        <Bug code="EI2, EI" />
   </Match>
 
@@ -80,32 +80,32 @@
   </Match>
 
   <Match>
-    <Class name="org.apache.zookeeper.server.DataNode"/>
+    <Class name="org.apache.zookeeper.appserver.DataNode"/>
       <Field name="children"/> 
       <Bug code="IS"/>
   </Match>
  <Match>
-   <Class name="org.apache.zookeeper.server.quorum.Leader"/>
+   <Class name="org.apache.zookeeper.appserver.quorum.Leader"/>
      <Field name="lastProposed"/>
      <Bug code="IS"/>
   </Match>
   <Match>
-     <Class name="org.apache.zookeeper.server.quorum.LearnerSessionTracker"/>
+     <Class name="org.apache.zookeeper.appserver.quorum.LearnerSessionTracker"/>
        <Bug code="UrF"/>
   </Match>
   <Match>
-    <Class name="org.apache.zookeeper.server.quorum.AuthFastLeaderElection$Messenger$WorkerSender"/>
+    <Class name="org.apache.zookeeper.appserver.quorum.AuthFastLeaderElection$Messenger$WorkerSender"/>
     <Method name="process"/>
     <Bug code="RV"/>
   </Match>
 
   <!-- these are old classes just for upgrading and should go away -->
   <Match>
-    <Class name="org.apache.zookeeper.server.upgrade.DataNodeV1"/>
+    <Class name="org.apache.zookeeper.appserver.upgrade.DataNodeV1"/>
   </Match> 
 
   <Match>
-    <Class name="org.apache.zookeeper.server.upgrade.DataTreeV1"/>
+    <Class name="org.apache.zookeeper.appserver.upgrade.DataTreeV1"/>
   </Match>
 
   <!-- References code in a generated file that may or maynot be null -->
@@ -126,7 +126,7 @@
   </Match>
 
   <Match>
-    <Class name="org.apache.zookeeper.server.quorum.QuorumPeer"/>
+    <Class name="org.apache.zookeeper.appserver.quorum.QuorumPeer"/>
     <Bug pattern="OS_OPEN_STREAM" />
     <Method name="writeLongToFile" />
   </Match>

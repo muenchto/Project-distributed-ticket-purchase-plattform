@@ -1,8 +1,8 @@
-package server;
+package appserver;
 
 
 import auxiliary.*;
-import expringMap.map.ConcurrentHashMapWithTimedEviction;
+import appserver.expringmap.map.ConcurrentHashMapWithTimedEviction;
 
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;

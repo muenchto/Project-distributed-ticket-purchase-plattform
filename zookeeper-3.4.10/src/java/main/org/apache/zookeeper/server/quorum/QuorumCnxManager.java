@@ -932,7 +932,7 @@ public class QuorumCnxManager {
                             b = pollSendQueue(bq, 1000, TimeUnit.MILLISECONDS);
                         } else {
                             LOG.error("No queue of incoming messages for " +
-                                      "server " + sid);
+                                    "appserver " + sid);
                             break;
                         }
 

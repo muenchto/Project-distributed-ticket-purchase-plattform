@@ -1,15 +1,11 @@
-package server;
+package appserver;
 
 import auxiliary.ConnectionHandler;
 import auxiliary.Message;
 import auxiliary.Seat;
 import auxiliary.WideBoxIF;
-import com.sun.tools.javac.util.ArrayUtils;
 
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Arrays;

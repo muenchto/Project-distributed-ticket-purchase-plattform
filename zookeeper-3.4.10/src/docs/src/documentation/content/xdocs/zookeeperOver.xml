@@ -97,10 +97,10 @@
       majority of the servers are available, the ZooKeeper service will be
       available.</para>
 
-      <para>Clients connect to a single ZooKeeper server. The client maintains
-      a TCP connection through which it sends requests, gets responses, gets
-      watch events, and sends heart beats. If the TCP connection to the server
-      breaks, the client will connect to a different server.</para>
+      <para>Clients connect to a single ZooKeeper appserver. The client maintains
+          a TCP connection through which it sends requests, gets responses, gets
+          watch events, and sends heart beats. If the TCP connection to the server
+          breaks, the client will connect to a different appserver.</para>
 
       <para><emphasis role="bold">ZooKeeper is ordered.</emphasis> ZooKeeper
       stamps each update with a number that reflects the order of all

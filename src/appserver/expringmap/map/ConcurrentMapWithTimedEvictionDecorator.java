@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package expringMap.map;
+package appserver.expringmap.map;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -23,8 +23,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
-import expringMap.ConcurrentMapWithTimedEviction;
-import expringMap.EvictionScheduler;
+import appserver.expringmap.ConcurrentMapWithTimedEviction;
+import appserver.expringmap.EvictionScheduler;
 
 /**
  * A {@link ConcurrentMapWithTimedEviction} implementation which decorates an

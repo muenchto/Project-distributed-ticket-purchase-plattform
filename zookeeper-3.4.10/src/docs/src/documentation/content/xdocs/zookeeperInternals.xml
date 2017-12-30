@@ -259,7 +259,7 @@ activation:
 
 <itemizedlist>
 <listitem><para>A follower will ACK the NEW_LEADER proposal after it has synced with the leader.</para></listitem>
-<listitem><para>A follower will only ACK a NEW_LEADER proposal with a given zxid from a single server.</para></listitem>
+<listitem><para>A follower will only ACK a NEW_LEADER proposal with a given zxid from a single appserver.</para></listitem>
 <listitem><para>A new leader will COMMIT the NEW_LEADER proposal when a quorum of followers have ACKed it.</para></listitem>
 <listitem><para>A follower will commit any state it received from the leader when the NEW_LEADER proposal is COMMIT.</para></listitem>
 <listitem><para>A new leader will not accept new proposals until the NEW_LEADER proposal has been COMMITED.</para></listitem>
@@ -368,12 +368,12 @@ acknowledgement from a quorum of servers.
 </para>
 
 <para>
-If we extract the properties that we really need from our use of majorities, we have that we only
-need to guarantee that groups of processes used to validate an operation by voting (e.g., acknowledging
-a leader proposal) pairwise intersect in at least one server. Using majorities guarantees such a property.
-However, there are other ways of constructing quorums different from majorities. For example, we can assign
-weights to the votes of servers, and say that the votes of some servers are more important. To obtain a quorum,
-we get enough votes so that the sum of weights of all votes is larger than half of the total sum of all weights.    
+    If we extract the properties that we really need from our use of majorities, we have that we only
+    need to guarantee that groups of processes used to validate an operation by voting (e.g., acknowledging
+    a leader proposal) pairwise intersect in at least one appserver. Using majorities guarantees such a property.
+    However, there are other ways of constructing quorums different from majorities. For example, we can assign
+    weights to the votes of servers, and say that the votes of some servers are more important. To obtain a quorum,
+    we get enough votes so that the sum of weights of all votes is larger than half of the total sum of all weights.
 </para>
 
 <para>

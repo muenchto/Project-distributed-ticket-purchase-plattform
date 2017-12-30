@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-package expringMap.queue;
+package appserver.expringmap.queue;
 
 import java.util.Comparator;
 import java.util.Queue;
 import java.util.concurrent.PriorityBlockingQueue;
 
-import expringMap.EvictionQueue;
-import expringMap.map.EvictibleEntry;
+import appserver.expringmap.EvictionQueue;
+import appserver.expringmap.map.EvictibleEntry;
 
 /**
  * An {@link EvictionQueue} which uses a {@link java.util.Queue} to store its

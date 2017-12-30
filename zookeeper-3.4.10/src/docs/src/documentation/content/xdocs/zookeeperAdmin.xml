@@ -245,14 +245,14 @@
           Use the following settings as a starting point:</para>
 
           <programlisting>
-tickTime=2000
-dataDir=/var/lib/zookeeper/
-clientPort=2181
-initLimit=5
-syncLimit=2
-server.1=zoo1:2888:3888
-server.2=zoo2:2888:3888
-server.3=zoo3:2888:3888</programlisting>
+              tickTime=2000
+              dataDir=/var/lib/zookeeper/
+              clientPort=2181
+              initLimit=5
+              syncLimit=2
+              appserver.1=zoo1:2888:3888
+              appserver.2=zoo2:2888:3888
+              appserver.3=zoo3:2888:3888</programlisting>
 
           <para>You can find the meanings of these and other configuration
           settings in the section <xref linkend="sc_configuration" />. A word
@@ -261,7 +261,7 @@ server.3=zoo3:2888:3888</programlisting>
           <para>Every machine that is part of the ZooKeeper ensemble should know
           about every other machine in the ensemble. You accomplish this with
           the series of lines of the form <emphasis
-          role="bold">server.id=host:port:port</emphasis>. The parameters <emphasis
+          role="bold">appserver.id=host:port:port</emphasis>. The parameters <emphasis
           role="bold">host</emphasis> and <emphasis
           role="bold">port</emphasis> are straightforward. You attribute the
           server id to each machine by creating a file named
@@ -280,8 +280,9 @@ server.3=zoo3:2888:3888</programlisting>
           <para>If your configuration file is set up, you can start a
           ZooKeeper server:</para>
 
-          <para><computeroutput>$ java -cp zookeeper.jar:lib/slf4j-api-1.6.1.jar:lib/slf4j-log4j12-1.6.1.jar:lib/log4j-1.2.15.jar:conf \
-              org.apache.zookeeper.server.quorum.QuorumPeerMain zoo.cfg
+          <para><computeroutput>$ java -cp
+              zookeeper.jar:lib/slf4j-api-1.6.1.jar:lib/slf4j-log4j12-1.6.1.jar:lib/log4j-1.2.15.jar:conf \
+              org.apache.zookeeper.appserver.quorum.QuorumPeerMain zoo.cfg
           </computeroutput></para>
           
           <para>QuorumPeerMain starts a ZooKeeper server,
@@ -539,7 +540,9 @@ server.3=zoo3:2888:3888</programlisting>
         can be run as a cron job on the ZooKeeper server machines to
         clean up the logs daily.</para>
 
-        <programlisting> java -cp zookeeper.jar:lib/slf4j-api-1.6.1.jar:lib/slf4j-log4j12-1.6.1.jar:lib/log4j-1.2.15.jar:conf org.apache.zookeeper.server.PurgeTxnLog &lt;dataDir&gt; &lt;snapDir&gt; -n &lt;count&gt;</programlisting>
+        <programlisting>java -cp
+            zookeeper.jar:lib/slf4j-api-1.6.1.jar:lib/slf4j-log4j12-1.6.1.jar:lib/log4j-1.2.15.jar:conf
+            org.apache.zookeeper.appserver.PurgeTxnLog &lt;dataDir&gt; &lt;snapDir&gt; -n &lt;count&gt;</programlisting>
 
         <para>Automatic purging of the snapshots and corresponding
         transaction logs was introduced in version 3.4.0 and can be
@@ -620,15 +623,15 @@ server.3=zoo3:2888:3888</programlisting>
 		<varlistentry>
 		<term> Server not coming up because of file corruption</term>
 		<listitem>
-		<para>A server might not be able to read its database and fail to come up because of 
-		some file corruption in the transaction logs of the ZooKeeper server. You will
-		see some IOException on loading ZooKeeper database. In such a case,
-		make sure all the other servers in your ensemble are up and  working. Use "stat" 
-		command on the command port to see if they are in good health. After you have verified that
-		all the other servers of the ensemble are up, you can go ahead and clean the database
-		of the corrupt server. Delete all the files in datadir/version-2 and datalogdir/version-2/.
-		Restart the server.
-		</para>
+		<para>A server might not be able to read its database and fail to come up because of
+            some file corruption in the transaction logs of the ZooKeeper appserver. You will
+            see some IOException on loading ZooKeeper database. In such a case,
+            make sure all the other servers in your ensemble are up and working. Use "stat"
+            command on the command port to see if they are in good health. After you have verified that
+            all the other servers of the ensemble are up, you can go ahead and clean the database
+            of the corrupt appserver. Delete all the files in datadir/version-2 and datalogdir/version-2/.
+            Restart the appserver.
+        </para>
 		</listitem>
 		</varlistentry>
 		</variablelist>
@@ -951,7 +954,7 @@ server.3=zoo3:2888:3888</programlisting>
           </varlistentry>
 
           <varlistentry>
-            <term>server.x=[hostname]:nnnnn[:nnnnn], etc</term>
+            <term>appserver.x=[hostname]:nnnnn[:nnnnn], etc</term>
 
             <listitem>
               <para>(No Java system property)</para>
@@ -961,7 +964,7 @@ server.3=zoo3:2888:3888</programlisting>
               file <filename>myid</filename> in the data directory. That file
               contains the server number, in ASCII, and it should match
               <emphasis role="bold">x</emphasis> in <emphasis
-              role="bold">server.x</emphasis> in the left hand side of this
+              role="bold">appserver.x</emphasis> in the left hand side of this
               setting.</para>
 
               <para>The list of servers that make up ZooKeeper servers that is
@@ -1103,11 +1106,11 @@ server.3=zoo3:2888:3888</programlisting>
               checking occurs for a user authenticated as
               super.</para>
 
-              <para>org.apache.zookeeper.server.auth.DigestAuthenticationProvider
-              can be used to generate the superDigest, call it with
-              one parameter of "super:&lt;password>". Provide the
-              generated "super:&lt;data>" as the system property value
-              when starting each server of the ensemble.</para>
+              <para>org.apache.zookeeper.appserver.auth.DigestAuthenticationProvider
+                  can be used to generate the superDigest, call it with
+                  one parameter of "super:&lt;password>". Provide the
+                  generated "super:&lt;data>" as the system property value
+                  when starting each server of the ensemble.</para>
 
               <para>When authenticating to a ZooKeeper server (from a
               ZooKeeper client) pass a scheme of "digest" and authdata
@@ -1343,7 +1346,7 @@ server.3=zoo3:2888:3888</programlisting>
             be the default, however Netty based communication can be
             used in place of NIO by setting the environment variable
             "zookeeper.serverCnxnFactory" to
-            "org.apache.zookeeper.server.NettyServerCnxnFactory". You
+            "org.apache.zookeeper.appserver.NettyServerCnxnFactory". You
             have the option of setting this on either the client(s) or
             server(s), typically you would want to set this on both,
             however that is at your discretion.

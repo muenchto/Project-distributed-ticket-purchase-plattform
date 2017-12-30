@@ -246,8 +246,8 @@ class QuorumPeerInstance implements Instance {
      * @throws KeeperException
      */
     public static String[] createServer(InstanceManager im, int i, boolean leaderServes) throws NoAvailableContainers, DuplicateNameException, InterruptedException, KeeperException {
-        im.assignInstance("server"+i, QuorumPeerInstance.class, Integer.toString(i) + " " + leaderServes, 50);
-        return im.getStatus("server"+i, 3000).split(",");
+        im.assignInstance("appserver" +i, QuorumPeerInstance.class, Integer.toString(i) + " " + leaderServes, 50);
+        return im.getStatus("appserver" +i, 3000).split(",");
         
     }
 
@@ -261,9 +261,9 @@ class QuorumPeerInstance implements Instance {
      * @throws NoAssignmentException
      */
     public static void startInstance(InstanceManager im, String quorumHostPort, int index) throws InterruptedException, KeeperException, NoAssignmentException {
-        im.resetStatus("server" + index);
-        im.reconfigureInstance("server"+index, quorumHostPort + " start");
-        im.getStatus("server" + index, 5000);
+        im.resetStatus("appserver" + index);
+        im.reconfigureInstance("appserver" +index, quorumHostPort + " start");
+        im.getStatus("appserver" + index, 5000);
     }
 
     /**
@@ -275,9 +275,9 @@ class QuorumPeerInstance implements Instance {
      * @throws NoAssignmentException
      */
     public static void stopInstance(InstanceManager im, int index) throws InterruptedException, KeeperException, NoAssignmentException {
-        im.resetStatus("server" + index);
-        im.reconfigureInstance("server"+index, Integer.toString(index) + " stop");
-        im.getStatus("server" + index, 3000);
+        im.resetStatus("appserver" + index);
+        im.reconfigureInstance("appserver" +index, Integer.toString(index) + " stop");
+        im.getStatus("appserver" + index, 3000);
    
     }
 

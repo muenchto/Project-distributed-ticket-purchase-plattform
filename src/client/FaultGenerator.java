@@ -32,7 +32,7 @@ public class FaultGenerator {
 					case "db":
 						dbserverStub.killServer();
 						break;
-					case "server":
+					case "appserver":
                         wideboxStub.killServer();
                         break;
                     default:

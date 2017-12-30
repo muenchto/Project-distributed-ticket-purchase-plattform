@@ -1,8 +1,7 @@
 package auxiliary;
 
 import org.apache.zookeeper.*;
-import zookeeperlib.ZKUtils;
-import zookeeperlib.ZooKeeperConnection;
+import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -26,6 +25,9 @@ public class ConnectionHandler implements Watcher {
 
     final CountDownLatch connectedSignal = new CountDownLatch(1);
 
+    public interface ConnectionWatcher {
+        void connectionLost(String znode);
+    }
 
     public enum type {
         DBServer,
@@ -79,7 +81,7 @@ public class ConnectionHandler implements Watcher {
 
         try {
             //reset the folder to reset the node counter
-            if (zk.exists(zkPath, false) != null && ZKUtils.getAllNodes(zk, zkPath).size() == 0) {
+            if (zk.exists(zkPath, false) != null && getAllNodes(zk, zkPath).size() == 0) {
                 zk.delete(zkPath, 0);
                 zk.create(zkPath, ("root of "+ serverType).getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             }
@@ -92,7 +94,7 @@ public class ConnectionHandler implements Watcher {
             e1.printStackTrace();
         }
 
-        numServersAtStart = ZKUtils.getAllNodes(zk, zkPath).size();
+        numServersAtStart = getAllNodes(zk, zkPath).size();
 
         try {
             local_registry = LocateRegistry.createRegistry(reg_port + numServersAtStart);
@@ -174,11 +176,24 @@ public class ConnectionHandler implements Watcher {
         }
     }
 
-    public interface ConnectionWatcher {
-        void connectionLost(String znode);
+
+    public static List<String> getAllNodes(ZooKeeper zk, String path){
+        Stat node;
+        try {
+            node = zk.exists(path, false);
+            List<String> children = new ArrayList<>();
+            if (node != null) {
+                children = zk.getChildren(path, false);
+                java.util.Collections.sort(children);
+            }
+            return children;
+        } catch (KeeperException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public int getNrOfNodesOnPath(String path){
-        return ZKUtils.getAllNodes(zk, path).size();
+        return getAllNodes(zk, path).size();
     }
 }

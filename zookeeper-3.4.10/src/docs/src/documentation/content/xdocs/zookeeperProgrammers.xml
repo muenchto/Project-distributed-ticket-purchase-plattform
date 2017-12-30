@@ -424,15 +424,15 @@
     deployment time.</para>
 
     <para>When a client gets a handle to the ZooKeeper service,
-    ZooKeeper creates a ZooKeeper session, represented as a 64-bit
-    number, that it assigns to the client. If the client connects to a
-    different ZooKeeper server, it will send the session id as a part
-    of the connection handshake.  As a security measure, the server
-    creates a password for the session id that any ZooKeeper server
-    can validate.The password is sent to the client with the session
-    id when the client establishes the session. The client sends this
-    password with the session id whenever it reestablishes the session
-    with a new server.</para>
+        ZooKeeper creates a ZooKeeper session, represented as a 64-bit
+        number, that it assigns to the client. If the client connects to a
+        different ZooKeeper server, it will send the session id as a part
+        of the connection handshake. As a security measure, the server
+        creates a password for the session id that any ZooKeeper server
+        can validate.The password is sent to the client with the session
+        id when the client establishes the session. The client sends this
+        password with the session id whenever it reestablishes the session
+        with a new appserver.</para>
 
     <para>One of the parameters to the ZooKeeper client library call
     to create a ZooKeeper session is the session timeout in
@@ -507,14 +507,14 @@
     the session connection event.</para>
 
     <para>The session is kept alive by requests sent by the client. If
-    the session is idle for a period of time that would timeout the
-    session, the client will send a PING request to keep the session
-    alive. This PING request not only allows the ZooKeeper server to
-    know that the client is still active, but it also allows the
-    client to verify that its connection to the ZooKeeper server is
-    still active. The timing of the PING is conservative enough to
-    ensure reasonable time to detect a dead connection and reconnect
-    to a new server.</para>
+        the session is idle for a period of time that would timeout the
+        session, the client will send a PING request to keep the session
+        alive. This PING request not only allows the ZooKeeper server to
+        know that the client is still active, but it also allows the
+        client to verify that its connection to the ZooKeeper server is
+        still active. The timing of the PING is conservative enough to
+        ensure reasonable time to detect a dead connection and reconnect
+        to a new appserver.</para>
 
     <para>
       Once a connection to the server is successfully established
@@ -609,14 +609,14 @@
     </itemizedlist>
 
     <para>Watches are maintained locally at the ZooKeeper server to which the
-    client is connected. This allows watches to be lightweight to set,
-    maintain, and dispatch. When a client connects to a new server, the watch
-    will be triggered for any session events. Watches will not be received
-    while disconnected from a server. When a client reconnects, any previously
-    registered watches will be reregistered and triggered if needed. In
-    general this all occurs transparently. There is one case where a watch
-    may be missed: a watch for the existence of a znode not yet created will
-    be missed if the znode is created and deleted while disconnected.</para>
+        client is connected. This allows watches to be lightweight to set,
+        maintain, and dispatch. When a client connects to a new server, the watch
+        will be triggered for any session events. Watches will not be received
+        while disconnected from a appserver. When a client reconnects, any previously
+        registered watches will be reregistered and triggered if needed. In
+        general this all occurs transparently. There is one case where a watch
+        may be missed: a watch for the existence of a znode not yet created will
+        be missed if the znode is created and deleted while disconnected.</para>
 
 	<section id="sc_WatchSemantics">
       <title>Semantics of Watches</title>
@@ -894,9 +894,9 @@
       </listitem></itemizedlist>
 
       <para>The application uses the zoo_add_auth function to
-      authenticate itself to the server. The function can be called
-      multiple times if the application wants to authenticate using
-      different schemes and/or identities.</para>
+          authenticate itself to the appserver. The function can be called
+          multiple times if the application wants to authenticate using
+          different schemes and/or identities.</para>
 
       <itemizedlist><listitem>
           <para><emphasis>int</emphasis> <emphasis>zoo_create</emphasis>
@@ -1440,9 +1440,9 @@ authProvider.2=com.f.MyAuth2
     <title>Building Blocks: A Guide to ZooKeeper Operations</title>
 
     <para>This section surveys all the operations a developer can perform
-    against a ZooKeeper server. It is lower level information than the earlier
-    concepts chapters in this manual, but higher level than the ZooKeeper API
-    Reference. It covers these topics:</para>
+        against a ZooKeeper appserver. It is lower level information than the earlier
+        concepts chapters in this manual, but higher level than the ZooKeeper API
+        Reference. It covers these topics:</para>
 
     <itemizedlist>
       <listitem>

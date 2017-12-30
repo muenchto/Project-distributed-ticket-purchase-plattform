@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-package expringMap.map;
+package appserver.expringmap.map;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import expringMap.ConcurrentMapWithTimedEviction;
-import expringMap.EvictionScheduler;
-import expringMap.scheduler.SingleThreadEvictionScheduler;
+import appserver.expringmap.ConcurrentMapWithTimedEviction;
+import appserver.expringmap.EvictionScheduler;
+import appserver.expringmap.scheduler.SingleThreadEvictionScheduler;
 
 /**
  * A {@link ConcurrentMapWithTimedEviction} which conforms to the
