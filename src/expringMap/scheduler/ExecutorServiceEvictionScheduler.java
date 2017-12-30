@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor.scheduler;
+package expringMap.scheduler;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,8 +23,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.stoyanr.evictor.EvictionScheduler;
-import com.stoyanr.evictor.map.EvictibleEntry;
+import expringMap.EvictionScheduler;
+import expringMap.map.EvictibleEntry;
 
 /**
  * An {@link EvictionScheduler} which uses a

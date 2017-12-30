@@ -13,7 +13,7 @@ public class DBServer {
 	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) 
 	final static int MODE = 3; 
 	final static int NUM_THEATERS = 1500; // not used now, using index insted
-    final static int NUM_DBSERVER = 4;
+    final static int NUM_DBSERVER = 2;
 
     public static void main(String args[]) throws RemoteException {
 

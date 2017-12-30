@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor.scheduler;
+package expringMap.scheduler;
 
-import com.stoyanr.evictor.EvictionQueue;
-import com.stoyanr.evictor.EvictionScheduler;
-import com.stoyanr.evictor.map.EvictibleEntry;
-import com.stoyanr.evictor.queue.NavigableMapEvictionQueue;
+import expringMap.EvictionQueue;
+import expringMap.EvictionScheduler;
+import expringMap.map.EvictibleEntry;
+import expringMap.queue.NavigableMapEvictionQueue;
 
 /**
  * An abstract {@link EvictionScheduler} which uses an {@link EvictionQueue} to

@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor;
+package expringMap;
 
-import com.stoyanr.evictor.map.ConcurrentMapWithTimedEvictionDecorator;
-import com.stoyanr.evictor.map.EvictibleEntry;
+import expringMap.map.ConcurrentMapWithTimedEvictionDecorator;
+import expringMap.map.EvictibleEntry;
 
 /**
  * An eviction scheduler used by {@link ConcurrentMapWithTimedEvictionDecorator}

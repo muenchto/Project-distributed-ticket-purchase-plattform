@@ -356,7 +356,7 @@ public class Result implements Callable {
         long latencyEnd;
         long mainRequestLatency = 0;
         long latencydif;
-        int aux = r.nextInt(this.numTheaters);
+        int aux = r.nextInt(1000);
         try {
             latencyBeg = System.currentTimeMillis();
             theaters = wideBoxStub.getNames();
@@ -369,6 +369,7 @@ public class Result implements Callable {
 
             latencyBeg = System.currentTimeMillis();
             Message m = wideBoxStub.query(theaters[aux]);
+            System.out.println(theaters[aux]);
             latencyEnd = System.currentTimeMillis();
             this.latencyCounter++;
             latencydif = latencyEnd - latencyBeg;

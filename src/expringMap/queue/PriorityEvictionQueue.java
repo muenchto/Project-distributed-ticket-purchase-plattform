@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor.queue;
+package expringMap.queue;
 
 import java.util.Comparator;
 import java.util.Queue;
 import java.util.concurrent.PriorityBlockingQueue;
 
-import com.stoyanr.evictor.EvictionQueue;
-import com.stoyanr.evictor.map.EvictibleEntry;
+import expringMap.EvictionQueue;
+import expringMap.map.EvictibleEntry;
 
 /**
  * An {@link EvictionQueue} which uses a {@link java.util.Queue} to store its

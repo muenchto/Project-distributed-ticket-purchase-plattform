@@ -89,6 +89,7 @@ public class LoadBalancer {
                     theaterList.addAll(Arrays.asList(aS.getNames()));
                 }
                 theaterNames = theaterList.toArray(new String[0]);
+                System.out.println(Arrays.toString(theaterNames));
                 return theaterNames;
             }
         }

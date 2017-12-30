@@ -47,6 +47,7 @@ public class TrafficGenerator {
             String zkAddress = zkIP + ":" + zkPort;
             ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.LoadBalancer);
             WideBoxIF wideBoxStub = (WideBoxIF) connector.get("loadbalancer0", "/loadbalancer");
+            System.out.println("TrafficGen found loadbalancer");
 
 
             ConfigHandler ch = new ConfigHandler();

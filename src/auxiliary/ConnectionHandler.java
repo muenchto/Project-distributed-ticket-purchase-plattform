@@ -12,20 +12,20 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 
 /**
  * Created by tobiasmuench on 19.12.17.
  */
-public class ConnectionHandler  {
+public class ConnectionHandler implements Watcher {
 
     final CountDownLatch connectedSignal = new CountDownLatch(1);
 
-    public interface ZKConnection {
-        void listen(WatchedEvent event);
-    }
 
     public enum type {
         DBServer,
@@ -34,11 +34,12 @@ public class ConnectionHandler  {
     }
 
     private ZooKeeper zk;
-    String zkFolder;
-    String zkPath;
+    private String zkFolder;
+    private String zkPath;
+    private HashMap<String, ConnectionWatcher> watcherList;
 
-    int reg_port;
-    Registry local_registry;
+    private int reg_port;
+    private Registry local_registry;
 
     public int numServersAtStart;
 
@@ -74,6 +75,8 @@ public class ConnectionHandler  {
             e.printStackTrace();
         }
 
+        watcherList = new HashMap<String, ConnectionWatcher>();
+
         try {
             //reset the folder to reset the node counter
             if (zk.exists(zkPath, false) != null && ZKUtils.getAllNodes(zk, zkPath).size() == 0) {
@@ -96,7 +99,7 @@ public class ConnectionHandler  {
         } catch (RemoteException e1) {
             e1.printStackTrace();
         }
-        System.out.println("Registry and ZooKeeper connection established");
+        System.out.println("CONNECTION HANDLER: Registry and ZooKeeper connection established");
     }
 
     public Remote get(String serverName, String path) {
@@ -109,9 +112,9 @@ public class ConnectionHandler  {
             byte[] zk_data = zk.getData(path + "/" + serverName, null, null);
             dbServerIP = new String(zk_data).split(":")[0];
             dbServerPort = new String(zk_data).split(":")[1];
-            System.out.println("ConnectionHandler trying to get " + serverName + " @Registry " + dbServerIP + ":" + dbServerPort);
+            System.out.println("CONNECTION HANDLER: trying to get " + serverName + " @Registry " + dbServerIP + ":" + dbServerPort);
             remote_registry = LocateRegistry.getRegistry(dbServerIP, Integer.parseInt(dbServerPort));
-            System.out.println("reg at " + Arrays.toString(remote_registry.list()));
+            System.out.println("CONNECTION HANDLER: registered successfully at " + Arrays.toString(remote_registry.list()));
             return remote_registry.lookup(serverName);
         } catch (KeeperException e) {
             e.printStackTrace();
@@ -137,7 +140,7 @@ public class ConnectionHandler  {
         } catch (RemoteException e) {
             e.printStackTrace();
         }
-        System.out.println("registered as " + zkFolder + numServersAtStart);
+        System.out.println("CONNECTION HANDLER: registered as " + zkFolder + numServersAtStart);
 
         try {
             zk.create(zkPath + "/" + zkFolder + numServersAtStart,
@@ -151,7 +154,28 @@ public class ConnectionHandler  {
                 e1.printStackTrace();
             }
         }
-        System.out.println("created ZooKeeper node " + zkFolder + numServersAtStart);
+        System.out.println("CONNECTION HANDLER: created ZooKeeper node " + zkFolder + numServersAtStart);
+    }
+
+    public void setWatch(ConnectionWatcher object, String znode) {
+        this.watcherList.put(znode, object);
+        try {
+            zk.getData(znode, this, null);
+        } catch (KeeperException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void process(WatchedEvent event) {
+        String znode = event.getPath();
+        if (event.getType() == Event.EventType.NodeDeleted){
+            watcherList.get(znode).connectionLost(znode);
+        }
+    }
+
+    public interface ConnectionWatcher {
+        void connectionLost(String znode);
     }
 
     public int getNrOfNodesOnPath(String path){

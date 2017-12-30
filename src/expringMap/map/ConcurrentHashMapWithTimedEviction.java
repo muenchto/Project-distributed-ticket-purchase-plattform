@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-package com.stoyanr.evictor.map;
+package expringMap.map;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.stoyanr.evictor.ConcurrentMapWithTimedEviction;
-import com.stoyanr.evictor.EvictionScheduler;
-import com.stoyanr.evictor.scheduler.SingleThreadEvictionScheduler;
+import expringMap.ConcurrentMapWithTimedEviction;
+import expringMap.EvictionScheduler;
+import expringMap.scheduler.SingleThreadEvictionScheduler;
 
 /**
  * A {@link ConcurrentMapWithTimedEviction} which conforms to the

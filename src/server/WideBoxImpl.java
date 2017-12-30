@@ -2,8 +2,9 @@ package server;
 
 
 import auxiliary.*;
-import com.stoyanr.evictor.map.ConcurrentHashMapWithTimedEviction;
+import expringMap.map.ConcurrentHashMapWithTimedEviction;
 
+import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedHashMap;
@@ -15,12 +16,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author group: psd002 ; members: 42560-50586-30360
  */
-public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
+public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, ConnectionHandler.ConnectionWatcher {
 
-    private final long EXPIRING_DURATION = 15000;
+    private static final long EXPIRING_DURATION = 15000;
     private int ID;
+    private int NUM_SERVERS;
 
-    private DataStorageIF dataStorageStubPrimary;
+    private DataStorageIF dataStorageStub;
     private  DataStorageIF dataStorageStubBackup;
 
     private int clientCounter;
@@ -36,6 +38,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         dbServerLocalMode = false;
 
         this.ID = connector.numServersAtStart;
+        this.NUM_SERVERS = NUM_SERVERS;
 
         System.out.println("Widebox starting");
 
@@ -45,12 +48,13 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
         if (!dbServerLocalMode) {
             try {
-                dataStorageStubPrimary = (DataStorageIF) connector.get("dbserver" + ID, "/dbserver");
-                System.err.println("WideBoxImpl found primary dbserver" + ID);
-                dataStorageStubBackup = (DataStorageIF) connector.get("dbserver" + ID, "/dbserver");
-                System.err.println("WideBoxImpl found backup dbserver" + ID);
+                dataStorageStub = (DataStorageIF) connector.get("dbserver" + ID, "/dbserver");
+                connector.setWatch(this,  "/dbserver/dbserver"+ID);
+                System.out.println("WIDEBOXIMPL: found primary dbserver" + ID);
+                dataStorageStubBackup = (DataStorageIF) connector.get("dbserver" + ((ID +1) % NUM_SERVERS), "/dbserver");
+                System.out.println("WIDEBOXIMPL: found backup dbserver" + ((ID +1) % NUM_SERVERS));
             } catch (Exception e) {
-                System.err.println("WideBoxImpl exception: " + e.toString());
+                System.err.println("WIDEBOXIMPL: exception: " + e.toString());
                 e.printStackTrace();
             }
         } else {
@@ -59,7 +63,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             }
             this.clientCounter = 0;
         }
-        System.out.println("WideBox ready..");
+        System.out.println("WIDEBOXIMPL: ready..");
 
         }
 
@@ -72,17 +76,17 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
             } else {
                 System.out.println("getNames");
-                String[] temp = dataStorageStubPrimary.getTheaterNames();
+                String[] temp = dataStorageStub.getTheaterNames();
                 return temp;
             }
         }
 
+    @Override
     public Message query(String theaterName) throws RemoteException {
 
         //if the theater is queried the first time, the name is added to the HasMap
         //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
         if (!reservedSeats.containsKey(theaterName)) {
-
             ConcurrentHashMapWithTimedEviction<String, Integer> expiringSeatMap =
                     new ConcurrentHashMapWithTimedEviction<>();
             reservedSeats.put(theaterName, expiringSeatMap);
@@ -94,7 +98,15 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 theater = (Theater) this.theaters.get(theaterName);
                 theater = theater.clone();
             } else {
-                theater = dataStorageStubPrimary.getTheater(theaterName);
+                try {
+                    theater = dataStorageStub.getTheater(theaterName);
+                }catch (ConnectException e1) {
+                    System.err.println("WIDEBOXIMPL ERROR RMI: Could not connect to primary DBServer.");
+                    dataStorageStub = dataStorageStubBackup;
+                    System.out.println("WIDEBOXIMPL : switched to backup DBServer" + ((ID +1) % NUM_SERVERS));
+
+                    theater = dataStorageStub.getTheater(theaterName);
+                }
             }
 
             if (theater.status == TheaterStatus.FULL) {
@@ -125,7 +137,13 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
     }
 
+    @Override
     public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
+
+        // check if this AppServer has this theater in its list
+        if (reservedSeats.get(theaterName) == null) {
+            return new Message(MessageType.RESERVE_ERROR);
+        }
 
         Theater theater;
         synchronized (reservedSeats.get(theaterName)) {
@@ -133,14 +151,22 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 theater = (Theater) this.theaters.get(theaterName);
                 theater = theater.clone();
             } else {
-                theater = dataStorageStubPrimary.getTheater(theaterName);
-            }
+                try {
+                    theater = dataStorageStub.getTheater(theaterName);
+                }catch (ConnectException e1) {
+                    System.err.println("WIDEBOXIMPL ERROR RMI: Could not connect to primary DBServer.");
+                    dataStorageStub = dataStorageStubBackup;
+                    System.out.println("WIDEBOXIMPL : switched to backup DBServer" + ((ID +1) % NUM_SERVERS));
 
+                    theater = dataStorageStub.getTheater(theaterName);
+                }
+            }
 
             //add all reserved seats from one theater to the theaterObject as reserved
             for (String s : reservedSeats.get(theaterName).keySet()) {
                 theater.setSeatToReserved(s);
             }
+
             //try to reserve a new Seat for the client
             Seat new_seat = theater.reserveSeat(wish_seat);
 
@@ -148,16 +174,15 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
                 reservedSeats.get(theaterName).put(new_seat.getSeatName(), clientID, EXPIRING_DURATION);
 
                 //when reserve happens before 15 sec timeout, we need to remove the old reserved seat
-                if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) != null) {
-                    if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) == clientID) {
-                        reservedSeats.get(theaterName).remove(old_seat.getSeatName());
-                    }
-
+                if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) != null ||
+                        reservedSeats.get(theaterName).get(old_seat.getSeatName()) == clientID) {
+                    reservedSeats.get(theaterName).remove(old_seat.getSeatName());
                 }
                 theater.freeSeat(old_seat);
 
                 return new Message(MessageType.AVAILABLE, theater.seats, new_seat, clientID);
             }
+
             // if the wish seat was not free, just return the old seat
             else {
                 return new Message(MessageType.AVAILABLE, theater.seats, old_seat, clientID);
@@ -165,11 +190,14 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
         }
     }
 
+    @Override
     public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
 
-        //check if this client has already that seat reserved, if not, return error
-        if (reservedSeats.get(theaterName).get(acceptedSeat.getSeatName()) == null ||
-                reservedSeats.get(theaterName).get(acceptedSeat.getSeatName()) != clientID) {
+        // check if this AppServer has this theater in its list
+        // check if this client has already that seat reserved, if not, return error
+        if (reservedSeats.get(theaterName) == null ||
+                reservedSeats.get(theaterName).get(acceptedSeat.getSeatName()) == null ||
+                    reservedSeats.get(theaterName).get(acceptedSeat.getSeatName()) != clientID) {
             return new Message(MessageType.ACCEPT_ERROR);
         }
 
@@ -184,7 +212,20 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
             }
         } else {
             synchronized (reservedSeats.get(theaterName)) {
-                if (dataStorageStubPrimary.occupySeat(theaterName, acceptedSeat)) {
+
+                //try to buy the seat at the DB Server
+                boolean success;
+                try {
+                    success = dataStorageStub.occupySeat(theaterName, acceptedSeat);
+                }catch (ConnectException e1) {
+                    System.err.println("WIDEBOXIMPL ERROR RMI: Could not connect to primary DBServer.");
+                    dataStorageStub = dataStorageStubBackup;
+                    System.out.println("WIDEBOXIMPL : switched to backup DBServer" + ((ID +1) % NUM_SERVERS));
+
+                    success = dataStorageStub.occupySeat(theaterName, acceptedSeat);
+                }
+                if (success) {
+                    // if something goes wrong, the reservation will be kept, otherwise remove reservation
                     reservedSeats.get(theaterName).remove(acceptedSeat.getSeatName());
                     return new Message(MessageType.ACCEPT_OK);
                 } else {
@@ -196,11 +237,14 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
 
     }
 
+    @Override
     public Message cancel(String theaterName, Seat seat, int clientID) throws RemoteException {
 
-        //check if this client has already that seat reserved, if not, return error
-        if (reservedSeats.get(theaterName).get(seat.getSeatName()) == null ||
-                reservedSeats.get(theaterName).get(seat.getSeatName()) != clientID) {
+        // check if this AppServer has this theater in its list
+        // check if this client has already that seat reserved, if not, return error
+        if (reservedSeats.get(theaterName) == null ||
+                reservedSeats.get(theaterName).get(seat.getSeatName()) == null ||
+                    reservedSeats.get(theaterName).get(seat.getSeatName()) != clientID) {
             return new Message(MessageType.CANCEL_ERROR);
         } else {
             reservedSeats.get(theaterName).remove(seat.getSeatName());
@@ -213,4 +257,16 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF {
     public void killServer() throws RemoteException {
         System.exit(0);
     }
+
+    @Override
+    public void connectionLost(String path) {
+
+        String[] path_componenets = path.split("/");
+        String serverName = path_componenets[path_componenets.length - 1];
+        System.out.println("WIDEBOXIMPL WATCH: connection lost to " + serverName);
+
+        dataStorageStub = dataStorageStubBackup;
+        System.out.println("WIDEBOXIMPL WATCH: switched to backup dbserver" + ((ID +1) % NUM_SERVERS));
+    }
+
 }
