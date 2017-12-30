@@ -3,16 +3,14 @@ package client;
 import auxiliary.ConfigHandler;
 import auxiliary.ConnectionHandler;
 import auxiliary.LoadBalancerIF;
-import auxiliary.WideBoxIF;
-import server.LoadBalancer;
 
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * PSD Project - Phase 1
