@@ -67,9 +67,26 @@ public class TrafficGenerator {
             //int numOfThreads = (int) Math.ceil(rate / 300);
             //int numOfTasks = rate / numOfThreads;
 
+            long endTime = System.currentTimeMillis() + duration;
+            long startTime = System.currentTimeMillis();
+
             TimerTask timerTask = new TimerTask() {
                 @Override
                 public void run() {
+                    if (System.currentTimeMillis() >= endTime){
+                        System.out.println("nfudsfd");
+                        cancel();
+                        //timer.cancel();
+                        System.out.println("Num of requests made: " + stats[0] + "\n" +
+                                "Num of completed requests: " + stats[0] / 3 + "\n" +
+                                "Num of purchases made: " + stats[1] + "\n" +
+                                "Num of cancels made: " + stats[2] + "\n" +
+                                "Num of errors gotten: " + stats[3] + "\n" +
+                                "Average latenty per request: " + stats[4] + "\n" +
+                                "Average latency per completed request: " + stats[5] + "\n");
+                        System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime) / 1000));
+                        System.exit(1);
+                    }
                     HashMap<String, String[]> theaters;
                     long latencyBeg;
                     long latencyEnd;
@@ -137,18 +154,18 @@ public class TrafficGenerator {
             };
 
 
-            ScheduledExecutorService ex = Executors.newScheduledThreadPool(20);
-            //ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
+            //ScheduledExecutorService ex = Executors.newScheduledThreadPool(30);
+            //ExecutorService ex = Executors.newCachedThreadPool();
+            ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
+/*
+            TrafficGeneratorThread r = new TrafficGeneratorThread(loadBalancerStub, numTheaters, rate,
+                                sleepRate, duration, stats, origin, target, op, targetTheater, numClients, zkAddress);
+  */        //  long startTime = System.currentTimeMillis();
 
-            TrafficGeneratorThread r;
-            long startTime = System.currentTimeMillis();
-
-            //Future<TrafficGeneratorThread> futureR;
-            long endTime = System.currentTimeMillis() + duration;
-            //while (System.currentTimeMillis() < endTime) {
+            //long endTime = System.currentTimeMillis() + duration;
             //Future<TrafficGeneratorThread> futureR = ex.submit(new TrafficGeneratorThread(loadBalancerStub, numTheaters, rate,
             //            sleepRate, duration, stats, origin, target, op, targetTheater, numClients, zkAddress));
-            ScheduledFuture<?> futureR = ex.scheduleAtFixedRate(timerTask, 0, 1000 / rate, TimeUnit.MILLISECONDS);
+
             Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
                 @Override
                 public void run() {
@@ -156,7 +173,18 @@ public class TrafficGenerator {
                 }
             }, duration, TimeUnit.MILLISECONDS);
             //}
-
+            /*
+            int rateCounter = 1;
+            int rateAux = rate + 1;
+            while(rateCounter % rateAux != 0) {
+                if (rateCounter == rateAux){
+                    rateCounter = 1;
+                    continue;
+                }
+                ex.submit(timerTask);
+                rateCounter++;
+            }
+            */
 /*
             Timer t = new Timer();
             t.schedule(new TimerTask() {
@@ -179,7 +207,7 @@ public class TrafficGenerator {
 */
 
             //ex.shutdown();
-            while (!ex.isTerminated()) {
+ /*           while (!ex.isTerminated()) {
             }
             System.out.println("Num of requests made: " + stats[0] + "\n" +
                     "Num of completed requests: " + stats[0] / 3 + "\n" +
@@ -192,81 +220,14 @@ public class TrafficGenerator {
 
             System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime) / 1000));
             System.exit(1);
+*/
 
 
-/*
-            TimerTask timerTask = new TimerTask() {
-                @Override
-                public void run() {
-                    HashMap<String,String[]> theaters;
-                    long latencyBeg;
-                    long latencyEnd;
-                    long mainRequestLatency = 0;
-                    long latencydif;
-                    Random r = new Random();
-                    int aux = r.nextInt(numTheaters);
-                    String theaterName = "TheaterNr"+aux;
-                    try {
-                        latencyBeg = System.currentTimeMillis();
-                        theaters = loadBalancerStub.getNames();
-                        latencyEnd = System.currentTimeMillis();
 
-                        String targetAppServer = getAppServerWithTheater(theaters, aux);
-                        wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
-
-                        latencyCounter++;
-                        latencydif = latencyEnd - latencyBeg;
-                        mainRequestLatency += latencydif;
-                        addToAverageLatency(latencydif);
-                        synchronized (stats) {
-                            stats[0]++;
-                        }
-                        latencyBeg = System.currentTimeMillis();
-                        Message m = wideBoxStub.query(theaterName);
-                        //check for null if the theater doesnt exist in the message m
-
-                        latencyEnd = System.currentTimeMillis();
-                        latencyCounter++;
-                        latencydif = latencyEnd - latencyBeg;
-                        mainRequestLatency += latencydif;
-                        addToAverageLatency(latencydif);
-                        synchronized (stats) {
-                            stats[0]++;
-                        }
-
-
-                        if (m.getType() == MessageType.AVAILABLE) {
-                            latencyBeg = System.currentTimeMillis();
-                            wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
-                            latencyEnd = System.currentTimeMillis();
-                            latencyCounter++;
-                            latencydif = latencyEnd - latencyBeg;
-                            mainRequestLatency += latencydif;
-                            completeRequestLatencyCounter++;
-                            addToCompleteRequestLatency(mainRequestLatency);
-                            addToAverageLatency(latencydif);
-                            synchronized (stats) {
-                                stats[0]++;
-                                stats[1]++;
-                            }
-                        } else {
-                            synchronized (stats) {
-                                stats[3]++;
-                            }
-                        }
-
-                    } catch (RemoteException e) {
-                        synchronized (stats) {
-                            stats[3]++;
-                        }
-                        e.printStackTrace();
-                    }
-                }
-            };
             Timer timer = new Timer();
             timer.scheduleAtFixedRate( timerTask, 0,1000/rate);
             System.out.println("HFNUDISO");
-            if (System.currentTimeMillis() >= endTime){
+            /*if (System.currentTimeMillis() >= endTime){
                 System.out.println("nfudsfd");
                 timerTask.cancel();
                 timer.cancel();
@@ -278,8 +239,8 @@ public class TrafficGenerator {
                         "Average latenty per request: " + stats[4] + "\n" +
                         "Average latency per completed request: " + stats[5] + "\n");
                 System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime) / 1000));
-            }
-*/
+            }*/
+
         } catch (Exception e1) {
             e1.printStackTrace();
         }

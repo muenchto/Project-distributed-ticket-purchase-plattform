@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
  * 
  * @author group: psd002 ; members: 42560-50586-30360
  */
-public class TrafficGeneratorThread implements Callable {
+public class TrafficGeneratorThread implements Runnable {
 	
     private long latencyCounter;
     private long completeRequestLatencyCounter;
@@ -36,8 +36,7 @@ public class TrafficGeneratorThread implements Callable {
     private String targetTheater;
     private int numClients;
     private int aux;
-    private int numOfTasks;
-    
+
 	
     public TrafficGeneratorThread(LoadBalancerIF loadBalancerStub, int numTheaters, int rate, long sleepRate, int duration, 
     		int[] stats, String origin, String target, String op, String targetTheater, int numClients,
@@ -55,15 +54,14 @@ public class TrafficGeneratorThread implements Callable {
         this.op = op;
         this.targetTheater = targetTheater;
         this.numClients = numClients;
-        this.numOfTasks = numOfTasks;
-        
+
         this.connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
         
         //this.latencyCounter = 1;
     }
 
     @Override
-    public TrafficGeneratorThread call() throws Exception {
+    public void run() {
         long endTime;
         Random r = new Random();
         int clientId = 1;
@@ -177,7 +175,6 @@ public class TrafficGeneratorThread implements Callable {
             }
         }
         this.stats[4] = aux;
-        return this;
     }
 
     public void SSQRequest(){
