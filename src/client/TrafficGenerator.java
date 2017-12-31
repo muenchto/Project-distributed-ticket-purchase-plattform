@@ -62,16 +62,20 @@ public class TrafficGenerator {
             String op = ch.getOp();
             int duration = ch.getDuration() * 1000; //milliseconds
             int rate = ch.getRate();
-            int numThread = ch.getNumThreads();
+            //int numThread = ch.getNumThreads();
             long sleepRate = 1000;//going to be updated inside the thread     //rate/1000;
 
-            //ExecutorService ex = Executors.newFixedThreadPool(numTheaters);
-            ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
+            
+            int numOfThreads = (int) Math.ceil(rate/300);
+            int numOfTasks = rate/numOfThreads;
+            
+            ExecutorService ex = Executors.newFixedThreadPool(numOfThreads);
+            //ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 
             TrafficGeneratorThread r;
             long startTime = System.currentTimeMillis();
             final Future<TrafficGeneratorThread> futureR = ex.submit(new TrafficGeneratorThread(loadBalancerStub, numTheaters, rate,
-                    sleepRate, duration, stats, origin, target, op, targetTheater, numClients, zkAddress));
+                    sleepRate, duration, stats, origin, target, op, targetTheater, numClients, zkAddress, numOfTasks));
             try {
                 Timer t = new Timer();
                 t.schedule(new TimerTask() {

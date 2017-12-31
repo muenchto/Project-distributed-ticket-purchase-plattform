@@ -114,9 +114,9 @@ public class ConnectionHandler implements Watcher {
             byte[] zk_data = zk.getData(path + "/" + serverName, null, null);
             dbServerIP = new String(zk_data).split(":")[0];
             dbServerPort = new String(zk_data).split(":")[1];
-            System.out.println("CONNECTION HANDLER: trying to get " + serverName + " @Registry " + dbServerIP + ":" + dbServerPort);
+            //System.out.println("CONNECTION HANDLER: trying to get " + serverName + " @Registry " + dbServerIP + ":" + dbServerPort);
             remote_registry = LocateRegistry.getRegistry(dbServerIP, Integer.parseInt(dbServerPort));
-            System.out.println("CONNECTION HANDLER: registered successfully at " + Arrays.toString(remote_registry.list()));
+            //System.out.println("CONNECTION HANDLER: registered successfully at " + Arrays.toString(remote_registry.list()));
             return remote_registry.lookup(serverName);
         } catch (KeeperException | InterruptedException | RemoteException | NotBoundException e) {
             e.printStackTrace();
