@@ -10,6 +10,7 @@ import auxiliary.ConnectionHandler;
  */
 public class AppServer {
     final static int NUM_DBSERVER = 2;
+    final static int NUM_THEATERS = 1500;
 
 
     public static void main(String args[]) throws Exception {
@@ -28,7 +29,7 @@ public class AppServer {
         }
         String zkAddress = zkIP + ":" + zkPort;
         ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
-        WideBoxImpl widebox = new WideBoxImpl(connector, NUM_DBSERVER);
+        WideBoxImpl widebox = new WideBoxImpl(connector, NUM_DBSERVER, NUM_THEATERS);
 
         connector.register(widebox);
         System.out.println("AppServer ready");

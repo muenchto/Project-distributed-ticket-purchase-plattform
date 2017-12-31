@@ -41,13 +41,14 @@ public class LoadBalancerImpl extends UnicastRemoteObject implements LoadBalance
 			return theaterNames;
 		} else {
 			// List<String> theaterList = new ArrayList<>();
+			System.out.println("LOADBALANCER: getNames: build new List of theaterNames: ");
 			int i = 0;
 			for (WideBoxIF aS : appserverList) {
 				// theaterList.addAll(Arrays.asList(aS.getNames()));
 				theaterNames.put("appserver" + i, aS.getNames());
+				System.out.println("appserver" + i + ": " + Arrays.toString(theaterNames.get("appserver" + i)));
 				i++;
 			}
-			System.out.println("LOADBALANCER: getNames: new List of theaterNames built: "+ Arrays.asList(theaterNames));
 			return theaterNames;
 		}
 	}

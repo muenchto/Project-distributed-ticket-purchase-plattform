@@ -13,4 +13,5 @@ public enum MessageType {
     CANCEL_OK,
     CANCEL_ERROR,
     BUSY,
+    NOT_RESPONSIBLE_ERROR,
 }
