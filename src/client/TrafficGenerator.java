@@ -99,10 +99,6 @@ public class TrafficGenerator {
                         latencyBeg = System.currentTimeMillis();
                         theaters = loadBalancerStub.getNames();
                         latencyEnd = System.currentTimeMillis();
-
-                        String targetAppServer = getAppServerWithTheater(theaters, aux);
-                        wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
-
                         latencyCounter++;
                         latencydif = latencyEnd - latencyBeg;
                         mainRequestLatency += latencydif;
@@ -110,6 +106,17 @@ public class TrafficGenerator {
                         synchronized (stats) {
                             stats[0]++;
                         }
+
+                        String targetAppServer = getAppServerWithTheater(theaters, aux);
+                        latencyBeg = System.currentTimeMillis();
+                        wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+                        latencyEnd = System.currentTimeMillis();
+                        latencyCounter++;
+                        latencydif = latencyEnd - latencyBeg;
+                        mainRequestLatency += latencydif;
+                        addToAverageLatency(latencydif);
+
+
                         latencyBeg = System.currentTimeMillis();
                         Message m = wideBoxStub.query(theaterName);
                         //check for null if the theater doesnt exist in the message m
