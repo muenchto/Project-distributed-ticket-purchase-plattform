@@ -113,7 +113,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	//ONLY CALL THIS FUCTION IF EXIST A PRIOR RESERVATION.
 	//This validation should be done at appserver 
 	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException{
-		System.out.println("DBServerImpl: occupySeat");
+		//System.out.println("DBServerImpl: occupySeat");
 		//Theater theater = theaters.get(theaterName).seats
 		if(theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
 			synchronized(this){

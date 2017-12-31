@@ -61,7 +61,7 @@ public class TrafficGenerator {
             int duration = ch.getDuration() * 1000; //milliseconds
             int rate = ch.getRate();
             //int numThread = ch.getNumThreads();
-            long sleepRate = 1000;//going to be updated inside the thread     //rate/1000;
+            long sleepRate = 1000 / rate;//going to be updated inside the thread     //rate/1000;
 
 
             //int numOfThreads = (int) Math.ceil(rate / 300);
@@ -73,7 +73,7 @@ public class TrafficGenerator {
             TimerTask timerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    if (System.currentTimeMillis() >= endTime){
+                    /*if (System.currentTimeMillis() >= endTime){
                         System.out.println("nfudsfd");
                         cancel();
                         //timer.cancel();
@@ -86,7 +86,7 @@ public class TrafficGenerator {
                                 "Average latency per completed request: " + stats[5] + "\n");
                         System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime) / 1000));
                         System.exit(1);
-                    }
+                    }*/
                     HashMap<String, String[]> theaters;
                     long latencyBeg;
                     long latencyEnd;
@@ -154,9 +154,9 @@ public class TrafficGenerator {
             };
 
 
-            //ScheduledExecutorService ex = Executors.newScheduledThreadPool(30);
+            ScheduledExecutorService ex = Executors.newScheduledThreadPool(100);
             //ExecutorService ex = Executors.newCachedThreadPool();
-            ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
+            //ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 /*
             TrafficGeneratorThread r = new TrafficGeneratorThread(loadBalancerStub, numTheaters, rate,
                                 sleepRate, duration, stats, origin, target, op, targetTheater, numClients, zkAddress);
@@ -172,6 +172,26 @@ public class TrafficGenerator {
                     ex.shutdown();
                 }
             }, duration, TimeUnit.MILLISECONDS);
+            ex.scheduleAtFixedRate(timerTask,0,sleepRate,TimeUnit.MILLISECONDS);
+/*
+            while (!ex.isShutdown()) {
+                ex.submit(timerTask);
+                Thread.sleep(sleepRate);
+            }*/
+            while (!ex.isTerminated()) {
+            }
+            System.out.println("Num of requests made: " + stats[0] + "\n" +
+                    "Num of completed requests: " + stats[0] / 3 + "\n" +
+                    "Num of purchases made: " + stats[1] + "\n" +
+                    "Num of cancels made: " + stats[2] + "\n" +
+                    "Num of errors gotten: " + stats[3] + "\n" +
+                    "Average latenty per request: " + stats[4] + "\n" +
+                    "Average latency per completed request: " + stats[5] + "\n");
+
+
+            System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime) / 1000));
+            System.exit(1);
+
             //}
             /*
             int rateCounter = 1;
@@ -223,7 +243,7 @@ public class TrafficGenerator {
 */
 
 
-
+/*
             Timer timer = new Timer();
             timer.scheduleAtFixedRate( timerTask, 0,1000/rate);
             System.out.println("HFNUDISO");
