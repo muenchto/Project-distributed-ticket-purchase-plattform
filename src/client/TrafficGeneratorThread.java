@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
  * 
  * @author group: psd002 ; members: 42560-50586-30360
  */
-public class TrafficGeneratorThread implements Callable {
+public class TrafficGeneratorThread implements Runnable {
 	
     private long latencyCounter;
     private long completeRequestLatencyCounter;
@@ -36,12 +36,11 @@ public class TrafficGeneratorThread implements Callable {
     private String targetTheater;
     private int numClients;
     private int aux;
-    private int numOfTasks;
-    
+
 	
     public TrafficGeneratorThread(LoadBalancerIF loadBalancerStub, int numTheaters, int rate, long sleepRate, int duration, 
     		int[] stats, String origin, String target, String op, String targetTheater, int numClients,
-    		String zkAddress, int numOfTasks) {
+    		String zkAddress) {
         this.wideBoxStub = null;
         this.loadBalancerStub = loadBalancerStub;
         this.numTheaters = numTheaters;
@@ -55,15 +54,14 @@ public class TrafficGeneratorThread implements Callable {
         this.op = op;
         this.targetTheater = targetTheater;
         this.numClients = numClients;
-        this.numOfTasks = numOfTasks;
-        
+
         this.connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
         
         //this.latencyCounter = 1;
     }
 
     @Override
-    public TrafficGeneratorThread call() throws Exception {
+    public void run() {
         long endTime;
         Random r = new Random();
         int clientId = 1;
@@ -102,19 +100,19 @@ public class TrafficGeneratorThread implements Callable {
                         }
                     }
                 } else { //op = purchase
-                    endTime = System.currentTimeMillis() + duration;
-                    int taskCounter = 0;
-                    while ((System.currentTimeMillis() < endTime) 
-                    		|| taskCounter != this.numOfTasks ) {
-                        while ((this.rateCounter % (this.rate + 1) != 0) 
-                        		|| taskCounter != this.numOfTasks) {
+                    //endTime = System.currentTimeMillis() + duration;
+                    //int taskCounter = 0;
+                    //while ((System.currentTimeMillis() < endTime)
+                    //		|| taskCounter != this.numOfTasks ) {
+                    //    while ((this.rateCounter % (this.rate + 1) != 0)
+                    //    		|| taskCounter != this.numOfTasks) {
                             SRPRequest(r);
-                            taskCounter++;
-                        }
-                        if (this.rateCounter == this.rate + 1) {
-                            this.rateCounter = 1;
-                        }
-                    }
+                    //        taskCounter++;
+                    //    }
+                    //    if (this.rateCounter == this.rate + 1) {
+                    //        this.rateCounter = 1;
+                    //    }
+                    //}
                 }
             }
         } else { //origin = random
@@ -177,7 +175,6 @@ public class TrafficGeneratorThread implements Callable {
             }
         }
         this.stats[4] = aux;
-        return this;
     }
 
     public void SSQRequest(){
