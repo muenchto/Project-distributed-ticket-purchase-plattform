@@ -66,27 +66,22 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
             this.clientCounter = 0;
         }
         System.out.println("WIDEBOXIMPL: ready..");
+    }
 
+    @Override
+    public String[] getNames () throws RemoteException {
+        if (dbServerLocalMode) {
+            java.util.Set keys = this.theaters.keySet();
+            return (String[]) keys.toArray(new String[keys.size()]);
+
+        } else {
+            System.out.println("WIDEBOXIMPL: getNames from dbserver");
+            return dataStorageStub.getTheaterNames();
         }
-
-
-        public String[] getNames () throws RemoteException {
-            if (dbServerLocalMode) {
-                java.util.Set keys = this.theaters.keySet();
-                String[] names = (String[]) keys.toArray(new String[keys.size()]);
-                return names;
-
-            } else {
-                System.out.println("getNames");
-                String[] temp = dataStorageStub.getTheaterNames();
-                return temp;
-            }
-        }
+    }
 
     @Override
     public Message query(String theaterName) throws RemoteException {
-    	
-    	System.out.println("WB "+theaterName);
 
         //if the theater is queried the first time, the name is added to the HasMap
         //and a new ExpiringMap is created for the Seats and the Expirer is started for this seat map
