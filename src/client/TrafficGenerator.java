@@ -2,7 +2,9 @@ package client;
 
 import auxiliary.*;
 
+import java.rmi.ConnectException;
 import java.rmi.RemoteException;
+import java.rmi.UnmarshalException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.*;
@@ -24,7 +26,9 @@ public class TrafficGenerator {
     static volatile int[] stats = new int[6];
     static int latencyCounter = 0;
     static int completeRequestLatencyCounter = 0;
-    static WideBoxIF wideBoxStub;
+
+    static final int NUM_SERVERS = 2;
+
 
     public static void main(String[] args) {
 
@@ -42,9 +46,11 @@ public class TrafficGenerator {
                 zkPort = args[2];
             }
             String zkAddress = zkIP + ":" + zkPort;
-            ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.LoadBalancer);
-            LoadBalancerIF loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer0", "/loadbalancer");
-            
+            final ConnectionHandler connector = new ConnectionHandler(zkAddress, null);
+            final LoadBalancerIF loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer0", "/loadbalancer");
+            //final LoadBalancerIF loadBalancerStubBackup = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+
+
             /*
             ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
             WideBoxIF wideBoxStub = (WideBoxIF) connector.get("loadbalancer0", "/appserver");
@@ -56,7 +62,7 @@ public class TrafficGenerator {
             String target = ch.getTarget();
             String targetTheater = ch.getTargetTheater();
             int numClients = ch.getNumClients();
-            int numTheaters = ch.getNumTheaters();
+            final int numTheaters = ch.getNumTheaters();
             String op = ch.getOp();
             int duration = ch.getDuration() * 1000; //milliseconds
             int rate = ch.getRate();
@@ -103,25 +109,53 @@ public class TrafficGenerator {
                         latencydif = latencyEnd - latencyBeg;
                         mainRequestLatency += latencydif;
                         addToAverageLatency(latencydif);
+
                         synchronized (stats) {
                             stats[0]++;
                         }
 
                         String targetAppServer = getAppServerWithTheater(theaters, aux);
-                        latencyBeg = System.currentTimeMillis();
-                        wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
-                        latencyEnd = System.currentTimeMillis();
-                        latencyCounter++;
-                        latencydif = latencyEnd - latencyBeg;
-                        mainRequestLatency += latencydif;
-                        addToAverageLatency(latencydif);
+
+                        WideBoxIF wideBoxStub;
+                        WideBoxIF wideBoxStubBackup;
+                        try {
+                            latencyBeg = System.currentTimeMillis();
+                            wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+                            latencyEnd = System.currentTimeMillis();
+                            latencyCounter++;
+                            latencydif = latencyEnd - latencyBeg;
+                            mainRequestLatency += latencydif;
+                            addToAverageLatency(latencydif);
+                        } catch(ConnectException e1) {
+                            System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+                            int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+                            int backupServerNr = Math.floorMod(appserverNr+1, NUM_SERVERS);
+                            wideBoxStubBackup = (WideBoxIF) connector.get("appserver"+backupServerNr, "/appserver");
+                            wideBoxStub = wideBoxStubBackup;
+                            System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+
+                        }
 
 
-                        latencyBeg = System.currentTimeMillis();
-                        Message m = wideBoxStub.query(theaterName);
-                        //check for null if the theater doesnt exist in the message m
+                        Message m;
+                        try {
 
-                        latencyEnd = System.currentTimeMillis();
+                            latencyBeg = System.currentTimeMillis();
+                            m = wideBoxStub.query(theaterName);
+                            //check for null if the theater doesnt exist in the message m
+
+                            latencyEnd = System.currentTimeMillis();
+                        }catch (ConnectException | UnmarshalException e1) {
+                            System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+                            int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+                            int backupServerNr = Math.floorMod(appserverNr+1, NUM_SERVERS);
+                            wideBoxStubBackup = (WideBoxIF) connector.get("appserver"+backupServerNr, "/appserver");
+                            wideBoxStub = wideBoxStubBackup;
+                            System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+
+                            m = wideBoxStub.query(theaterName);
+                        }
+
                         latencyCounter++;
                         latencydif = latencyEnd - latencyBeg;
                         mainRequestLatency += latencydif;
@@ -132,9 +166,22 @@ public class TrafficGenerator {
 
 
                         if (m.getType() == MessageType.AVAILABLE) {
-                            latencyBeg = System.currentTimeMillis();
-                            wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
-                            latencyEnd = System.currentTimeMillis();
+
+                            try {
+                                latencyBeg = System.currentTimeMillis();
+                                wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+                                latencyEnd = System.currentTimeMillis();
+                            }catch (ConnectException | UnmarshalException e1) {
+                                System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
+                                int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+                                int backupServerNr = Math.floorMod(appserverNr+1, NUM_SERVERS);
+                                wideBoxStubBackup = (WideBoxIF) connector.get("appserver"+backupServerNr, "/appserver");
+                                wideBoxStub = wideBoxStubBackup;
+                                System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+
+                                wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+                            }
+
                             latencyCounter++;
                             latencydif = latencyEnd - latencyBeg;
                             mainRequestLatency += latencydif;
@@ -161,7 +208,7 @@ public class TrafficGenerator {
             };
 
 
-            ScheduledExecutorService ex = Executors.newScheduledThreadPool(100);
+            final ScheduledExecutorService ex = Executors.newScheduledThreadPool(100);
             //ExecutorService ex = Executors.newCachedThreadPool();
             //ExecutorService ex = Executors.newSingleThreadScheduledExecutor();
 /*

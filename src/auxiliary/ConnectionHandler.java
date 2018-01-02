@@ -6,6 +6,7 @@ import org.apache.zookeeper.data.Stat;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.rmi.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -47,21 +48,8 @@ public class ConnectionHandler implements Watcher {
 
     public ConnectionHandler(String zkAdress, ConnectionHandler.type serverType) {
 
-        if (serverType == type.AppServer) {
-            zkFolder = "appserver";
-            reg_port = 6000;
-        } else if (serverType == type.DBServer){
-            zkFolder = "dbserver";
-            reg_port = 5000;
-        }
-        else {
-            zkFolder = "loadbalancer";
-            reg_port = 7000;
-        }
-        zkPath = "/" + zkFolder;
-
         try {
-            zk = new ZooKeeper(zkAdress,1000, new Watcher() {
+            zk = new ZooKeeper(zkAdress, 1000, new Watcher() {
 
                 public void process(WatchedEvent we) {
 
@@ -71,40 +59,68 @@ public class ConnectionHandler implements Watcher {
                 }
             });
             connectedSignal.await();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+
+        if (serverType != null) {
+
+            if (serverType == type.AppServer) {
+                zkFolder = "appserver";
+                reg_port = 6000;
+            } else if (serverType == type.DBServer) {
+                zkFolder = "dbserver";
+                reg_port = 5000;
+            } else {
+                zkFolder = "loadbalancer";
+                reg_port = 7000;
+            }
+            zkPath = "/" + zkFolder;
+
+            try {
+                zk = new ZooKeeper(zkAdress, 1000, new Watcher() {
+
+                    public void process(WatchedEvent we) {
+
+                        if (we.getState() == Event.KeeperState.SyncConnected) {
+                            connectedSignal.countDown();
+                        }
+                    }
+                });
+                connectedSignal.await();
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                //reset the folder to reset the node counter
+                if (zk.exists(zkPath, false) != null && getAllNodes(zk, zkPath).size() == 0) {
+                    zk.delete(zkPath, 0);
+                    zk.create(zkPath, ("root of " + serverType).getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                }
+                //create a new server folder
+                else if (zk.exists(zkPath, false) == null) {
+                    zk.create(zkPath, ("root of " + serverType).getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                }
+            } catch (KeeperException | InterruptedException e1) {
+                e1.printStackTrace();
+            }
+            numServersAtStart = getAllNodes(zk, zkPath).size();
+            try {
+                local_registry = LocateRegistry.createRegistry(reg_port + numServersAtStart);
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }
+
         }
 
         watcherList = new HashMap<String, ConnectionWatcher>();
 
-        try {
-            //reset the folder to reset the node counter
-            if (zk.exists(zkPath, false) != null && getAllNodes(zk, zkPath).size() == 0) {
-                zk.delete(zkPath, 0);
-                zk.create(zkPath, ("root of "+ serverType).getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            }
-            //create a new server folder
-            else if (zk.exists(zkPath, false) == null) {
-                zk.create(zkPath, ("root of "+serverType).getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            }
-        }
-        catch (KeeperException | InterruptedException e1) {
-            e1.printStackTrace();
-        }
 
-        numServersAtStart = getAllNodes(zk, zkPath).size();
-
-        try {
-            local_registry = LocateRegistry.createRegistry(reg_port + numServersAtStart);
-        } catch (RemoteException e1) {
-            e1.printStackTrace();
-        }
         System.out.println("CONNECTION HANDLER: Registry and ZooKeeper connection established");
     }
 
-    public Remote get(String serverName, String path) {
+    public Remote get(String serverName, String path) throws ConnectException {
 
         Registry remote_registry;
 
@@ -121,6 +137,7 @@ public class ConnectionHandler implements Watcher {
         } catch (KeeperException | InterruptedException | RemoteException | NotBoundException e) {
             e.printStackTrace();
         }
+
         return null; //TODO: make it better
     }
 
