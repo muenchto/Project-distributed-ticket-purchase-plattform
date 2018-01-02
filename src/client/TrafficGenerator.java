@@ -93,7 +93,7 @@ public class TrafficGenerator {
 
 			TrafficGeneratorThread r = new TrafficGeneratorThread(loadBalancerStub, numTheaters, stats, origin, target, op, targetTheater, numClients, connector, NUM_SERVERS);			
 			
-			final ScheduledExecutorService ex = Executors.newScheduledThreadPool(1000);
+			final ScheduledExecutorService ex = Executors.newScheduledThreadPool(100);
 
 			Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
 				@Override
@@ -111,7 +111,7 @@ public class TrafficGenerator {
 								"Num of errors gotten: " + stats[3] + "\n" + 
 								"Average latenty per request: " + stats[4] + "\n" +
 								"Average latency per completed request: " + stats[5] + "\n" +
-								"Effective rate: " + stats[0]/duration);
+								"Effective rate: " + stats[0]/(duration/1000));
 			
 //			System.out.println("Num of requests made: " + requests.intValue() + "\n" + "Num of completed requests: " + requests.intValue() / 3
 //					+ "\n" + "Num of purchases made: " + purchased.intValue() + "\n" + "Num of cancels made: " + cancelled.intValue() + "\n"

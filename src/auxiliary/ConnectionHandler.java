@@ -157,10 +157,10 @@ public class ConnectionHandler implements Watcher {
 
         try {
             zk.create(zkPath + "/" + zkFolder + numServersAtStart,
-                    (InetAddress.getLocalHost().getHostAddress() + ":" + (reg_port + numServersAtStart)).getBytes(),
+                    (local_ip + ":" + (reg_port + numServersAtStart)).getBytes(),
                     ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);
             //zk.getChildren(zkPath + "/" + serverName, true);
-        } catch (UnknownHostException | KeeperException | InterruptedException e1) {
+        } catch (KeeperException | InterruptedException e1) {
             if (e1.getClass().equals(KeeperException.class)) {
                 e1.printStackTrace();
             } else {

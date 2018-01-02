@@ -154,7 +154,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		String[] names = (String[]) keys.toArray(new String[keys.size()]);
 		return names;	
 	}
-
+/*
 	@Override
 	public synchronized Theater getTheater(String theaterName) throws RemoteException{
 		if(!theaters.containsKey(theaterName)) {
@@ -162,7 +162,16 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 					".This DBServer is only responsible for " + firstTheater + " to " + lastTheater + " theaters");
 		}
 		return theaters.get(theaterName);
-	}
+	}*/
+	@Override
+    public synchronized Theater getTheater(String theaterName) throws RemoteException{
+        if(theaters.containsKey(theaterName)) {
+            return theaters.get(theaterName);
+        }else {
+        	System.out.println("Going to the backup");
+            return theatersBackup.get(theaterName);
+        }
+    }
 
 	@Override
 	//ONLY CALL THIS FUCTION IF EXIST A PRIOR RESERVATION.
@@ -271,7 +280,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
     // Auxiliary methods ******************************************************
 	private synchronized int updateSoldSeatAux(String theaterName, Seat theaterSeat) {
-		if (theatersBackup.contains(theaterName)) {
+		if (theatersBackup.containsKey(theaterName)) {
 			if(theatersBackup.get(theaterName).occupySeat(theaterSeat))
 				// operation sucesseful
 				return 1;
@@ -279,14 +288,15 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 				// seat not available
 				return 0;
 		}
-		else
-			if (theaters.contains(theaterName))
+		else {
+			if (theaters.containsKey(theaterName))
 				//theater found on primarys theater, something it's not alright 
 				//This should not happen but if it happens you know
 				return -2;
 			else
 				//theater does not exist in theaterbackup, something it's not alright 
 				return -1;
+		}
 	}
 
 	//Count operations to at 100 operations, save memory to file and delete log file

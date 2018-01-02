@@ -1085,7 +1085,7 @@ public class TrafficGeneratorThread implements Runnable {
 	private String getAppServerWithTheater(HashMap<String, String[]> theaters, String theaterName) {
 		for (Entry<String, String[]> e : theaters.entrySet()) {
 			for (String s : e.getValue()) {
-				if (s.equals(targetTheater)) {
+				if (s.equals(theaterName)) {
 					return e.getKey();
 				}
 			}
