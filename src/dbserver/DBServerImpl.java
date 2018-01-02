@@ -40,7 +40,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	private boolean flag_bkserver_down;
 
 
-	public DBServerImpl(int ID, int NUM_DBSERVER, ConnectionHandler connector, int writingMode, int NUM_THEATERS) throws IOException{
+	public DBServerImpl(int ID, String local_ip, int NUM_DBSERVER, ConnectionHandler connector, int writingMode, int NUM_THEATERS) throws IOException{
 
 		this.SERVER_ID = ID;
 		this.NUM_SERVERS = NUM_DBSERVER;
@@ -115,7 +115,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 
 
-        connector.register(this);
+        connector.register(this, local_ip);
         //if this db server is the last one, he has to inform the dbserver0 that he is alive an will have dbserver0 as backup
         if (ID == NUM_DBSERVER-1) {
             primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");

@@ -23,13 +23,13 @@ public class DBServer {
         int NUM_DBSERVERS = configfile.getNum_servers();
         int NUM_THEATERS = configfile.getNum_theaters();
 
-
+        String local_ip = "127.0.0.1";
         String zkIP = "localhost";
         String zkPort = "";
 
         if (args.length > 0) {
-            //args[0] = own IP
-            System.setProperty("java.rmi.server.hostname", args[0]);
+            local_ip = args[0];
+            System.setProperty("java.rmi.server.hostname", local_ip);
             //args[1] = zookeeper IP
             zkIP = args[1];
             //args[2] = zookeeper Port
@@ -40,7 +40,7 @@ public class DBServer {
         DBServerImpl dbServer = null;
         try {
             int dbServerID = connector.getNrOfNodesOnPath("/dbserver");
-            dbServer = new DBServerImpl(dbServerID, NUM_DBSERVERS, connector, MODE, NUM_THEATERS);
+            dbServer = new DBServerImpl(dbServerID, local_ip, NUM_DBSERVERS, connector, MODE, NUM_THEATERS);
         } catch (IOException e1) {
             e1.printStackTrace();
         }

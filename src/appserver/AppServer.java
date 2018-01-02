@@ -15,12 +15,13 @@ public class AppServer {
 
     public static void main(String args[]) throws Exception {
 
+        String local_ip = "127.0.0.1";
         String zkIP = "localhost";
         String zkPort = "";
 
         if (args.length > 0) {
-            //args[0] = own IP
-            System.setProperty("java.rmi.server.hostname", args[0]);
+            local_ip = args[0];
+            System.setProperty("java.rmi.server.hostname", local_ip);
 
             //args[1] = zookeeper IP
             zkIP = args[1];
@@ -31,7 +32,7 @@ public class AppServer {
         ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.AppServer);
         WideBoxImpl widebox = new WideBoxImpl(connector, NUM_DBSERVER, NUM_THEATERS);
 
-        connector.register(widebox);
+        connector.register(widebox, local_ip);
         System.out.println("AppServer ready");
     }
 }
