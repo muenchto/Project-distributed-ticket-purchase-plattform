@@ -183,12 +183,13 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			synchronized(this){
 				//UPDATE Hashmap
 				theaters.get(theaterName).occupySeat(theaterSeat);
+				//log operation to file
+				storageFile.buySeat(theaterName,theaterSeat);
 				if (!flag_bkserver_down) {
 					// update the replica backup
 					updateBackup(theaterName,theaterSeat);
 				}
-				//log operation to file
-				storageFile.buySeat(theaterName,theaterSeat);
+				
 				// to count operations to at x operations, save memory to file and delete log file
 				countOperation();
 			}
@@ -268,9 +269,11 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public void notifyPrimaryAlive(int id) throws RemoteException {
 		primaryServerStub = (DataStorageIF) connector.get("dbserver" + (id), "/dbserver");
 		System.out.println("Connection to PRIMARY SERVER" + (id)+" established");
-		if (SERVER_ID == 0 && id == NUM_SERVERS)
+		if (SERVER_ID == 0 && id == NUM_SERVERS-1)
 			try {
 				theatersBackup = primaryServerStub.getSnapshot();
+				System.out.println("DB-"+SERVER_ID+"Received the snapshot from dbserver "+id);
+			
 			}
 			catch (RemoteException e) {
 				System.err.println("DBSERVER"+id+": primary server connecting down");
@@ -280,10 +283,17 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
     // Auxiliary methods ******************************************************
 	private synchronized int updateSoldSeatAux(String theaterName, Seat theaterSeat) {
+		System.out.println("DB-"+SERVER_ID+" request received to buy seat in theater "+theaterName);
 		if (theatersBackup.containsKey(theaterName)) {
-			if(theatersBackup.get(theaterName).occupySeat(theaterSeat))
+			if(theatersBackup.get(theaterName).occupySeat(theaterSeat)){
+				System.out.println("operation sucessuful");
+				storageFile.buySeatInBackup(theaterName, theaterSeat);
+				System.out.println("compra registado no ficheiro de backup");
+				countOperationback();
+				
 				// operation sucesseful
 				return 1;
+			}
 			else
 				// seat not available
 				return 0;
@@ -318,13 +328,13 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			int resp=backupServerStub.updateSoldSeat(theaterName, theaterSeat);
 			switch (resp) {
 				case -2 :
-					System.out.println("FROM BACKUP: theater found on primarys theater, something it's not alright ");
+					System.out.println("FROM BACKUP: theater " +theaterName+" found on primarys theater, something it's not alright ");
 					break;
 				case -1 :
-					System.out.println("FROM BACKUP: theater does not exist in theaterbackup, something it's not alright ");
+					System.out.println("FROM BACKUP: theater " +theaterName+" does not exist in theaterbackup, something it's not alright ");
 					break;
 				case 0 :
-					System.out.println("FROM BACKUP: seat not available");
+					System.out.println("FROM BACKUP: seat not available on theater " +theaterName);
 					break;
 				case 1 :
 					System.out.println("FROM BACKUP: operation sucesseful");
