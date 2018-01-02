@@ -21,47 +21,48 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TrafficGeneratorThread implements Runnable {
 
-	private int latencyCounter;
 	private WideBoxIF wideBoxStub;
 	private LoadBalancerIF loadBalancerStub;
 	private ConnectionHandler connector;
 	private int numTheaters;
-	private int numRequests;
-	private int numErrors;
-	private int numPurchased;
-	private long numAverageLatency;
-	private int compReqAverageLatency;
-	private int numCancelled;
+//	private Integer numRequests;
+//	private Integer numErrors;
+//	private Integer numPurchased;
+//	private Integer numAverageLatency;
+//	private Integer compReqAverageLatency;
+//	private Integer compReqLatencyCounter;
+//	private Integer numCancelled;
+//	private Integer latencyCounter;
 	private String origin;
 	private String target;
 	private String op;
 	private String targetTheater;
 	private int NUM_SERVERS;
-	private int compReqLatencyCounter;
+	
 	private int [] stats;
 	
 
-	public TrafficGeneratorThread(LoadBalancerIF loadBalancerStub, int numTheaters, int numRequests,
-			long numAverageLatency, int compReqAverageLatency, int numCancelled, int numErros, int numPurchased,
-			int latencyCounter, int compReqLatencyCounter, String origin, String target, String op,
-			String targetTheater, int numClients, ConnectionHandler connector, int NUM_SERVERS) {
-		this.wideBoxStub = null;
-		this.loadBalancerStub = loadBalancerStub;
-		this.numTheaters = numTheaters;
-		this.numRequests = numRequests;
-		this.numPurchased = numPurchased;
-		this.numErrors = numErros;
-		this.numAverageLatency = numAverageLatency;
-		this.compReqAverageLatency = compReqAverageLatency;
-		this.compReqLatencyCounter = compReqLatencyCounter;
-		this.numCancelled = numCancelled;
-		this.origin = origin;
-		this.target = target;
-		this.op = op;
-		this.targetTheater = targetTheater;
-		this.connector = connector;
-		this.NUM_SERVERS = NUM_SERVERS;
-	}
+//	public TrafficGeneratorThread(LoadBalancerIF loadBalancerStub, int numTheaters, Integer numRequests,
+//			Integer numAverageLatency, Integer compReqAverageLatency, Integer numCancelled, Integer numErros, Integer numPurchased,
+//			Integer latencyCounter, Integer compReqLatencyCounter, String origin, String target, String op,
+//			String targetTheater, int numClients, ConnectionHandler connector, int NUM_SERVERS) {
+//		this.wideBoxStub = null;
+//		this.loadBalancerStub = loadBalancerStub;
+//		this.numTheaters = numTheaters;
+//		this.numRequests = numRequests;
+//		this.numPurchased = numPurchased;
+//		this.numErrors = numErros;
+//		this.numAverageLatency = numAverageLatency;
+//		this.compReqAverageLatency = compReqAverageLatency;
+//		this.compReqLatencyCounter = compReqLatencyCounter;
+//		this.numCancelled = numCancelled;
+//		this.origin = origin;
+//		this.target = target;
+//		this.op = op;
+//		this.targetTheater = targetTheater;
+//		this.connector = connector;
+//		this.NUM_SERVERS = NUM_SERVERS;
+//	}
 
 	public TrafficGeneratorThread(LoadBalancerIF loadBalancerStub, int numTheaters,
 			int[] stats, String origin, String target, String op, String targetTheater,
@@ -80,19 +81,18 @@ public class TrafficGeneratorThread implements Runnable {
 
 	@Override
 	public void run() {
-		long endTime;
 		Random r = new Random();
 		int clientId = 1;
 		if (origin.equals("single")) {
 			if (target.equals("single")) {
 				if (op.equals("query")) {
-					//SSQRequest();
+					SSQRequest();
 				} else { // op = purchase
-					//SSPRequest();
+					SSPRequest();
 				}
 			} else { // target = random
 				if (op.equals("query")) {
-					//SRQRequest(r);
+					SRQRequest(r);
 				} else { // op = purchase
 					SRPRequest(r);
 				}
@@ -100,205 +100,379 @@ public class TrafficGeneratorThread implements Runnable {
 		} else { // origin = random
 			if (target.equals("single")) {
 				if (op.equals("query")) {
-					//RSQRequest(clientId);
+					RSQRequest(clientId);
 				} else { // op = purchase
-					//RSPRequest(clientId);
+					RSPRequest(clientId);
 				}
 			} else { // target = random
 				if (op.equals("query")) {
-					//RRQRequest(r, clientId);
+					RRQRequest(r, clientId);
 				} else { // op = purchase
-					//RRPRequest(clientId, r);
+					RRPRequest(clientId, r);
 				}
 			}
 		}
 	}
-/*
+
 	public void SSQRequest() {
-		String[] theaters;
+		HashMap<String, String[]> theaters;
 		long latencyBeg;
 		long latencyEnd;
 		long mainRequestLatency = 0;
 		long latencydif;
+		String theaterName = "TheaterNr" + targetTheater;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = wideBoxStub.getNames();
+			theaters = loadBalancerStub.getNames();
+			// check if loadbalancer is dead so we can connect to the backup
 			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
+			synchronized (this.stats) {
+				this.stats[6]++;	
+			}
 			latencydif = latencyEnd - latencyBeg;
 			mainRequestLatency += latencydif;
 			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			synchronized (this.stats) {
+				this.stats[0]++;
+			}
 
-			latencyBeg = System.currentTimeMillis();
-			Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
-			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
-			latencydif = latencyEnd - latencyBeg;
-			mainRequestLatency += latencydif;
-			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			String targetAppServer = getAppServerWithTheater(theaters, theaterName);
+			WideBoxIF wideBoxStub;
+			WideBoxIF wideBoxStubBackup;
+			try {
+				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+			} catch (ConnectException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 
-			if (m.getType() == MessageType.AVAILABLE) {
+			}
+
+			Message m = null;
+			try {
+
 				latencyBeg = System.currentTimeMillis();
-				wideBoxStub.cancel(theaters[Integer.parseInt(targetTheater)], m.getClientsSeat(), m.getClientID());
+				m = wideBoxStub.query(theaterName);
 				latencyEnd = System.currentTimeMillis();
-				this.latencyCounter++;
+				synchronized (this.stats) {
+					this.stats[6]++;	
+				}
 				latencydif = latencyEnd - latencyBeg;
 				mainRequestLatency += latencydif;
-				this.completeRequestLatencyCounter++;
-				addToCompleteRequestLatency(mainRequestLatency);
 				addToAverageLatency(latencydif);
-				this.numCancelled[0]++;
-				this.numCancelled[2]++;
-			} else {
-				this.numCancelled[3]++;
-			}
-
-			if (mainRequestLatency <= this.numAverageLatency) {
-				this.numAverageLatency -= mainRequestLatency;
-			}
-
-			if (this.rateCounter == this.numRequests) {
-				if (this.numAverageLatency > 0) {
-					Thread.sleep(this.numAverageLatency);
+				synchronized (this.stats) {
+					this.stats[0]++;	
 				}
-				this.numAverageLatency = 1000;
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 			}
-			this.rateCounter++;
+			
+			if (m.getType() == MessageType.AVAILABLE) {
+				try {
+					latencyBeg = System.currentTimeMillis();
+					wideBoxStub.cancel(theaterName, m.getClientsSeat(), m.getClientID());
+					latencyEnd = System.currentTimeMillis();
+					synchronized (this.stats) {
+						this.stats[6]++;	
+					}
+					latencydif = latencyEnd - latencyBeg;
+					mainRequestLatency += latencydif;
+					synchronized (this.stats) {
+						this.stats[7]++;	
+					}
+					addToCompleteRequestLatency(mainRequestLatency);
+					addToAverageLatency(latencydif);
+					synchronized (this.stats) {
+						this.stats[0]++;
+						this.stats[2]++;
+						
+					}
+				} catch (ConnectException | UnmarshalException e1) {
+					
+					System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
+					/*int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+					int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+					wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
+							"/appserver");
+					wideBoxStub = wideBoxStubBackup;
+					System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+					// ----------ASK-----------
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					*/
+					synchronized (this.stats) {
+						this.stats[3]++;
+					}
+					
+				}
+
+			} else {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}			
+			}
 
 		} catch (RemoteException e) {
-			this.numCancelled[3]++;
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			synchronized (this.stats) {
+				this.stats[3]++;
+			}
 			e.printStackTrace();
 		}
 	}
 
 	public void SSPRequest() {
-		String[] theaters;
+		HashMap<String, String[]> theaters;
 		long latencyBeg;
 		long latencyEnd;
 		long mainRequestLatency = 0;
 		long latencydif;
+		String theaterName = "TheaterNr" + targetTheater;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = wideBoxStub.getNames();
+			theaters = loadBalancerStub.getNames();
+			// check if loadbalancer is dead so we can connect to the backup
 			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
+			synchronized (this.stats) {
+				this.stats[6]++;	
+			}
 			latencydif = latencyEnd - latencyBeg;
 			mainRequestLatency += latencydif;
 			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			synchronized (this.stats) {
+				this.stats[0]++;
+			}
 
-			latencyBeg = System.currentTimeMillis();
-			Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
-			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
-			latencydif = latencyEnd - latencyBeg;
-			mainRequestLatency += latencydif;
-			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			String targetAppServer = getAppServerWithTheater(theaters, theaterName);
+			WideBoxIF wideBoxStub;
+			WideBoxIF wideBoxStubBackup;
+			try {
+				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+			} catch (ConnectException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 
-			if (m.getType() == MessageType.AVAILABLE) {
+			}
+
+			Message m = null;
+			try {
+
 				latencyBeg = System.currentTimeMillis();
-				wideBoxStub.accept(theaters[Integer.parseInt(targetTheater)], m.getClientsSeat(), m.getClientID());
+				m = wideBoxStub.query(theaterName);
 				latencyEnd = System.currentTimeMillis();
-				this.latencyCounter++;
+				synchronized (this.stats) {
+					this.stats[6]++;	
+				}
 				latencydif = latencyEnd - latencyBeg;
 				mainRequestLatency += latencydif;
-				this.completeRequestLatencyCounter++;
-				addToCompleteRequestLatency(mainRequestLatency);
 				addToAverageLatency(latencydif);
-				this.numCancelled[0]++;
-				this.numCancelled[1]++;
-			} else {
-				this.numCancelled[3]++;
-			}
-
-			if (mainRequestLatency <= this.numAverageLatency) {
-				this.numAverageLatency -= mainRequestLatency;
-			}
-
-			if (this.rateCounter == this.numRequests) {
-				if (this.numAverageLatency > 0) {
-					Thread.sleep(this.numAverageLatency);
+				synchronized (this.stats) {
+					this.stats[0]++;	
 				}
-				this.numAverageLatency = 1000;
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 			}
-			this.rateCounter++;
+			
+			if (m.getType() == MessageType.AVAILABLE) {
+				try {
+					latencyBeg = System.currentTimeMillis();
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					latencyEnd = System.currentTimeMillis();
+					synchronized (this.stats) {
+						this.stats[6]++;	
+					}
+					latencydif = latencyEnd - latencyBeg;
+					mainRequestLatency += latencydif;
+					synchronized (this.stats) {
+						this.stats[7]++;	
+					}
+					addToCompleteRequestLatency(mainRequestLatency);
+					addToAverageLatency(latencydif);
+					synchronized (this.stats) {
+						this.stats[0]++;
+						this.stats[1]++;
+						
+					}
+				} catch (ConnectException | UnmarshalException e1) {
+					
+					System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
+					/*int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+					int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+					wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
+							"/appserver");
+					wideBoxStub = wideBoxStubBackup;
+					System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+					// ----------ASK-----------
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					*/
+					synchronized (this.stats) {
+						this.stats[3]++;
+					}
+					
+				}
+
+			} else {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}			
+			}
 
 		} catch (RemoteException e) {
-			this.numCancelled[3]++;
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			synchronized (this.stats) {
+				this.stats[3]++;
+			}
 			e.printStackTrace();
 		}
-
 	}
 
 	public void SRQRequest(Random r) {
-		String[] theaters;
+		HashMap<String, String[]> theaters;
 		long latencyBeg;
 		long latencyEnd;
 		long mainRequestLatency = 0;
 		long latencydif;
-		int aux = r.nextInt(this.numTheaters);
+		int aux = r.nextInt(numTheaters);
+		String theaterName = "TheaterNr" + aux;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = wideBoxStub.getNames();
+			theaters = loadBalancerStub.getNames();
+			// check if loadbalancer is dead so we can connect to the backup
 			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
+			synchronized (this.stats) {
+				this.stats[6]++;	
+			}
 			latencydif = latencyEnd - latencyBeg;
 			mainRequestLatency += latencydif;
 			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			synchronized (this.stats) {
+				this.stats[0]++;
+			}
 
-			latencyBeg = System.currentTimeMillis();
-			Message m = wideBoxStub.query(theaters[aux]);
-			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
-			latencydif = latencyEnd - latencyBeg;
-			mainRequestLatency += latencydif;
-			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			String targetAppServer = getAppServerWithTheater(theaters, theaterName);
+			WideBoxIF wideBoxStub;
+			WideBoxIF wideBoxStubBackup;
+			try {
+				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+			} catch (ConnectException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 
-			if (m.getType() == MessageType.AVAILABLE) {
+			}
+
+			Message m = null;
+			try {
+
 				latencyBeg = System.currentTimeMillis();
-				wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
+				m = wideBoxStub.query(theaterName);
 				latencyEnd = System.currentTimeMillis();
-				this.latencyCounter++;
+				synchronized (this.stats) {
+					this.stats[6]++;	
+				}
 				latencydif = latencyEnd - latencyBeg;
 				mainRequestLatency += latencydif;
-				this.completeRequestLatencyCounter++;
-				addToCompleteRequestLatency(mainRequestLatency);
 				addToAverageLatency(latencydif);
-				this.numCancelled[0]++;
-				this.numCancelled[2]++;
-			} else {
-				this.numCancelled[3]++;
-			}
-
-			if (mainRequestLatency <= this.numAverageLatency) {
-				this.numAverageLatency -= mainRequestLatency;
-			}
-
-			if (this.rateCounter == this.numRequests) {
-				if (this.numAverageLatency > 0) {
-					Thread.sleep(this.numAverageLatency);
+				synchronized (this.stats) {
+					this.stats[0]++;	
 				}
-				this.numAverageLatency = 1000;
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 			}
-			this.rateCounter++;
+			
+
+			if (m.getType() == MessageType.AVAILABLE) {
+				try {
+					latencyBeg = System.currentTimeMillis();
+					wideBoxStub.cancel(theaterName, m.getClientsSeat(), m.getClientID());
+					latencyEnd = System.currentTimeMillis();
+					synchronized (this.stats) {
+						this.stats[6]++;	
+					}
+					latencydif = latencyEnd - latencyBeg;
+					mainRequestLatency += latencydif;
+					synchronized (this.stats) {
+						this.stats[7]++;	
+					}
+					addToCompleteRequestLatency(mainRequestLatency);
+					addToAverageLatency(latencydif);
+					synchronized (this.stats) {
+						this.stats[0]++;
+						this.stats[2]++;
+						
+					}
+				} catch (ConnectException | UnmarshalException e1) {
+					
+					System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
+					/*int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+					int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+					wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
+							"/appserver");
+					wideBoxStub = wideBoxStubBackup;
+					System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+					// ----------ASK-----------
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					*/
+					synchronized (this.stats) {
+						this.stats[3]++;
+					}
+					
+				}
+
+			} else {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}			
+			}
 
 		} catch (RemoteException e) {
-			this.numCancelled[3]++;
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			synchronized (this.stats) {
+				this.stats[3]++;
+			}
 			e.printStackTrace();
 		}
 	}
-*/
+
 	public void SRPRequest(Random r) {
 		HashMap<String, String[]> theaters;
 		long latencyBeg;
@@ -312,22 +486,25 @@ public class TrafficGeneratorThread implements Runnable {
 			theaters = loadBalancerStub.getNames();
 			// check if loadbalancer is dead so we can connect to the backup
 			latencyEnd = System.currentTimeMillis();
-			//this.latencyCounter++;
-			this.stats.merge("requests", 0, (oldValue, one) -> oldValue + one);
+			synchronized (this.stats) {
+				this.stats[6]++;	
+			}
 			latencydif = latencyEnd - latencyBeg;
 			mainRequestLatency += latencydif;
 			addToAverageLatency(latencydif);
-//			synchronized (this.numRequests) {
-//				this.numRequests++;
-//			}
-			this.stats.merge("requests", 0, (oldValue, one) -> oldValue + one);
+			synchronized (this.stats) {
+				this.stats[0]++;
+			}
 
-			String targetAppServer = getAppServerWithTheater(theaters, aux);
+			String targetAppServer = getAppServerWithTheater(theaters, theaterName);
 			WideBoxIF wideBoxStub;
 			WideBoxIF wideBoxStubBackup;
 			try {
 				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
 			} catch (ConnectException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
 				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
 				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
 				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
@@ -337,22 +514,25 @@ public class TrafficGeneratorThread implements Runnable {
 
 			}
 
-			Message m;
+			Message m = null;
 			try {
 
 				latencyBeg = System.currentTimeMillis();
 				m = wideBoxStub.query(theaterName);
-				// check for null if the theater doesnt exist in the message m
-
 				latencyEnd = System.currentTimeMillis();
-				latencyCounter++;
+				synchronized (this.stats) {
+					this.stats[6]++;	
+				}
 				latencydif = latencyEnd - latencyBeg;
 				mainRequestLatency += latencydif;
 				addToAverageLatency(latencydif);
-				//synchronized (stats) {
-					this.numRequests++;
-				//}
+				synchronized (this.stats) {
+					this.stats[0]++;	
+				}
 			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
 				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
 				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
 				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
@@ -360,39 +540,32 @@ public class TrafficGeneratorThread implements Runnable {
 				wideBoxStub = wideBoxStubBackup;
 				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 			}
-
-			latencyBeg = System.currentTimeMillis();
-			m = wideBoxStub.query(theaterName);
-			latencyEnd = System.currentTimeMillis();
-			latencyCounter++;
-			latencydif = latencyEnd - latencyBeg;
-			mainRequestLatency += latencydif;
-			addToAverageLatency(latencydif);
-			//synchronized (stats) {
-			this.numRequests++;
-			//}
+			
 
 			if (m.getType() == MessageType.AVAILABLE) {
 				try {
 					latencyBeg = System.currentTimeMillis();
 					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
 					latencyEnd = System.currentTimeMillis();
-					latencyCounter++;
+					synchronized (this.stats) {
+						this.stats[6]++;	
+					}
 					latencydif = latencyEnd - latencyBeg;
 					mainRequestLatency += latencydif;
-					compReqLatencyCounter++;
+					synchronized (this.stats) {
+						this.stats[7]++;	
+					}
 					addToCompleteRequestLatency(mainRequestLatency);
 					addToAverageLatency(latencydif);
-					this.numRequests++;
-					this.numPurchased++;				
-//					synchronized (stats) {
-//						stats[0]++;
-//						stats[1]++;
-//					}
+					synchronized (this.stats) {
+						this.stats[0]++;
+						this.stats[1]++;
+						
+					}
 				} catch (ConnectException | UnmarshalException e1) {
-					/*
+					
 					System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
-					int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+					/*int appserverNr = Integer.parseInt(targetAppServer.substring(9));
 					int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
 					wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
 							"/appserver");
@@ -401,277 +574,515 @@ public class TrafficGeneratorThread implements Runnable {
 					// ----------ASK-----------
 					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
 					*/
-					this.numErrors++;
+					synchronized (this.stats) {
+						this.stats[3]++;
+					}
+					
 				}
 
 			} else {
-				this.numErrors++;
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}			
 			}
 
 		} catch (RemoteException e) {
-			this.numErrors++;
+			synchronized (this.stats) {
+				this.stats[3]++;
+			}
 			e.printStackTrace();
 		}
 	}
-/*
+
 	public void RSQRequest(int clientId) {
-		String[] theaters;
+		HashMap<String, String[]> theaters;
 		long latencyBeg;
 		long latencyEnd;
 		long mainRequestLatency = 0;
 		long latencydif;
+		String theaterName = "TheaterNr" + targetTheater;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = wideBoxStub.getNames();
+			theaters = loadBalancerStub.getNames();
+			// check if loadbalancer is dead so we can connect to the backup
 			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
+			synchronized (this.stats) {
+				this.stats[6]++;	
+			}
 			latencydif = latencyEnd - latencyBeg;
 			mainRequestLatency += latencydif;
 			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			synchronized (this.stats) {
+				this.stats[0]++;
+			}
 
-			latencyBeg = System.currentTimeMillis();
-			Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
-			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
-			latencydif = latencyEnd - latencyBeg;
-			mainRequestLatency += latencydif;
-			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			String targetAppServer = getAppServerWithTheater(theaters, theaterName);
+			WideBoxIF wideBoxStub;
+			WideBoxIF wideBoxStubBackup;
+			try {
+				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+			} catch (ConnectException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 
-			if (m.getType() == MessageType.AVAILABLE) {
+			}
+
+			Message m = null;
+			try {
+
 				latencyBeg = System.currentTimeMillis();
-				wideBoxStub.cancel(theaters[Integer.parseInt(targetTheater)], m.getClientsSeat(), m.getClientID());
+				m = wideBoxStub.query(theaterName);
 				latencyEnd = System.currentTimeMillis();
-				this.latencyCounter++;
+				synchronized (this.stats) {
+					this.stats[6]++;	
+				}
 				latencydif = latencyEnd - latencyBeg;
 				mainRequestLatency += latencydif;
-				this.completeRequestLatencyCounter++;
-				addToCompleteRequestLatency(mainRequestLatency);
 				addToAverageLatency(latencydif);
-				this.numCancelled[0]++;
-				this.numCancelled[2]++;
-			} else {
-				this.numCancelled[3]++;
-			}
-
-			if (mainRequestLatency <= this.numAverageLatency) {
-				this.numAverageLatency -= mainRequestLatency;
-			}
-
-			if (this.rateCounter == this.numRequests) {
-				if (this.numAverageLatency > 0) {
-					Thread.sleep(this.numAverageLatency);
+				synchronized (this.stats) {
+					this.stats[0]++;	
 				}
-				this.numAverageLatency = 1000;
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 			}
-			this.rateCounter++;
+			
+			if (m.getType() == MessageType.AVAILABLE) {
+				try {
+					latencyBeg = System.currentTimeMillis();
+					wideBoxStub.cancel(theaterName, m.getClientsSeat(), m.getClientID());
+					latencyEnd = System.currentTimeMillis();
+					synchronized (this.stats) {
+						this.stats[6]++;	
+					}
+					latencydif = latencyEnd - latencyBeg;
+					mainRequestLatency += latencydif;
+					synchronized (this.stats) {
+						this.stats[7]++;	
+					}
+					addToCompleteRequestLatency(mainRequestLatency);
+					addToAverageLatency(latencydif);
+					synchronized (this.stats) {
+						this.stats[0]++;
+						this.stats[2]++;
+						
+					}
+				} catch (ConnectException | UnmarshalException e1) {
+					
+					System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
+					/*int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+					int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+					wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
+							"/appserver");
+					wideBoxStub = wideBoxStubBackup;
+					System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+					// ----------ASK-----------
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					*/
+					synchronized (this.stats) {
+						this.stats[3]++;
+					}
+					
+				}
+
+			} else {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}			
+			}
 
 		} catch (RemoteException e) {
-			this.numCancelled[3]++;
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			synchronized (this.stats) {
+				this.stats[3]++;
+			}
 			e.printStackTrace();
 		}
 	}
 
 	public void RSPRequest(int clientId) {
-		String[] theaters;
+		HashMap<String, String[]> theaters;
 		long latencyBeg;
 		long latencyEnd;
 		long mainRequestLatency = 0;
 		long latencydif;
+		String theaterName = "TheaterNr" + targetTheater;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = wideBoxStub.getNames();
+			theaters = loadBalancerStub.getNames();
+			// check if loadbalancer is dead so we can connect to the backup
 			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
+			synchronized (this.stats) {
+				this.stats[6]++;	
+			}
 			latencydif = latencyEnd - latencyBeg;
 			mainRequestLatency += latencydif;
 			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			synchronized (this.stats) {
+				this.stats[0]++;
+			}
 
-			latencyBeg = System.currentTimeMillis();
-			Message m = wideBoxStub.query(theaters[Integer.parseInt(targetTheater)]);
-			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
-			latencydif = latencyEnd - latencyBeg;
-			mainRequestLatency += latencydif;
-			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			String targetAppServer = getAppServerWithTheater(theaters, theaterName);
+			WideBoxIF wideBoxStub;
+			WideBoxIF wideBoxStubBackup;
+			try {
+				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+			} catch (ConnectException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 
-			if (m.getType() == MessageType.AVAILABLE) {
+			}
+
+			Message m = null;
+			try {
+
 				latencyBeg = System.currentTimeMillis();
-				wideBoxStub.accept(theaters[Integer.parseInt(targetTheater)], m.getClientsSeat(), m.getClientID());
+				m = wideBoxStub.query(theaterName);
 				latencyEnd = System.currentTimeMillis();
-				this.latencyCounter++;
+				synchronized (this.stats) {
+					this.stats[6]++;	
+				}
 				latencydif = latencyEnd - latencyBeg;
 				mainRequestLatency += latencydif;
-				this.completeRequestLatencyCounter++;
-				addToCompleteRequestLatency(mainRequestLatency);
 				addToAverageLatency(latencydif);
-				this.numCancelled[0]++;
-				this.numCancelled[1]++;
-			} else {
-				this.numCancelled[3]++;
-			}
-
-			if (mainRequestLatency <= this.numAverageLatency) {
-				this.numAverageLatency -= mainRequestLatency;
-			}
-
-			if (this.rateCounter == this.numRequests) {
-				if (this.numAverageLatency > 0) {
-					Thread.sleep(this.numAverageLatency);
+				synchronized (this.stats) {
+					this.stats[0]++;	
 				}
-				this.numAverageLatency = 1000;
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 			}
-			this.rateCounter++;
+			
+			if (m.getType() == MessageType.AVAILABLE) {
+				try {
+					latencyBeg = System.currentTimeMillis();
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					latencyEnd = System.currentTimeMillis();
+					synchronized (this.stats) {
+						this.stats[6]++;	
+					}
+					latencydif = latencyEnd - latencyBeg;
+					mainRequestLatency += latencydif;
+					synchronized (this.stats) {
+						this.stats[7]++;	
+					}
+					addToCompleteRequestLatency(mainRequestLatency);
+					addToAverageLatency(latencydif);
+					synchronized (this.stats) {
+						this.stats[0]++;
+						this.stats[1]++;
+						
+					}
+				} catch (ConnectException | UnmarshalException e1) {
+					
+					System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
+					/*int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+					int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+					wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
+							"/appserver");
+					wideBoxStub = wideBoxStubBackup;
+					System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+					// ----------ASK-----------
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					*/
+					synchronized (this.stats) {
+						this.stats[3]++;
+					}
+					
+				}
+
+			} else {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}			
+			}
 
 		} catch (RemoteException e) {
-			this.numCancelled[3]++;
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			synchronized (this.stats) {
+				this.stats[3]++;
+			}
 			e.printStackTrace();
 		}
 	}
 
 	public void RRQRequest(Random r, int clientId) {
-		String[] theaters;
+		HashMap<String, String[]> theaters;
 		long latencyBeg;
 		long latencyEnd;
 		long mainRequestLatency = 0;
 		long latencydif;
-		int aux = r.nextInt(this.numTheaters);
+		int aux = r.nextInt(numTheaters);
+		String theaterName = "TheaterNr" + aux;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = wideBoxStub.getNames();
+			theaters = loadBalancerStub.getNames();
+			// check if loadbalancer is dead so we can connect to the backup
 			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
+			synchronized (this.stats) {
+				this.stats[6]++;	
+			}
 			latencydif = latencyEnd - latencyBeg;
 			mainRequestLatency += latencydif;
 			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			synchronized (this.stats) {
+				this.stats[0]++;
+			}
 
-			latencyBeg = System.currentTimeMillis();
-			Message m = wideBoxStub.query(theaters[aux]);
-			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
-			latencydif = latencyEnd - latencyBeg;
-			mainRequestLatency += latencydif;
-			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			String targetAppServer = getAppServerWithTheater(theaters, theaterName);
+			WideBoxIF wideBoxStub;
+			WideBoxIF wideBoxStubBackup;
+			try {
+				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+			} catch (ConnectException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 
-			if (m.getType() == MessageType.AVAILABLE) {
+			}
+
+			Message m = null;
+			try {
+
 				latencyBeg = System.currentTimeMillis();
-				wideBoxStub.cancel(theaters[aux], m.getClientsSeat(), m.getClientID());
+				m = wideBoxStub.query(theaterName);
 				latencyEnd = System.currentTimeMillis();
-				this.latencyCounter++;
+				synchronized (this.stats) {
+					this.stats[6]++;	
+				}
 				latencydif = latencyEnd - latencyBeg;
 				mainRequestLatency += latencydif;
-				this.completeRequestLatencyCounter++;
-				addToCompleteRequestLatency(mainRequestLatency);
 				addToAverageLatency(latencydif);
-				this.numCancelled[0]++;
-				this.numCancelled[2]++;
-			} else {
-				this.numCancelled[3]++;
-			}
-
-			if (mainRequestLatency <= this.numAverageLatency) {
-				this.numAverageLatency -= mainRequestLatency;
-			}
-
-			if (this.rateCounter == this.numRequests) {
-				if (this.numAverageLatency > 0) {
-					Thread.sleep(this.numAverageLatency);
+				synchronized (this.stats) {
+					this.stats[0]++;	
 				}
-				this.numAverageLatency = 1000;
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 			}
-			this.rateCounter++;
+			
+
+			if (m.getType() == MessageType.AVAILABLE) {
+				try {
+					latencyBeg = System.currentTimeMillis();
+					wideBoxStub.cancel(theaterName, m.getClientsSeat(), m.getClientID());
+					latencyEnd = System.currentTimeMillis();
+					synchronized (this.stats) {
+						this.stats[6]++;	
+					}
+					latencydif = latencyEnd - latencyBeg;
+					mainRequestLatency += latencydif;
+					synchronized (this.stats) {
+						this.stats[7]++;	
+					}
+					addToCompleteRequestLatency(mainRequestLatency);
+					addToAverageLatency(latencydif);
+					synchronized (this.stats) {
+						this.stats[0]++;
+						this.stats[2]++;
+						
+					}
+				} catch (ConnectException | UnmarshalException e1) {
+					
+					System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
+					/*int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+					int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+					wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
+							"/appserver");
+					wideBoxStub = wideBoxStubBackup;
+					System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+					// ----------ASK-----------
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					*/
+					synchronized (this.stats) {
+						this.stats[3]++;
+					}
+					
+				}
+
+			} else {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}			
+			}
 
 		} catch (RemoteException e) {
-			this.numCancelled[3]++;
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			synchronized (this.stats) {
+				this.stats[3]++;
+			}
 			e.printStackTrace();
 		}
 	}
 
 	public void RRPRequest(int clientId, Random r) {
-		String[] theaters;
+		HashMap<String, String[]> theaters;
 		long latencyBeg;
 		long latencyEnd;
 		long mainRequestLatency = 0;
 		long latencydif;
-		int aux = r.nextInt(this.numTheaters);
+		int aux = r.nextInt(numTheaters);
+		String theaterName = "TheaterNr" + aux;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = wideBoxStub.getNames();
+			theaters = loadBalancerStub.getNames();
+			// check if loadbalancer is dead so we can connect to the backup
 			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
+			synchronized (this.stats) {
+				this.stats[6]++;	
+			}
 			latencydif = latencyEnd - latencyBeg;
 			mainRequestLatency += latencydif;
 			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			synchronized (this.stats) {
+				this.stats[0]++;
+			}
 
-			latencyBeg = System.currentTimeMillis();
-			Message m = wideBoxStub.query(theaters[aux]);
-			latencyEnd = System.currentTimeMillis();
-			this.latencyCounter++;
-			latencydif = latencyEnd - latencyBeg;
-			mainRequestLatency += latencydif;
-			addToAverageLatency(latencydif);
-			this.numCancelled[0]++;
+			String targetAppServer = getAppServerWithTheater(theaters, theaterName);
+			WideBoxIF wideBoxStub;
+			WideBoxIF wideBoxStubBackup;
+			try {
+				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+			} catch (ConnectException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 
-			if (m.getType() == MessageType.AVAILABLE) {
+			}
+
+			Message m = null;
+			try {
+
 				latencyBeg = System.currentTimeMillis();
-				wideBoxStub.accept(theaters[aux], m.getClientsSeat(), m.getClientID());
+				m = wideBoxStub.query(theaterName);
 				latencyEnd = System.currentTimeMillis();
-				this.latencyCounter++;
+				synchronized (this.stats) {
+					this.stats[6]++;	
+				}
 				latencydif = latencyEnd - latencyBeg;
 				mainRequestLatency += latencydif;
-				this.completeRequestLatencyCounter++;
-				addToCompleteRequestLatency(mainRequestLatency);
 				addToAverageLatency(latencydif);
-				this.numCancelled[0]++;
-				this.numCancelled[1]++;
-			} else {
-				this.numCancelled[3]++;
-			}
-
-			if (mainRequestLatency <= this.numAverageLatency) {
-				this.numAverageLatency -= mainRequestLatency;
-			}
-
-			if (this.rateCounter == this.numRequests) {
-				if (this.numAverageLatency > 0) {
-					Thread.sleep(this.numAverageLatency);
+				synchronized (this.stats) {
+					this.stats[0]++;	
 				}
-				this.numAverageLatency = 1000;
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
+				wideBoxStub = wideBoxStubBackup;
+				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
 			}
-			this.rateCounter++;
+			
+
+			if (m.getType() == MessageType.AVAILABLE) {
+				try {
+					latencyBeg = System.currentTimeMillis();
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					latencyEnd = System.currentTimeMillis();
+					synchronized (this.stats) {
+						this.stats[6]++;	
+					}
+					latencydif = latencyEnd - latencyBeg;
+					mainRequestLatency += latencydif;
+					synchronized (this.stats) {
+						this.stats[7]++;	
+					}
+					addToCompleteRequestLatency(mainRequestLatency);
+					addToAverageLatency(latencydif);
+					synchronized (this.stats) {
+						this.stats[0]++;
+						this.stats[1]++;
+						
+					}
+				} catch (ConnectException | UnmarshalException e1) {
+					
+					System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
+					/*int appserverNr = Integer.parseInt(targetAppServer.substring(9));
+					int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
+					wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
+							"/appserver");
+					wideBoxStub = wideBoxStubBackup;
+					System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
+					// ----------ASK-----------
+					wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
+					*/
+					synchronized (this.stats) {
+						this.stats[3]++;
+					}
+					
+				}
+
+			} else {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}			
+			}
 
 		} catch (RemoteException e) {
-			this.numCancelled[3]++;
-			e.printStackTrace();
-		} catch (InterruptedException e) {
+			synchronized (this.stats) {
+				this.stats[3]++;
+			}
 			e.printStackTrace();
 		}
 	}
-*/
+
 	private synchronized void addToAverageLatency(long diff) {
-		this.stats[4] = Math
-				.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.stats[4]));
+		this.stats[4] = Math.toIntExact(this.stats[4] + ((diff - this.stats[4]) / this.stats[6]));
 	}
 
 	private synchronized void addToCompleteRequestLatency(long diff) {
-		this.stats[5] = Math.toIntExact(
-				this.stats[5] + ((diff - this.stats[5]) / this.stats[5]));
+		this.stats[5] = Math.toIntExact(this.stats[5] + ((diff - this.stats[5]) / this.stats[7]));
 	}
 
-	private String getAppServerWithTheater(HashMap<String, String[]> theaters, int aux) {
-		String targetTheater = "TheaterNr" + aux;
+	private String getAppServerWithTheater(HashMap<String, String[]> theaters, String theaterName) {
 		for (Entry<String, String[]> e : theaters.entrySet()) {
 			for (String s : e.getValue()) {
 				if (s.equals(targetTheater)) {
@@ -681,13 +1092,4 @@ public class TrafficGeneratorThread implements Runnable {
 		}
 		return null;
 	}
-/*
-	@Override
-	public String toString() {
-		return "Num of requests made: " + this.numCancelled[0] + "\n" + "Num of completed requests: "
-				+ this.numCancelled[0] / 3 + "\n" + "Num of purchases made: " + this.numCancelled[1] + "\n"
-				+ "Num of cancels made: " + this.numCancelled[2] + "\n" + "Num of errors gotten: "
-				+ this.numCancelled[3] + "\n" + "Average latenty per request: " + this.numCancelled[4] + "\n"
-				+ "Average latency per completed request: " + this.numCancelled[5] + "\n";
-	}*/
 }

@@ -16,18 +16,18 @@ import java.util.concurrent.*;
  */
 public class TrafficGenerator {
 
-//	volatile static int requests;
-//	volatile static int averageLatency;
-//	volatile static int completeReqAverageLatency;
-//	volatile static int cancelled;
-//	volatile static int purchased;
-//	volatile static int errors;
-//	volatile static int latencyCounter = 0;
-//	volatile static int completeRequestLatencyCounter = 0;
+//	volatile static Integer requests;
+//	volatile static Integer averageLatency;
+//	volatile static Integer completeReqAverageLatency;
+//	volatile static Integer cancelled;
+//	volatile static Integer purchased;
+//	volatile static Integer errors;
+//	volatile static Integer latencyCounter = 0;
+//	volatile static Integer completeRequestLatencyCounter = 0;
 
 	// requests, purchased, cancelled, errors, average latency, complete request
-	// average latency
-	static int[] stats = new int[6];
+	// average latency, average latency counter, comp req latency counter
+	static int[] stats = new int[8];
 
 	static final int NUM_SERVERS = 2;
 
@@ -76,14 +76,14 @@ public class TrafficGenerator {
 			stats.put("latencyCounter", 0);
 			stats.put("completeRequestLatencyCounter", 0);
 			*/
-//			int requests = 0;
-//			int averageLatency = 0;
-//			int completeReqAverageLatency = 0;
-//			int cancelled = 0;
-//			int purchased = 0;
-//			int errors = 0;
-//			int latencyCounter = 0;
-//			int completeRequestLatencyCounter = 0;			
+//			requests = new Integer(0);
+//			averageLatency = new Integer(0);
+//			completeReqAverageLatency = new Integer(0);
+//			cancelled = new Integer(0);
+//			purchased = new Integer(0);
+//			errors = new Integer(0);
+//			latencyCounter = new Integer(0);
+//			completeRequestLatencyCounter = new Integer(0);
 			
 			
 
@@ -93,127 +93,7 @@ public class TrafficGenerator {
 
 			TrafficGeneratorThread r = new TrafficGeneratorThread(loadBalancerStub, numTheaters, stats, origin, target, op, targetTheater, numClients, connector, NUM_SERVERS);			
 			
-			
-/*
-			TimerTask timerTask = new TimerTask() {
-				@Override
-				public void run() {
-					HashMap<String, String[]> theaters;
-					long latencyBeg;
-					long latencyEnd;
-					long mainRequestLatency = 0;
-					long latencydif;
-					Random r = new Random();
-					int aux = r.nextInt(numTheaters);
-					String theaterName = "TheaterNr" + aux;
-					try {
-						latencyBeg = System.currentTimeMillis();
-						theaters = loadBalancerStub.getNames();
-						// check if loadbalancer is dead so we can connect to the backup
-						latencyEnd = System.currentTimeMillis();
-						latencyCounter++;
-						latencydif = latencyEnd - latencyBeg;
-						mainRequestLatency += latencydif;
-						addToAverageLatency(latencydif);
-						synchronized (requests) {
-							stats[0]++;
-						}
-
-						String targetAppServer = getAppServerWithTheater(theaters, aux);
-						WideBoxIF wideBoxStub;
-						WideBoxIF wideBoxStubBackup;
-						try {
-							wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
-						} catch (ConnectException e1) {
-							System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
-							int appserverNr = Integer.parseInt(targetAppServer.substring(9));
-							int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
-							wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
-							wideBoxStub = wideBoxStubBackup;
-							System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
-
-						}
-
-						Message m;
-						try {
-
-							latencyBeg = System.currentTimeMillis();
-							m = wideBoxStub.query(theaterName);
-							// check for null if the theater doesnt exist in the message m
-
-							latencyEnd = System.currentTimeMillis();
-							latencyCounter++;
-							latencydif = latencyEnd - latencyBeg;
-							mainRequestLatency += latencydif;
-							addToAverageLatency(latencydif);
-							synchronized (stats) {
-								stats[0]++;
-							}
-						} catch (ConnectException | UnmarshalException e1) {
-							System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
-							int appserverNr = Integer.parseInt(targetAppServer.substring(9));
-							int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
-							wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
-							wideBoxStub = wideBoxStubBackup;
-							System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
-
-							// m = wideBoxStub.query(theaterName);
-						}
-
-						latencyBeg = System.currentTimeMillis();
-						m = wideBoxStub.query(theaterName);
-						latencyEnd = System.currentTimeMillis();
-						latencyCounter++;
-						latencydif = latencyEnd - latencyBeg;
-						mainRequestLatency += latencydif;
-						addToAverageLatency(latencydif);
-						synchronized (stats) {
-							stats[0]++;
-						}
-
-						if (m.getType() == MessageType.AVAILABLE) {
-							try {
-								latencyBeg = System.currentTimeMillis();
-								wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
-								latencyEnd = System.currentTimeMillis();
-								latencyCounter++;
-								latencydif = latencyEnd - latencyBeg;
-								mainRequestLatency += latencydif;
-								completeRequestLatencyCounter++;
-								addToCompleteRequestLatency(mainRequestLatency);
-								addToAverageLatency(latencydif);
-								synchronized (stats) {
-									stats[0]++;
-									stats[1]++;
-								}
-							} catch (ConnectException | UnmarshalException e1) {
-								System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary DBServer.");
-								int appserverNr = Integer.parseInt(targetAppServer.substring(9));
-								int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
-								wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr,
-										"/appserver");
-								wideBoxStub = wideBoxStubBackup;
-								System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
-								// ----------ASK-----------
-								wideBoxStub.accept(theaterName, m.getClientsSeat(), m.getClientID());
-							}
-
-						} else {
-							synchronized (stats) {
-								stats[3]++;
-							}
-						}
-
-					} catch (RemoteException e) {
-						synchronized (stats) {
-							stats[3]++;
-						}
-						e.printStackTrace();
-					}
-				}
-			};
-*/
-			final ScheduledExecutorService ex = Executors.newScheduledThreadPool(100);
+			final ScheduledExecutorService ex = Executors.newScheduledThreadPool(1000);
 
 			Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
 				@Override
@@ -224,15 +104,19 @@ public class TrafficGenerator {
 			ex.scheduleAtFixedRate(r/*timerTask*/, 0, sleepRate, TimeUnit.MILLISECONDS);
 			while (!ex.isTerminated()) {
 			}
-			System.out.println("Num of requests made: " + stats[0] + "\n" + "Num of completed requests: " + stats[0] / 3
-					+ "\n" + "Num of purchases made: " + stats[1] + "\n" + "Num of cancels made: " + stats[2] + "\n"
-					+ "Num of errors gotten: " + stats[3] + "\n" + "Average latenty per request: " + stats[4] + "\n"
-					+ "Average latency per completed request: " + stats[5] + "\n");
+			System.out.println("Num of requests made: " + stats[0] + "\n" +
+								"Num of completed requests: " + stats[0] / 3 + "\n" + 
+								"Num of purchases made: " + stats[1] + "\n" + 
+								"Num of cancels made: " + stats[2] + "\n" + 
+								"Num of errors gotten: " + stats[3] + "\n" + 
+								"Average latenty per request: " + stats[4] + "\n" +
+								"Average latency per completed request: " + stats[5] + "\n" +
+								"Effective rate: " + stats[0]/duration);
 			
-//			System.out.println("Num of requests made: " + requests + "\n" + "Num of completed requests: " + requests / 3
-//					+ "\n" + "Num of purchases made: " + purchased + "\n" + "Num of cancels made: " + cancelled + "\n"
-//					+ "Num of errors gotten: " + errors + "\n" + "Average latenty per request: " + averageLatency + "\n"
-//					+ "Average latency per completed request: " + completeReqAverageLatency + "\n");
+//			System.out.println("Num of requests made: " + requests.intValue() + "\n" + "Num of completed requests: " + requests.intValue() / 3
+//					+ "\n" + "Num of purchases made: " + purchased.intValue() + "\n" + "Num of cancels made: " + cancelled.intValue() + "\n"
+//					+ "Num of errors gotten: " + errors.intValue() + "\n" + "Average latenty per request: " + averageLatency.intValue() + "\n"
+//					+ "Average latency per completed request: " + completeReqAverageLatency.intValue() + "\n");
 
 			System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime) / 1000));
 			System.exit(1);
