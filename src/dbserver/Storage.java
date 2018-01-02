@@ -300,7 +300,7 @@ public class Storage {
 				op++;
 			}
 			log.delete();
-			System.out.println("STORAGE: Log file processed, with " + op + "operations pending and deleted");
+			System.out.println("STORAGE: Log file processed, with " + op + " operations pending and deleted");
 		} catch (FileNotFoundException e) {
 			System.err.println("File "+log.getName()+" dont exist");
 			e.printStackTrace();
@@ -320,11 +320,14 @@ public class Storage {
 				row=(scLog.next()).charAt(0);
 				col=scLog.nextInt();
 				scLog.skip("\n");
-				theatersTemp.get(theaterName).occupySeat(row-'A', col);
+				if(theatersTemp.containsKey(theaterName))
+					theatersTemp.get(theaterName).occupySeat(row-'A', col);
+				else
+					System.out.println("Cannot find "+theaterName+" in the hashmap that was loaded by from "+DBFILENAMEBACKUP);
 				op++;
 			}
 			logback.delete();
-			System.out.println("STORAGE: Log file processed, with " + op + "operations pending and deleted");
+			System.out.println("STORAGE: Log file processed, with " + op + " operations pending and deleted");
 		} catch (FileNotFoundException e) {
 			System.err.println("File "+logback.getName()+" dont exist");
 			e.printStackTrace();
