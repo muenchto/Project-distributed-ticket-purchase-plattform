@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, ConnectionHandler.ConnectionWatcher {
 
-    private static final long EXPIRING_DURATION = 15000;
+    private int EXPIRING_DURATION;
     private int NUM_THEATERS;
     private int ID;
     private int NUM_SERVERS;
@@ -47,8 +47,13 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
         dbServerLocalMode = false;
 
         this.ID = connector.numServersAtStart;
-        this.NUM_SERVERS = total_num_of_servers;
-        this.NUM_THEATERS = total_num_of_theaters;
+
+        WideBoxConfigHandler configfile = new WideBoxConfigHandler();
+        System.out.println(configfile.toString());
+
+        this.NUM_SERVERS = configfile.getNum_servers();
+        this.NUM_THEATERS = configfile.getNum_theaters();
+        this.EXPIRING_DURATION = configfile.getExpiring_time();
 
         int previousID = Math.floorMod((ID - 1), NUM_SERVERS);
         int succesiveID = Math.floorMod((ID + 1), NUM_SERVERS);

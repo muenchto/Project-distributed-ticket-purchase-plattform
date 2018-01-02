@@ -26,7 +26,7 @@ public interface DataStorageIF extends Remote{
 	//updates are only applied to backup hashmap
 	int updateSoldSeat (String theaterName, Seat theaterSeat) throws RemoteException;
 	int[] updateSoldSeat(String theaterName[], Seat theaterSeat[]) throws RemoteException;
-	ConcurrentHashMap<String, Theater> Snapshot() throws RemoteException;
+	ConcurrentHashMap<String, Theater> getSnapshot() throws RemoteException;
 
     void notifyBackupAlive(int backupServerID) throws RemoteException;
 
