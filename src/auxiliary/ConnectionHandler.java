@@ -146,7 +146,7 @@ public class ConnectionHandler implements Watcher {
         zk.close();
     }
 
-    public void register(Remote obj) {
+    public void register(Remote obj, String local_ip) {
 
         try {
             local_registry.rebind(zkFolder + numServersAtStart, obj);

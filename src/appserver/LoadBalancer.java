@@ -12,12 +12,13 @@ public class LoadBalancer {
 
 	public static void main(String args[]) throws Exception {
 
+		String local_ip = "127.0.0.1";
 		String zkIP = "localhost";
 		String zkPort = "";
 
 		if (args.length > 0) {
-			// args[0] = own IP
-			System.setProperty("java.rmi.server.hostname", args[0]);
+			local_ip = args[0];
+			System.setProperty("java.rmi.server.hostname", local_ip);
 
 			// args[1] = zookeeper IP
 			zkIP = args[1];
@@ -28,7 +29,7 @@ public class LoadBalancer {
 		ConnectionHandler connector = new ConnectionHandler(zkAddress, ConnectionHandler.type.LoadBalancer);
 		LoadBalancerImpl loadBalancer = new LoadBalancerImpl(connector);
 
-		connector.register(loadBalancer);
+		connector.register(loadBalancer, local_ip);
 		System.out.println("LoadBalancer ready");
 	}
 }

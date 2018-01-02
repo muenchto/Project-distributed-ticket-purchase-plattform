@@ -271,6 +271,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
 
     @Override
     public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
+        System.out.println("accept called "+theaterName+", "+acceptedSeat.getSeatName()+", "+ clientID);
 
         // check if the theater is in this servers responsibility
         int theaterNr = Integer.parseInt(theaterName.substring(9));
