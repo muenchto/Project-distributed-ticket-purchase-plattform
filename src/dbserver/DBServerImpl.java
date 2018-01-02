@@ -18,13 +18,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public ConcurrentHashMap<String, Theater> theatersBackup;
 
 	public  Storage storageFile;
-	final static String DBFILENAME = "DBfile.txt";
-	final static String LOGFILENAME = "LOGfile.txt";
-	/*
-	public Storage storageBkFile;
-	final static String DBFILENAMEBACKUP = "DB_BACKUPfile.txt";
-	final static String LOGFILENAMEBACKUP = "LOG_BACKUPfile.txt";
-	*/
+
 	private int firstTheater;
 	private int lastTheater;
 	private int firstBackTheater;
@@ -34,7 +28,6 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public int mode;
 	public int NUM_SERVERS;
 	public int SERVER_ID;
-	public int NUM_THEATERS;
 	private int errors;
 
 	private ConnectionHandler connector;
@@ -79,7 +72,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 		//if there is a db file, load the file to memory hashmap 
 		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
-		if (storageFile.existentDBfile() && false) {
+		if (storageFile.existentDBfile()) {
 			System.out.println("DB file present, loading DB");
 			//Creation of the theaters hashmap
 			theaters = storageFile.loadDBfile();
@@ -110,10 +103,11 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			//Creation of the theaters hashmap
 			System.out.println("DB backup file NOT present, creating new hashmap");
 			theatersBackup = new ConcurrentHashMap<String, Theater>();
-			for (int i = firstTheater; i < lastTheater; i++) {
+			for (int i = firstBackTheater; i < lastBackTheater; i++) {
 				theatersBackup.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
-				//System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
 			}
+			System.out.println("BACKUP: created "+theatersBackup.size()+" theaters from "+theatersBackup.get("TheaterNr"+firstBackTheater).theaterName + " until "+theatersBackup.get("TheaterNr"+(lastBackTheater-1)).theaterName);
+
 			//dump newly createad hashmap to file
 			storageFile.saveToBackFile(theatersBackup);
 		}
