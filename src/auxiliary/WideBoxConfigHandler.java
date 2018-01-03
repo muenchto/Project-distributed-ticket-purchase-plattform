@@ -14,6 +14,7 @@ public class WideBoxConfigHandler {
     private int expiring_time;
     private int num_theaters;
     private int num_servers;
+    private int write_mode;
 
 
     public WideBoxConfigHandler() {
@@ -35,6 +36,9 @@ public class WideBoxConfigHandler {
                     case "Reservation expiring time (millisec)":
                         this.expiring_time = Integer.parseInt(split[1]);
                         break;
+                    case "Write mode":
+                    	this.write_mode = Integer.parseInt(split[1]);
+                    	break;
 
                 }
             }
@@ -58,12 +62,20 @@ public class WideBoxConfigHandler {
         return num_servers;
     }
 
+    public int getWrite_mode() {
+        return write_mode;
+    }
+ 
+    
+    
     @Override
     public String toString() {
         return "WideBox is running with the following parameter:\n" +
                 "Numbers of Database Server (== num AppServer) = " + num_servers+ "\n"+
                 "Total number of theaters = " + num_theaters + "\n"+
-                "The time until a reservation expires = " + expiring_time + "\n";
+                "The time until a reservation expires = " + expiring_time + "\n"+
+        		"DBServer write mode to disk = " + write_mode + "\n"+
+        		"Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) \n";
     }
 
 }

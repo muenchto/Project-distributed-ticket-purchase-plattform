@@ -35,9 +35,9 @@ public class LoadBalancerImpl extends UnicastRemoteObject implements LoadBalance
 	}
 
 	@Override
-	public HashMap<String, String[]> getNames() throws RemoteException {
+	public synchronized HashMap<String, String[]> getNames() throws RemoteException {
 		if (!theaterNames.isEmpty()) {
-			System.out.println("LOADBALANCER: getNames: cached list returned" );
+			//System.out.println("LOADBALANCER: getNames: cached list returned" );
 			return theaterNames;
 		} else {
 			// List<String> theaterList = new ArrayList<>();

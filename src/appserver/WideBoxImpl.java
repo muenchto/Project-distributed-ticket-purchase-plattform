@@ -110,7 +110,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
 
 
     @Override
-    public String[] getNames () throws RemoteException {
+    public synchronized String[] getNames () throws RemoteException {
         if (dbServerLocalMode) {
             java.util.Set keys = this.theaters.keySet();
             return (String[]) keys.toArray(new String[keys.size()]);
@@ -122,7 +122,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
     }
 
     @Override
-    public Message query(String theaterName) throws RemoteException {
+    public synchronized Message query(String theaterName) throws RemoteException {
 
         // check if the theater is in this servers responsibility
         int theaterNr = Integer.parseInt(theaterName.substring(9));
@@ -148,7 +148,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
         }
 
         Theater theater;
-        synchronized (reservedSeats.get(theaterName)) {
+       // synchronized (reservedSeats.get(theaterName)) {
             if (dbServerLocalMode) {
                 theater = (Theater) this.theaters.get(theaterName);
                 theater = theater.clone();
@@ -193,11 +193,11 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
             System.out.println("QUERY from " + clientCounter + ": reservedSeats @ " + theater.theaterName + ": " + reservedSeats.get(theater.theaterName).keySet());
 
             return new Message(MessageType.AVAILABLE, theater.seats, seat, clientID);
-        }
+        //}
     }
 
     @Override
-    public Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
+    public synchronized Message reserve(String theaterName, Seat old_seat, Seat wish_seat, int clientID) throws RemoteException {
 
         // check if the theater is in this servers responsibility
         int theaterNr = Integer.parseInt(theaterName.substring(9));
@@ -219,7 +219,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
         }
 
         Theater theater;
-        synchronized (reservedSeats.get(theaterName)) {
+        //synchronized (reservedSeats.get(theaterName)) {
             if (dbServerLocalMode) {
                 theater = (Theater) this.theaters.get(theaterName);
                 theater = theater.clone();
@@ -270,11 +270,11 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
             System.out.println("RESERVE from " + clientCounter + ":  @ " + theater.theaterName + ": " + return_seat.getSeatName());
 
             return new Message(MessageType.AVAILABLE, theater.seats, return_seat, clientID);
-        }
+        //}
     }
 
     @Override
-    public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
+    public synchronized Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
 
         // check if the theater is in this servers responsibility
         int theaterNr = Integer.parseInt(theaterName.substring(9));
@@ -308,7 +308,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
                 return new Message(MessageType.ACCEPT_ERROR);
             }
         } else {
-            synchronized (reservedSeats.get(theaterName)) {
+           // synchronized (reservedSeats.get(theaterName)) {
             
                 //try to buy the seat at the DB Server
                 boolean success;
@@ -344,14 +344,14 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
 
                     return new Message(MessageType.ACCEPT_ERROR);
                 }
-            }
+           // }
         }
 
 
     }
 
     @Override
-    public Message cancel(String theaterName, Seat seat, int clientID) throws RemoteException {
+    public synchronized Message cancel(String theaterName, Seat seat, int clientID) throws RemoteException {
 
         // check if this AppServer has this theater in its list
         // check if this client has already that seat reserved, if not, return error

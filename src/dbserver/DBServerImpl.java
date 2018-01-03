@@ -155,7 +155,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	// RMI FUNCTIONS **********************************************************
 	@Override
-	public String[] getTheaterNames() throws RemoteException{
+	public synchronized String[] getTheaterNames() throws RemoteException{
 		Set<String> keys = theaters.keySet();
 		String[] names = (String[]) keys.toArray(new String[keys.size()]);
 		return names;	
@@ -170,7 +170,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		return theaters.get(theaterName);
 	}*/
 	@Override
-    public Theater getTheater(String theaterName) throws RemoteException{
+    public synchronized Theater getTheater(String theaterName) throws RemoteException{
         if(theaters.containsKey(theaterName)) {
             return theaters.get(theaterName);
         }else {
@@ -182,11 +182,11 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	@Override
 	//ONLY CALL THIS FUCTION IF EXIST A PRIOR RESERVATION.
 	//This validation should be done at appserver
-	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException{
+	public synchronized boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException{
 		//Theater theater = theaters.get(theaterName).seats
 		if(theaters.get(theaterName) != null && theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
 			System.out.println("DBServerImpl: occupySeat");
-			synchronized(this){
+			//synchronized(theaters.get(theaterName)){
 				//UPDATE Hashmap
 				theaters.get(theaterName).occupySeat(theaterSeat);
 				if (!flag_bkserver_down) {
@@ -200,19 +200,19 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 				// to count operations to at x operations, save memory to file and delete log file
 				countOperation();
 
-			}
+			//}
 			return true;
 		}
 		else if(theatersBackup.get(theaterName) != null && theatersBackup.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
-			System.out.println("DBServerImpl: occupySeat AS BACKUP");
-			synchronized(this){
+			//System.out.println("DBServerImpl: occupySeat AS BACKUP");
+			//synchronized(theatersBackup.get(theaterName)){
 				//UPDATE Hashmap
 				theatersBackup.get(theaterName).occupySeat(theaterSeat);
 				//log operation to file
 				storageFile.buySeatInBackup(theaterName, theaterSeat);
 				// to count operations to at x operations, save memory to file and delete log file
 				countOperationback();
-			}
+			//}
 			return true;
 		}
 
@@ -252,7 +252,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	//set of updates
 	@Override
-	public int[] updateSoldSeat(String[] theaterName, Seat[] theaterSeat) throws RemoteException {
+	public synchronized int[] updateSoldSeat(String[] theaterName, Seat[] theaterSeat) throws RemoteException {
 		int[] response = new int[theaterName.length];
 		for (int i=0; i<theaterName.length;i++) {
 			response[i]=updateSoldSeatAux( theaterName[i],  theaterSeat[i]);
@@ -263,7 +263,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	
 	@Override
-	public ConcurrentHashMap<String, Theater> getSnapshot() throws RemoteException {
+	public synchronized ConcurrentHashMap<String, Theater> getSnapshot() throws RemoteException {
 		return theaters;
 	}
 
@@ -289,7 +289,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	}
 
     // Auxiliary methods ******************************************************
-	private synchronized int updateSoldSeatAux(String theaterName, Seat theaterSeat) {
+	private int updateSoldSeatAux(String theaterName, Seat theaterSeat) {
 		if (theatersBackup.containsKey(theaterName)) {
 			if(theatersBackup.get(theaterName).occupySeat(theaterSeat))
 				// operation sucesseful
@@ -310,7 +310,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	}
 
 	//Count operations to at 100 operations, save memory to file and delete log file
-	private synchronized void countOperation() {
+	private void countOperation() {
 		opCount++;
 		if (opCount>MAXOPERATIONS) {
 			try {
@@ -323,7 +323,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		}		
 	}
 
-	synchronized private void  updateBackup(String theaterName, Seat theaterSeat) {
+	private void updateBackup(String theaterName, Seat theaterSeat) {
 		try {
 			int resp=backupServerStub.updateSoldSeat(theaterName, theaterSeat);
 			switch (resp) {
@@ -349,7 +349,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	}
 
 
-	private synchronized void countOperationback() {
+	private void countOperationback() {
 		opCountBack++;
 		if (opCountBack>MAXOPERATIONS) {
 			try {

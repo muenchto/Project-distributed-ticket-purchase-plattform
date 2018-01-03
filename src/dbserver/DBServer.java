@@ -13,7 +13,7 @@ import java.rmi.RemoteException;
 public class DBServer {
 	
 	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) 
-    static int MODE = 3;
+   // static int MODE = 3;
 
     public static void main(String args[]) throws RemoteException {
 
@@ -22,6 +22,7 @@ public class DBServer {
 
         int NUM_DBSERVERS = configfile.getNum_servers();
         int NUM_THEATERS = configfile.getNum_theaters();
+        int MODE = configfile.getWrite_mode();
 
         String local_ip = "127.0.0.1";
         String zkIP = "localhost";
