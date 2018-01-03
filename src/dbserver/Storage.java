@@ -296,7 +296,11 @@ public class Storage {
 				row=(scLog.next()).charAt(0);
 				col=scLog.nextInt();
 				scLog.skip("\n");
-				theatersTemp.get(theaterName).occupySeat(row-'A', col);
+				System.out.println("trying to occupy seat row - "+(row-'A')+", col - "+col+" in theater - "+theaterName+"Contains theater- " +theatersTemp.containsKey(theatersTemp));
+				if (theatersTemp.containsKey(theatersTemp))
+					theatersTemp.get(theaterName).occupySeat(row-'A', col);
+				else
+					System.out.println("PROCESSING LOG  FAILED, "+theaterName+" dont exist in theatersTemp. FILE "+DBFILENAME);
 				op++;
 			}
 			log.delete();
@@ -320,10 +324,11 @@ public class Storage {
 				row=(scLog.next()).charAt(0);
 				col=scLog.nextInt();
 				scLog.skip("\n");
+				System.out.println("trying to occupy seat row - "+(row-'A')+", col - "+col+" in theater - "+theaterName+"Contains theater- " +theatersTemp.containsKey(theatersTemp));
 				if(theatersTemp.containsKey(theaterName))
 					theatersTemp.get(theaterName).occupySeat(row-'A', col);
 				else
-					System.out.println("Cannot find "+theaterName+" in the hashmap that was loaded by from "+DBFILENAMEBACKUP);
+					System.out.println("PROCESSING BACKUP LOG FAILED  "+theaterName+" dont exist in theatersTemp. FILE "+DBFILENAMEBACKUP);
 				op++;
 			}
 			logback.delete();
