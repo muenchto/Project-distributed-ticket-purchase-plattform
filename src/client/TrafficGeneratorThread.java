@@ -21,19 +21,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author group: psd002 ; members: 42560-50586-30360
  */
 public class TrafficGeneratorThread implements Runnable {
-
-	private WideBoxIF wideBoxStub;
+	
 	private LoadBalancerIF loadBalancerStub;
 	private ConnectionHandler connector;
 	private int numTheaters;
-//	private Integer numRequests;
-//	private Integer numErrors;
-//	private Integer numPurchased;
-//	private Integer numAverageLatency;
-//	private Integer compReqAverageLatency;
-//	private Integer compReqLatencyCounter;
-//	private Integer numCancelled;
-//	private Integer latencyCounter;
 	private String origin;
 	private String target;
 	private String op;
@@ -68,7 +59,6 @@ public class TrafficGeneratorThread implements Runnable {
 	public TrafficGeneratorThread(LoadBalancerIF loadBalancerStub, int numTheaters,
 			int[] stats, String origin, String target, String op, String targetTheater,
 			int numClients, ConnectionHandler connector, int NUM_SERVERS) {
-		this.wideBoxStub = null;
 		this.loadBalancerStub = loadBalancerStub;
 		this.numTheaters = numTheaters;
 		this.origin = origin;
@@ -83,7 +73,7 @@ public class TrafficGeneratorThread implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.println(Thread.currentThread().getName());
+		//System.out.println(Thread.currentThread().getName());
 		Random r = new Random();
 		int clientId = 1;
 		if (origin.equals("single")) {

@@ -1,12 +1,6 @@
 package client;
 
 import auxiliary.*;
-
-import java.rmi.ConnectException;
-import java.rmi.RemoteException;
-import java.rmi.UnmarshalException;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -16,18 +10,9 @@ import java.util.concurrent.*;
  */
 public class TrafficGenerator {
 
-//	volatile static Integer requests;
-//	volatile static Integer averageLatency;
-//	volatile static Integer completeReqAverageLatency;
-//	volatile static Integer cancelled;
-//	volatile static Integer purchased;
-//	volatile static Integer errors;
-//	volatile static Integer latencyCounter = 0;
-//	volatile static Integer completeRequestLatencyCounter = 0;
-
 	// requests, purchased, cancelled, errors, average latency, complete request
 	// average latency, average latency counter, comp req latency counter
-	static int[] stats = new int[8];
+	//static int[] stats = new int[8];
 
 	static final int NUM_SERVERS = 2;
 
@@ -49,6 +34,10 @@ public class TrafficGenerator {
 			String zkAddress = zkIP + ":" + zkPort;
 			final ConnectionHandler connector = new ConnectionHandler(zkAddress, null);
 			final LoadBalancerIF loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer0", "/loadbalancer");
+//			final ConnectionHandler connector2 = new ConnectionHandler(zkAddress, null);
+//			final LoadBalancerIF loadBalancerStub2 = (LoadBalancerIF) connector.get("loadbalancer0", "/loadbalancer");
+			int[] stats = new int[8];
+//			int[] stats2 = new int[8];
 
 			ConfigHandler ch = new ConfigHandler();
 			System.out.println(ch.toString());
@@ -75,48 +64,57 @@ public class TrafficGenerator {
 			stats.put("errors", 0);
 			stats.put("latencyCounter", 0);
 			stats.put("completeRequestLatencyCounter", 0);
-			*/
-//			requests = new Integer(0);
-//			averageLatency = new Integer(0);
-//			completeReqAverageLatency = new Integer(0);
-//			cancelled = new Integer(0);
-//			purchased = new Integer(0);
-//			errors = new Integer(0);
-//			latencyCounter = new Integer(0);
-//			completeRequestLatencyCounter = new Integer(0);
-			
-			
+			*/		
 
-//			TrafficGeneratorThread r = new TrafficGeneratorThread(loadBalancerStub, numTheaters, requests,
-//					averageLatency, completeReqAverageLatency, cancelled, errors, purchased, latencyCounter,
-//					completeRequestLatencyCounter, origin, target, op, targetTheater, numClients, connector, NUM_SERVERS);
 
-			TrafficGeneratorThread r = new TrafficGeneratorThread(loadBalancerStub, numTheaters, stats, origin, target, op, targetTheater, numClients, connector, NUM_SERVERS);			
+			TrafficGeneratorThread task = new TrafficGeneratorThread(loadBalancerStub, numTheaters, stats, origin, target, op, targetTheater, numClients, connector, NUM_SERVERS);
+			//TrafficGeneratorThread task2 = new TrafficGeneratorThread(loadBalancerStub2, numTheaters, stats2, origin, target, op, targetTheater, numClients, connector2, NUM_SERVERS);
 			
-			final ScheduledExecutorService ex = Executors.newScheduledThreadPool(100);
+			final ScheduledExecutorService ex = Executors.newScheduledThreadPool(8);
+			//final ScheduledExecutorService ex2 = Executors.newScheduledThreadPool(5);
 
 			Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
 				@Override
 				public void run() {
 					ex.shutdown();
+					//ex2.shutdown();
 				}
 			}, duration, TimeUnit.MILLISECONDS);
-			ex.scheduleAtFixedRate(r/*timerTask*/, 0, sleepRate, TimeUnit.MILLISECONDS);
-			while (!ex.isTerminated()) {
-			}
-			System.out.println("Num of requests made: " + stats[0] + "\n" +
-								"Num of completed requests: " + stats[0] / 3 + "\n" + 
-								"Num of purchases made: " + stats[1] + "\n" + 
-								"Num of cancels made: " + stats[2] + "\n" + 
-								"Num of errors gotten: " + stats[3] + "\n" + 
-								"Average latenty per request: " + stats[4] + "\n" +
-								"Average latency per completed request: " + stats[5] + "\n" +
-								"Effective rate: " + stats[0]/(duration/1000));
 			
-//			System.out.println("Num of requests made: " + requests.intValue() + "\n" + "Num of completed requests: " + requests.intValue() / 3
-//					+ "\n" + "Num of purchases made: " + purchased.intValue() + "\n" + "Num of cancels made: " + cancelled.intValue() + "\n"
-//					+ "Num of errors gotten: " + errors.intValue() + "\n" + "Average latenty per request: " + averageLatency.intValue() + "\n"
-//					+ "Average latency per completed request: " + completeReqAverageLatency.intValue() + "\n");
+			ex.scheduleAtFixedRate(task, 0, sleepRate, TimeUnit.MILLISECONDS);
+//			ex2.scheduleAtFixedRate(task2, 0, sleepRate*2, TimeUnit.MILLISECONDS);
+			
+			while (!ex.isTerminated()/* && !ex2.isTerminated()*/) {
+			}
+			
+			System.out.println("Thread Pool 1:\nNum of requests made: " + stats[0] + "\n" +
+					"Num of completed requests: " + stats[0] / 3 + "\n" + 
+					"Num of purchases made: " + stats[1] + "\n" + 
+					"Num of cancels made: " + stats[2] + "\n" + 
+					"Num of errors gotten: " + stats[3] + "\n" + 
+					"Average latenty per request: " + stats[4] + "\n" +
+					"Average latency per completed request: " + stats[5] + "\n" +
+					"Effective rate: " + stats[0]/(duration/1000) + "\n");
+			
+			
+//			System.out.println("Thread Pool 2:\nNum of requests made: " + stats2[0] + "\n" +
+//					"Num of completed requests: " + stats2[0] / 3 + "\n" + 
+//					"Num of purchases made: " + stats2[1] + "\n" + 
+//					"Num of cancels made: " + stats2[2] + "\n" + 
+//					"Num of errors gotten: " + stats2[3] + "\n" + 
+//					"Average latenty per request: " + stats2[4] + "\n" +
+//					"Average latency per completed request: " + stats2[5] + "\n" +
+//					"Effective rate: " + stats2[0]/(duration/1000) + "\n");
+//			
+//			
+//			System.out.println("Total:\nNum of requests made: " + (stats[0] + stats2[0]) + "\n" +
+//								"Num of completed requests: " + (stats[0] / 3  + stats2[0] / 3) + "\n" + 
+//								"Num of purchases made: " + (stats[1] + stats2[1]) + "\n" + 
+//								"Num of cancels made: " + (stats[2] + stats2[2]) + "\n" + 
+//								"Num of errors gotten: " + (stats[3] + stats2[3]) + "\n" + 
+//								"Average latenty per request: " + (stats[4] + stats2[4]) + "\n" +
+//								"Average latency per completed request: " + (stats[5] + stats2[5]) + "\n" +
+//								"Effective rate: " + (stats[0]/(duration/1000) + stats2[0]/(duration/1000)) + "\n");
 
 			System.out.println("Runtime (s): " + ((System.currentTimeMillis() - startTime) / 1000));
 			System.exit(1);
@@ -124,27 +122,4 @@ public class TrafficGenerator {
 			e1.printStackTrace();
 		}
 	}
-/*
-	private static synchronized void addToAverageLatency(long diff) {
-		// System.out.print(diff+" ");
-		stats[4] = Math.toIntExact(stats[4] + ((diff - stats[4]) / latencyCounter));
-		// aux = Math.toIntExact(aux + ((diff - aux) / this.latencyCounter));
-	}
-
-	private static synchronized void addToCompleteRequestLatency(long diff) {
-		stats[5] = Math.toIntExact(stats[5] + ((diff - stats[5]) / completeRequestLatencyCounter));
-	}
-
-	private static String getAppServerWithTheater(HashMap<String, String[]> theaters, int aux) {
-		String targetTheater = "TheaterNr" + aux;
-		for (Map.Entry<String, String[]> e : theaters.entrySet()) {
-			for (String s : e.getValue()) {
-				if (s.equals(targetTheater)) {
-					return e.getKey();
-				}
-			}
-		}
-		return null;
-	}*/
-
 }
