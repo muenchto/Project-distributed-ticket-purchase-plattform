@@ -72,7 +72,7 @@ public class TrafficGeneratorThread implements Runnable {
 
 	@Override
 	public void run() {
-
+		
 		//System.out.println(Thread.currentThread().getName());
 		Random r = new Random();
 		int clientId = 1;

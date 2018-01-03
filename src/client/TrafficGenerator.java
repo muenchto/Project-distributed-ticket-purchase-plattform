@@ -70,18 +70,30 @@ public class TrafficGenerator {
 			TrafficGeneratorThread task = new TrafficGeneratorThread(loadBalancerStub, numTheaters, stats, origin, target, op, targetTheater, numClients, connector, NUM_SERVERS);
 			//TrafficGeneratorThread task2 = new TrafficGeneratorThread(loadBalancerStub2, numTheaters, stats2, origin, target, op, targetTheater, numClients, connector2, NUM_SERVERS);
 			
-			final ScheduledExecutorService ex = Executors.newScheduledThreadPool(8);
+			//final ScheduledExecutorService ex = Executors.newScheduledThreadPool(8);
+			final ExecutorService ex = Executors.newFixedThreadPool(15);
 			//final ScheduledExecutorService ex2 = Executors.newScheduledThreadPool(5);
+			
 
 			Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
 				@Override
 				public void run() {
-					ex.shutdown();
+					ex.shutdownNow();
 					//ex2.shutdown();
 				}
 			}, duration, TimeUnit.MILLISECONDS);
 			
-			ex.scheduleAtFixedRate(task, 0, sleepRate, TimeUnit.MILLISECONDS);
+			while(!ex.isShutdown()) {
+				ex.submit(task);
+				Thread.sleep(sleepRate);
+			}
+			
+			/*for(int i = 0; i < (duration / 1000) * rate; i++) {
+				ex.submit(task);
+				Thread.sleep(sleepRate);
+			}
+			ex.shutdownNow();*/
+			//ex.scheduleAtFixedRate(task, 0, sleepRate, TimeUnit.MILLISECONDS);
 //			ex2.scheduleAtFixedRate(task2, 0, sleepRate*2, TimeUnit.MILLISECONDS);
 			
 			while (!ex.isTerminated()/* && !ex2.isTerminated()*/) {
@@ -94,7 +106,7 @@ public class TrafficGenerator {
 					"Num of errors gotten: " + stats[3] + "\n" + 
 					"Average latenty per request: " + stats[4] + "\n" +
 					"Average latency per completed request: " + stats[5] + "\n" +
-					"Effective rate: " + stats[0]/(duration/1000) + "\n");
+					"Effective rate: " + (stats[0]/3)/(duration/1000) + "\n");
 			
 			
 //			System.out.println("Thread Pool 2:\nNum of requests made: " + stats2[0] + "\n" +
