@@ -71,7 +71,7 @@ public class TrafficGenerator {
 			//TrafficGeneratorThread task2 = new TrafficGeneratorThread(loadBalancerStub2, numTheaters, stats2, origin, target, op, targetTheater, numClients, connector2, NUM_SERVERS);
 			
 			//final ScheduledExecutorService ex = Executors.newScheduledThreadPool(8);
-			final ExecutorService ex = Executors.newFixedThreadPool(15);
+			final ExecutorService ex = Executors.newFixedThreadPool(30);
 			//final ScheduledExecutorService ex2 = Executors.newScheduledThreadPool(5);
 			
 
