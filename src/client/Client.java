@@ -7,6 +7,9 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 /**
  * PSD Project - Phase 1
@@ -24,28 +27,43 @@ public class Client {
     }
 
     public static void main(String[] args) throws RemoteException {
-        Registry reg;
 
         int clientID;
-        
-        
+
+        String zkIP = "localhost";
+        String zkPort = "";
+
+        if (args.length > 0) {
+            //args[0] = own IP
+            System.setProperty("java.rmi.server.hostname", args[0]);
+
+            //args[1] = zookeeper IP
+            zkIP = args[1];
+            //args[2] = zookeeper Port
+            zkPort = args[2];
+        }
+        String zkAddress = zkIP + ":" + zkPort;
+        final ConnectionHandler connector = new ConnectionHandler(zkAddress, null);
+        final LoadBalancerIF loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer0", "/loadbalancer");
+
+
         try {
-            if (args.length > 0) {
-                reg = LocateRegistry.getRegistry(args[0],5000);
-            }
-            else {
-                reg = LocateRegistry.getRegistry(5000);
-            }
-            WideBoxIF wideboxStub = (WideBoxIF) reg.lookup("WideBoxServer");
-            System.out.println("Client connected to WideBoxServer");
 
-            String[] theaters = wideboxStub.getNames();
-            System.out.println("List of Theaters is: " + Arrays.toString(theaters));
+            System.out.println("Client connected to WideBox");
 
-            Console console = System.console();
-            String theaterChoice = console.readLine("Please choose a theater: ");
-            System.out.println("Widebox is looking for this theater: " + theaterChoice);
+            HashMap<String, String[]> theaters = loadBalancerStub.getNames();
+            System.out.println("List of Theaters is: " + Arrays.toString(theaters.values().toArray()));
 
+            Scanner input = new Scanner(System.in);
+            System.out.println("Please choose a theater: ");
+            String theaterChoice = input.nextLine();
+            int theaterNr = Integer.parseInt(theaterChoice);
+            System.out.println("Widebox is looking for this theater: " + theaterNr);
+
+            String targetAppServer = getAppServerWithTheater(theaters, theaterNr);
+            WideBoxIF wideboxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
+
+            theaterChoice = "TheaterNr"+theaterNr;
             Message answer = wideboxStub.query(theaterChoice);
             clientID = answer.getClientID();
             System.out.println("Hello " + clientID + ": " + theaterChoice + " has following seats: ");
@@ -55,13 +73,15 @@ public class Client {
 
             String seatChoice = null;
             while (true){
-                String choice = console.readLine("Accept (y/n) or cancel (c)?");
+                System.out.println("Accept (y/n) or cancel (c)?");
+                String choice = input.nextLine();
                 if (choice.equals("y")){
                     answer = wideboxStub.accept(theaterChoice, answer.getClientsSeat(), clientID);
                     break;
                 }
                 else if (choice.equals("n")){
-                    seatChoice = console.readLine("Choose a Seat:");
+                    System.out.println("Choose a Seat:");
+                    seatChoice = input.nextLine();
                     int seatColumn = Integer.parseInt(seatChoice.substring(1));
                     Seat seat = new Seat(Seat.SeatStatus.RESERVED, seatChoice.charAt(0), seatColumn);
 
@@ -94,5 +114,17 @@ public class Client {
             System.err.println("Client exception: " + e.toString());
             e.printStackTrace();
         }
+    }
+
+    private static String getAppServerWithTheater(HashMap<String, String[]> theaters, int aux) {
+        String targetTheater = "TheaterNr" + aux;
+        for (Map.Entry<String, String[]> e : theaters.entrySet()) {
+            for (String s : e.getValue()) {
+                if (s.equals(targetTheater)) {
+                    return e.getKey();
+                }
+            }
+        }
+        return null;
     }
 }

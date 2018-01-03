@@ -16,65 +16,106 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	private static final long serialVersionUID = -7370182827432554702L;
 	public ConcurrentHashMap<String, Theater> theaters ;
 	public ConcurrentHashMap<String, Theater> theatersBackup;
-	//For sharding. Array with the starting and end index of the piece of data
-	//that the replica is responsible, as a primary and as a backup of other.
-	public int[] theaterIndexPrim = new int [2];
-	public int[] theaterIndexBack = new int [2];
-	public static Storage storageFile;
-	final static String DBFILENAME = "DBfile.txt";
-	final static String LOGFILENAME = "LOGfile.txt";
-	public static Storage storageBkFile;
-	final static String DBFILENAMEBACKUP = "DB_BACKUPfile.txt";
-	final static String LOGFILENAMEBACKUP = "LOG_BACKUPfile.txt";
+
+	public  Storage storageFile;
+
 	private int firstTheater;
 	private int lastTheater;
-	private int opCount=0;
+	private int firstBackTheater;
+	private int lastBackTheater;
 	final static int MAXOPERATIONS=100; //limit operations to create snapshot
 	// Mode=1 (Buffer); Mode=2 (Buffer+Flush); Mode=3 (Buffer+Flush+Sync) future use
 	public int mode;
+	public int NUM_SERVERS;
+	public int SERVER_ID;
 	private int errors;
 
 	private ConnectionHandler connector;
 	private DataStorageIF backupServerStub;
 	private DataStorageIF primaryServerStub;
 
+	private int opCountBack = 0;
+	private int opCount=0;
 
-	private int numServersAtStart;
+	private boolean flag_bkserver_down;
 
-	public DBServerImpl(int ID, int NUM_DBSERVER, ConnectionHandler connector, int writingMode, int firstTheater, int lastTheater ) throws IOException{
+
+	public DBServerImpl(int ID, String local_ip, int NUM_DBSERVER, ConnectionHandler connector, int writingMode, int NUM_THEATERS) throws IOException{
+
+		this.SERVER_ID = ID;
+		this.NUM_SERVERS = NUM_DBSERVER;
 		mode=writingMode;
-		storageFile = new Storage (DBFILENAME, LOGFILENAME, firstTheater, lastTheater, writingMode);
-		//storageBkFile =  new Storage (DBFILENAMEBACKUP,LOGFILENAMEBACKUP);
-		this.firstTheater=firstTheater;
-		this.lastTheater=lastTheater;
+
 
 		this.connector = connector;
 
+		//For sharding. Array with the starting and end index of the piece of data
+		//that the replica is responsible, as a primary and as a backup of other.
+		int succesiveID = Math.floorMod((SERVER_ID + 1), NUM_SERVERS);
+		this.firstTheater = SERVER_ID * NUM_THEATERS / NUM_SERVERS;
+		if (SERVER_ID == NUM_SERVERS -1) {
+			this.lastTheater = NUM_THEATERS;
+		} else {
+			this.lastTheater = succesiveID * NUM_THEATERS / NUM_SERVERS;
+		}
 
+		int primary_Server_ID = Math.floorMod((SERVER_ID - 1), NUM_SERVERS);
+		this.firstBackTheater = primary_Server_ID * NUM_THEATERS / NUM_SERVERS;
+		if (primary_Server_ID == NUM_SERVERS -1) {
+			this.lastBackTheater = NUM_THEATERS;
+		} else {
+			this.lastBackTheater = this.firstTheater;
+		}
 
+		storageFile = new Storage (ID, firstTheater, lastTheater, firstBackTheater, mode);
+		//storageBkFile =  new Storage (DBFILENAMEBACKUP,LOGFILENAMEBACKUP);
 
 		//if there is a db file, load the file to memory hashmap 
 		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
-		if (storageFile.existentDBfile() && false) {
+		if (storageFile.existentDBfile()) {
 			System.out.println("DB file present, loading DB");
 			//Creation of the theaters hashmap
 			theaters = storageFile.loadDBfile();
 		}
 		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
 		else {
+
 			//Creation of the theaters hashmap
 			System.out.println("DB file NOT present, creating new hashmap");
 			theaters = new ConcurrentHashMap<String, Theater>();
 			for (int i = firstTheater; i < lastTheater; i++) {
 				theaters.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
-				//System.out.println(" nome do teatro "+theaters.get("TheaterNr"+i).theaterName+" - "+theaters.get("TheaterNr"+i).toString()+" adicionado"); //DEBUG USE
 			}
-			System.out.println("created theaters from "+theaters.get("TheaterNr"+firstTheater).theaterName + " until "+theaters.get("TheaterNr"+(lastTheater-1)).theaterName);
+			//System.out.println("created "+theaters.size()+" theaters from "+theaters.get("TheaterNr"+firstTheater).theaterName + " until "+theaters.get("TheaterNr"+(lastTheater-1)).theaterName);
+
 			//dump newly createad hashmap to file
-			//storageFile.saveToFile(theaters);
+			storageFile.saveToFile(theaters);
 		}
 
-        connector.register(this);
+		//BACKUP DATA
+		if (storageFile.existentDBbackfile()) {
+			System.out.println("DB backup file present, loading DB");
+			//Creation of the theaters hashmap
+			theatersBackup = storageFile.loadDBBackfile();
+		}
+		//if there isn't an existant db file, create clean theaters hashmap and make first dump to create a new file snapshot
+		else {
+			//Creation of the theaters hashmap
+			System.out.println("DB backup file NOT present, creating new hashmap");
+			theatersBackup = new ConcurrentHashMap<String, Theater>();
+			for (int i = firstBackTheater; i < lastBackTheater; i++) {
+				theatersBackup.put("TheaterNr" + i,  new  Theater("TheaterNr" + i));
+			}
+			System.out.println("BACKUP: created "+theatersBackup.size()+" theaters from "+theatersBackup.get("TheaterNr"+firstBackTheater).theaterName + " until "+theatersBackup.get("TheaterNr"+(lastBackTheater-1)).theaterName);
+
+			//dump newly createad hashmap to file
+			storageFile.saveToBackFile(theatersBackup);
+		}
+
+
+
+
+        connector.register(this, local_ip);
         //if this db server is the last one, he has to inform the dbserver0 that he is alive an will have dbserver0 as backup
         if (ID == NUM_DBSERVER-1) {
             primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
@@ -82,7 +123,8 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
             primaryServerStub.notifyBackupAlive(ID);
             backupServerStub = (DataStorageIF) connector.get("dbserver0", "/dbserver");
             System.out.println("Connection to BACKUP SERVER0 established");
-            backupServerStub.notifyPrimaryAlive(NUM_DBSERVER);
+			flag_bkserver_down = false;
+            backupServerStub.notifyPrimaryAlive(ID);
         }
         // if dbserver is not the first one (and not the last one), only connect to its primary server and notify this one that the backup server is up
         else if (ID > 0){
@@ -90,7 +132,20 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
             System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");
             primaryServerStub.notifyBackupAlive(ID);
         }
+
+		if(ID > 0){
+			try {
+				theatersBackup = primaryServerStub.getSnapshot();
+			}
+			catch (RemoteException e) {
+				System.err.println("DBSERVER"+ID+": primary server connection down");
+				//e.printStackTrace();
+			}
+		}
 	}
+
+
+
 
 	// RMI FUNCTIONS **********************************************************
 	@Override
@@ -99,7 +154,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		String[] names = (String[]) keys.toArray(new String[keys.size()]);
 		return names;	
 	}
-
+/*
 	@Override
 	public synchronized Theater getTheater(String theaterName) throws RemoteException{
 		if(!theaters.containsKey(theaterName)) {
@@ -107,34 +162,57 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 					".This DBServer is only responsible for " + firstTheater + " to " + lastTheater + " theaters");
 		}
 		return theaters.get(theaterName);
-	}
+	}*/
+	@Override
+    public synchronized Theater getTheater(String theaterName) throws RemoteException{
+        if(theaters.containsKey(theaterName)) {
+            return theaters.get(theaterName);
+        }else {
+        	System.out.println("Going to the backup");
+            return theatersBackup.get(theaterName);
+        }
+    }
 
 	@Override
 	//ONLY CALL THIS FUCTION IF EXIST A PRIOR RESERVATION.
-	//This validation should be done at appserver 
+	//This validation should be done at appserver
 	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException{
-		//System.out.println("DBServerImpl: occupySeat");
+		System.out.println("DBServerImpl: occupySeat");
 		//Theater theater = theaters.get(theaterName).seats
 		if(theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
 			synchronized(this){
 				//UPDATE Hashmap
 				theaters.get(theaterName).occupySeat(theaterSeat);
-				updateBackup(theaterName,theaterSeat);
-				//TODO update the replica backup 
 				//log operation to file
 				storageFile.buySeat(theaterName,theaterSeat);
+				if (!flag_bkserver_down) {
+					// update the replica backup
+					updateBackup(theaterName,theaterSeat);
+				}
+				
 				// to count operations to at x operations, save memory to file and delete log file
 				countOperation();
 			}
 			return true;
 		}
+		else if(theatersBackup.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
+			synchronized(this){
+				//UPDATE Hashmap
+				theatersBackup.get(theaterName).occupySeat(theaterSeat);
+				//log operation to file
+				storageFile.buySeatInBackup(theaterName, theaterSeat);
+				// to count operations to at x operations, save memory to file and delete log file
+				countOperationback();
+			}
+			return true;
+		}
+
 		else {
 			errors++;
 			System.out.println("DBSERVER: OCCUPY ERROR [" + errors + "]: " + theaterName + " " + theaterSeat.getSeatName() + " seat already taken.");
 			return false;
 		}
 	}
-
 
 	
 
@@ -176,7 +254,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	
 	@Override
-	public ConcurrentHashMap<String, Theater> Snapshot() throws RemoteException {
+	public ConcurrentHashMap<String, Theater> getSnapshot() throws RemoteException {
 		return theaters;
 	}
 
@@ -184,39 +262,51 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
     public void notifyBackupAlive(int backupServerID) throws RemoteException {
         backupServerStub = (DataStorageIF) connector.get("dbserver" + backupServerID, "/dbserver");
         System.out.println("Connection to BACKUP SERVER" + backupServerID + " established");
+		flag_bkserver_down = false;
     }
 
-    @Override
-    public void notifyPrimaryAlive(int NUM_DBSERVER) throws RemoteException {
-        primaryServerStub = (DataStorageIF) connector.get("dbserver" + (NUM_DBSERVER - 1), "/dbserver");
-        System.out.println("Connection to PRIMARY SERVER" + (NUM_DBSERVER - 1)+" established");
-    }
-
+	@Override
+	public void notifyPrimaryAlive(int id) throws RemoteException {
+		primaryServerStub = (DataStorageIF) connector.get("dbserver" + (id), "/dbserver");
+		System.out.println("Connection to PRIMARY SERVER" + (id)+" established");
+		if (SERVER_ID == 0 && id == NUM_SERVERS-1)
+			try {
+				theatersBackup = primaryServerStub.getSnapshot();
+				System.out.println("DB-"+SERVER_ID+"Received the snapshot from dbserver "+id);
+			
+			}
+			catch (RemoteException e) {
+				System.err.println("DBSERVER"+id+": primary server connecting down");
+				e.printStackTrace();
+			}
+	}
 
     // Auxiliary methods ******************************************************
-
-	public int getNumServersAtStart() {
-		return numServersAtStart;
-	}
-	
-
 	private synchronized int updateSoldSeatAux(String theaterName, Seat theaterSeat) {
-		if (theatersBackup.contains(theaterName)) {
-			if(theatersBackup.get(theaterName).occupySeat(theaterSeat))
+		System.out.println("DB-"+SERVER_ID+" request received to buy seat in theater "+theaterName);
+		if (theatersBackup.containsKey(theaterName)) {
+			if(theatersBackup.get(theaterName).occupySeat(theaterSeat)){
+				System.out.println("operation sucessuful");
+				storageFile.buySeatInBackup(theaterName, theaterSeat);
+				System.out.println("compra registado no ficheiro de backup");
+				countOperationback();
+				
 				// operation sucesseful
 				return 1;
+			}
 			else
 				// seat not available
 				return 0;
 		}
-		else
-			if (theaters.contains(theaterName))
+		else {
+			if (theaters.containsKey(theaterName))
 				//theater found on primarys theater, something it's not alright 
 				//This should not happen but if it happens you know
 				return -2;
 			else
 				//theater does not exist in theaterbackup, something it's not alright 
 				return -1;
+		}
 	}
 
 	//Count operations to at 100 operations, save memory to file and delete log file
@@ -233,9 +323,43 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		}		
 	}
 
-	private void updateBackup(String theaterName, Seat theaterSeat) {
-		//TODO
+	synchronized private void  updateBackup(String theaterName, Seat theaterSeat) {
+		try {
+			int resp=backupServerStub.updateSoldSeat(theaterName, theaterSeat);
+			switch (resp) {
+				case -2 :
+					System.out.println("FROM BACKUP: theater " +theaterName+" found on primarys theater, something it's not alright ");
+					break;
+				case -1 :
+					System.out.println("FROM BACKUP: theater " +theaterName+" does not exist in theaterbackup, something it's not alright ");
+					break;
+				case 0 :
+					System.out.println("FROM BACKUP: seat not available on theater " +theaterName);
+					break;
+				case 1 :
+					System.out.println("FROM BACKUP: operation sucesseful");
+					break;
+			}
+
+		} catch (RemoteException e) {
+			System.err.println("DBSERVER: backup server connecting down");
+			flag_bkserver_down = true;
+			//e.printStackTrace();
+		}
 	}
 
+
+	private synchronized void countOperationback() {
+		opCountBack++;
+		if (opCountBack>MAXOPERATIONS) {
+			try {
+				storageFile.saveToBackFile(theatersBackup);
+			} catch (IOException e) {
+				System.err.println("DBSERVER: Error in couting operations");
+				e.printStackTrace();
+			}
+			opCountBack=0;
+		}
+	}
 
 }
