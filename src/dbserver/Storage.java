@@ -296,7 +296,10 @@ public class Storage {
 				row=(scLog.next()).charAt(0);
 				col=scLog.nextInt();
 				scLog.skip("\n");
-				theatersTemp.get(theaterName).occupySeat(row-'A', col);
+				if(theatersTemp.containsKey(theaterName))
+					theatersTemp.get(theaterName).occupySeat(row-'A', col);
+				else
+					System.out.println("Cannot find "+theaterName+" in the hashmap that was loaded by from "+DBFILENAME+" contains theater? "+theatersTemp.containsKey(theaterName));
 				op++;
 			}
 			log.delete();
@@ -323,7 +326,7 @@ public class Storage {
 				if(theatersTemp.containsKey(theaterName))
 					theatersTemp.get(theaterName).occupySeat(row-'A', col);
 				else
-					System.out.println("Cannot find "+theaterName+" in the hashmap that was loaded by from "+DBFILENAMEBACKUP);
+					System.out.println("Cannot find "+theaterName+" in the hashmap that was loaded by from "+DBFILENAMEBACKUP+" contains theater? "+theatersTemp.containsKey(theaterName));
 				op++;
 			}
 			logback.delete();
