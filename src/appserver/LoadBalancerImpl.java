@@ -10,7 +10,7 @@ import auxiliary.ConnectionHandler;
 import auxiliary.LoadBalancerIF;
 import auxiliary.WideBoxIF;
 
-public class LoadBalancerImpl extends UnicastRemoteObject implements LoadBalancerIF, ConnectionHandler.ConnectionWatcher {
+public class LoadBalancerImpl extends UnicastRemoteObject implements LoadBalancerIF {
 
 	ArrayList<WideBoxIF> appserverList;
 	int num_appserver;
@@ -53,8 +53,9 @@ public class LoadBalancerImpl extends UnicastRemoteObject implements LoadBalance
 		}
 	}
 
-	@Override
-	public void connectionLost(String znode) {
 
+	@Override
+	public void killServer() throws RemoteException {
+		System.exit(0);
 	}
 }

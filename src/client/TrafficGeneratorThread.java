@@ -1,5 +1,6 @@
 package client;
 
+import appserver.LoadBalancer;
 import auxiliary.ConnectionHandler;
 import auxiliary.LoadBalancerIF;
 import auxiliary.Message;
@@ -81,6 +82,8 @@ public class TrafficGeneratorThread implements Runnable {
 
 	@Override
 	public void run() {
+
+		System.out.println(Thread.currentThread().getName());
 		Random r = new Random();
 		int clientId = 1;
 		if (origin.equals("single")) {
@@ -122,10 +125,22 @@ public class TrafficGeneratorThread implements Runnable {
 		long latencydif;
 		String theaterName = "TheaterNr" + targetTheater;
 		try {
-			latencyBeg = System.currentTimeMillis();
-			theaters = loadBalancerStub.getNames();
-			// check if loadbalancer is dead so we can connect to the backup
-			latencyEnd = System.currentTimeMillis();
+			try {
+				latencyBeg = System.currentTimeMillis();
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				latencyBeg = System.currentTimeMillis();
+				loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+				System.out.println("TRAFFICGEN : switched to backup LOADBALANCER1");
+			}
+
 			synchronized (this.stats) {
 				this.stats[6]++;	
 			}
@@ -241,10 +256,21 @@ public class TrafficGeneratorThread implements Runnable {
 		long latencydif;
 		String theaterName = "TheaterNr" + targetTheater;
 		try {
-			latencyBeg = System.currentTimeMillis();
-			theaters = loadBalancerStub.getNames();
-			// check if loadbalancer is dead so we can connect to the backup
-			latencyEnd = System.currentTimeMillis();
+			try {
+				latencyBeg = System.currentTimeMillis();
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				latencyBeg = System.currentTimeMillis();
+				loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+				System.out.println("TRAFFICGEN : switched to backup LOADBALANCER1");
+			}
 			synchronized (this.stats) {
 				this.stats[6]++;	
 			}
@@ -361,10 +387,21 @@ public class TrafficGeneratorThread implements Runnable {
 		int aux = r.nextInt(numTheaters);
 		String theaterName = "TheaterNr" + aux;
 		try {
-			latencyBeg = System.currentTimeMillis();
-			theaters = loadBalancerStub.getNames();
-			// check if loadbalancer is dead so we can connect to the backup
-			latencyEnd = System.currentTimeMillis();
+			try {
+				latencyBeg = System.currentTimeMillis();
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				latencyBeg = System.currentTimeMillis();
+				loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+				System.out.println("TRAFFICGEN : switched to backup LOADBALANCER1");
+			}
 			synchronized (this.stats) {
 				this.stats[6]++;	
 			}
@@ -482,10 +519,22 @@ public class TrafficGeneratorThread implements Runnable {
 		int aux = r.nextInt(numTheaters);
 		String theaterName = "TheaterNr" + aux;
 		try {
-			latencyBeg = System.currentTimeMillis();
-			theaters = loadBalancerStub.getNames();
-			// check if loadbalancer is dead so we can connect to the backup
-			latencyEnd = System.currentTimeMillis();
+
+			try {
+				latencyBeg = System.currentTimeMillis();
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				latencyBeg = System.currentTimeMillis();
+				loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+				System.out.println("TRAFFICGEN : switched to backup LOADBALANCER1");
+			}
 			synchronized (this.stats) {
 				this.stats[6]++;	
 			}
@@ -502,16 +551,16 @@ public class TrafficGeneratorThread implements Runnable {
 			try {
 				wideBoxStub = (WideBoxIF) connector.get(targetAppServer, "/appserver");
 			} catch (ConnectException e1) {
-				synchronized (this.stats) {
-					this.stats[3]++;
-				}
+
 				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
 				int appserverNr = Integer.parseInt(targetAppServer.substring(9));
 				int backupServerNr = Math.floorMod(appserverNr + 1, NUM_SERVERS);
 				wideBoxStubBackup = (WideBoxIF) connector.get("appserver" + backupServerNr, "/appserver");
 				wideBoxStub = wideBoxStubBackup;
 				System.out.println("TRAFFICGEN : switched to backup APPSERVER" + backupServerNr);
-
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
 			}
 
 			Message m = null;
@@ -602,10 +651,21 @@ public class TrafficGeneratorThread implements Runnable {
 		long latencydif;
 		String theaterName = "TheaterNr" + targetTheater;
 		try {
-			latencyBeg = System.currentTimeMillis();
-			theaters = loadBalancerStub.getNames();
-			// check if loadbalancer is dead so we can connect to the backup
-			latencyEnd = System.currentTimeMillis();
+			try {
+				latencyBeg = System.currentTimeMillis();
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				latencyBeg = System.currentTimeMillis();
+				loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+				System.out.println("TRAFFICGEN : switched to backup LOADBALANCER1");
+			}
 			synchronized (this.stats) {
 				this.stats[6]++;	
 			}
@@ -722,8 +782,21 @@ public class TrafficGeneratorThread implements Runnable {
 		String theaterName = "TheaterNr" + targetTheater;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = loadBalancerStub.getNames();
-			// check if loadbalancer is dead so we can connect to the backup
+			try {
+				latencyBeg = System.currentTimeMillis();
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				latencyBeg = System.currentTimeMillis();
+				loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+				System.out.println("TRAFFICGEN : switched to backup LOADBALANCER1");
+			}
 			latencyEnd = System.currentTimeMillis();
 			synchronized (this.stats) {
 				this.stats[6]++;	
@@ -824,7 +897,7 @@ public class TrafficGeneratorThread implements Runnable {
 				}			
 			}
 
-		} catch (RemoteException e) {
+		} catch (Exception e) {
 			synchronized (this.stats) {
 				this.stats[3]++;
 			}
@@ -842,8 +915,21 @@ public class TrafficGeneratorThread implements Runnable {
 		String theaterName = "TheaterNr" + aux;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = loadBalancerStub.getNames();
-			// check if loadbalancer is dead so we can connect to the backup
+			try {
+				latencyBeg = System.currentTimeMillis();
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				latencyBeg = System.currentTimeMillis();
+				loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+				System.out.println("TRAFFICGEN : switched to backup LOADBALANCER1");
+			}
 			latencyEnd = System.currentTimeMillis();
 			synchronized (this.stats) {
 				this.stats[6]++;	
@@ -963,8 +1049,21 @@ public class TrafficGeneratorThread implements Runnable {
 		String theaterName = "TheaterNr" + aux;
 		try {
 			latencyBeg = System.currentTimeMillis();
-			theaters = loadBalancerStub.getNames();
-			// check if loadbalancer is dead so we can connect to the backup
+			try {
+				latencyBeg = System.currentTimeMillis();
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+			} catch (ConnectException | UnmarshalException e1) {
+				synchronized (this.stats) {
+					this.stats[3]++;
+				}
+				System.err.println("TRAFFICGEN ERROR RMI: Could not connect to primary AppServer.");
+				latencyBeg = System.currentTimeMillis();
+				loadBalancerStub = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+				theaters = loadBalancerStub.getNames();
+				latencyEnd = System.currentTimeMillis();
+				System.out.println("TRAFFICGEN : switched to backup LOADBALANCER1");
+			}
 			latencyEnd = System.currentTimeMillis();
 			synchronized (this.stats) {
 				this.stats[6]++;	
