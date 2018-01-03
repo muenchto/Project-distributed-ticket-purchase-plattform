@@ -120,6 +120,14 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
         if (ID == NUM_DBSERVER-1) {
             primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
             System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");
+			try {
+				theatersBackup = primaryServerStub.getSnapshot();
+				System.out.println("got the snapshot");
+			}
+			catch (RemoteException e) {
+				System.err.println("DBSERVER: Coul not retrive the backup snapshot!");
+				//e.printStackTrace();
+			}
             primaryServerStub.notifyBackupAlive(ID);
             backupServerStub = (DataStorageIF) connector.get("dbserver0", "/dbserver");
             System.out.println("Connection to BACKUP SERVER0 established");
@@ -130,18 +138,16 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
         else if (ID > 0){
             primaryServerStub = (DataStorageIF) connector.get("dbserver" + (ID-1), "/dbserver");
             System.out.println("Connection to PRIMARY SERVER" + (ID-1)+" established");
-            primaryServerStub.notifyBackupAlive(ID);
-        }
-
-		if(ID > 0){
 			try {
 				theatersBackup = primaryServerStub.getSnapshot();
+				System.out.println("got the snapshot");
 			}
 			catch (RemoteException e) {
-				System.err.println("DBSERVER"+ID+": primary server connection down");
+				System.err.println("DBSERVER: Coul not retrive the backup snapshot!");
 				//e.printStackTrace();
 			}
-		}
+            primaryServerStub.notifyBackupAlive(ID);
+        }
 	}
 
 
@@ -149,7 +155,7 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 
 	// RMI FUNCTIONS **********************************************************
 	@Override
-	public synchronized String[] getTheaterNames() throws RemoteException{
+	public String[] getTheaterNames() throws RemoteException{
 		Set<String> keys = theaters.keySet();
 		String[] names = (String[]) keys.toArray(new String[keys.size()]);
 		return names;	
@@ -164,12 +170,12 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 		return theaters.get(theaterName);
 	}*/
 	@Override
-    public synchronized Theater getTheater(String theaterName) throws RemoteException{
+    public Theater getTheater(String theaterName) throws RemoteException{
         if(theaters.containsKey(theaterName)) {
             return theaters.get(theaterName);
         }else {
-        	System.out.println("Going to the backup");
-            return theatersBackup.get(theaterName);
+			Theater theater = theatersBackup.get(theaterName);
+			return theater;
         }
     }
 
@@ -177,24 +183,28 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	//ONLY CALL THIS FUCTION IF EXIST A PRIOR RESERVATION.
 	//This validation should be done at appserver
 	public boolean occupySeat(String theaterName, Seat theaterSeat) throws RemoteException{
-		System.out.println("DBServerImpl: occupySeat");
 		//Theater theater = theaters.get(theaterName).seats
-		if(theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
+		if(theaters.get(theaterName) != null && theaters.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
+			System.out.println("DBServerImpl: occupySeat");
 			synchronized(this){
 				//UPDATE Hashmap
 				theaters.get(theaterName).occupySeat(theaterSeat);
 				if (!flag_bkserver_down) {
 					// update the replica backup
 					updateBackup(theaterName,theaterSeat);
+					System.out.println("updated Backup");
 				}
+
 				//log operation to file
 				storageFile.buySeat(theaterName,theaterSeat);
 				// to count operations to at x operations, save memory to file and delete log file
 				countOperation();
+
 			}
 			return true;
 		}
-		else if(theatersBackup.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
+		else if(theatersBackup.get(theaterName) != null && theatersBackup.get(theaterName).seats[theaterSeat.rowNr-'A'][theaterSeat.colNr].status==SeatStatus.FREE) {
+			System.out.println("DBServerImpl: occupySeat AS BACKUP");
 			synchronized(this){
 				//UPDATE Hashmap
 				theatersBackup.get(theaterName).occupySeat(theaterSeat);
@@ -268,14 +278,14 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 	public void notifyPrimaryAlive(int id) throws RemoteException {
 		primaryServerStub = (DataStorageIF) connector.get("dbserver" + (id), "/dbserver");
 		System.out.println("Connection to PRIMARY SERVER" + (id)+" established");
-		if (SERVER_ID == 0 && id == NUM_SERVERS)
-			try {
-				theatersBackup = primaryServerStub.getSnapshot();
-			}
-			catch (RemoteException e) {
-				System.err.println("DBSERVER"+id+": primary server connecting down");
-				e.printStackTrace();
-			}
+		try {
+			theatersBackup = primaryServerStub.getSnapshot();
+			System.out.println("got the snapshot");
+		}
+		catch (RemoteException e) {
+			System.err.println("DBSERVER: Coul not retrive the backup snapshot!");
+			//e.printStackTrace();
+		}
 	}
 
     // Auxiliary methods ******************************************************
@@ -335,6 +345,8 @@ public class DBServerImpl extends UnicastRemoteObject implements DataStorageIF {
 			System.err.println("DBSERVER: backup server connecting down");
 			flag_bkserver_down = true;
 			//e.printStackTrace();
+		} finally {
+			return;
 		}
 	}
 

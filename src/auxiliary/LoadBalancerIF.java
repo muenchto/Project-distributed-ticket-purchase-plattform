@@ -5,5 +5,6 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 
 public interface LoadBalancerIF extends Remote{
-	public HashMap<String, String[]> getNames() throws RemoteException; 
+	HashMap<String, String[]> getNames() throws RemoteException;
+	void killServer() throws RemoteException;
 }

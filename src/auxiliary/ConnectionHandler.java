@@ -25,6 +25,8 @@ import java.util.concurrent.CountDownLatch;
 public class ConnectionHandler implements Watcher {
 
     final CountDownLatch connectedSignal = new CountDownLatch(1);
+    private final int NUM_DBSERVERS;
+    private final int NUM_THEATERS;
 
     public interface ConnectionWatcher {
         void connectionLost(String znode);
@@ -106,13 +108,23 @@ public class ConnectionHandler implements Watcher {
                 e1.printStackTrace();
             }
             numServersAtStart = getAllNodes(zk, zkPath).size();
+
+            /*System.setProperty("java.security.policy",System.getProperty("user.dir") +
+                    "/src/rmi.policy");
+
+            if (System.getSecurityManager() == null) {
+                System.setSecurityManager(new SecurityManager());
+            }*/
             try {
                 local_registry = LocateRegistry.createRegistry(reg_port + numServersAtStart);
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }
-
         }
+
+        WideBoxConfigHandler configfile = new WideBoxConfigHandler();
+        NUM_DBSERVERS = configfile.getNum_servers();
+        NUM_THEATERS = configfile.getNum_theaters();
 
         watcherList = new HashMap<String, ConnectionWatcher>();
 
@@ -135,7 +147,20 @@ public class ConnectionHandler implements Watcher {
             //System.out.println("CONNECTION HANDLER: registered successfully at " + Arrays.toString(remote_registry.list()));
             return remote_registry.lookup(serverName);
         } catch (KeeperException | InterruptedException | RemoteException | NotBoundException e) {
-            e.printStackTrace();
+            try {
+                int appserverNr = Integer.parseInt(serverName.substring(serverName.length()-1));
+                int backupServerNr = Math.floorMod(appserverNr + 1, NUM_DBSERVERS);
+                serverName = serverName.substring(0,serverName.length()-1) + backupServerNr;
+                byte[] zk_data = zk.getData(path + "/" + serverName, null, null);
+                dbServerIP = new String(zk_data).split(":")[0];
+                dbServerPort = new String(zk_data).split(":")[1];
+                System.err.println("CONNECTION HANDLER ERROR: trying to get BACKUP " + serverName + " @Registry " + dbServerIP + ":" + dbServerPort);
+                remote_registry = LocateRegistry.getRegistry(dbServerIP, Integer.parseInt(dbServerPort));
+                //System.out.println("CONNECTION HANDLER: registered successfully at " + Arrays.toString(remote_registry.list()));
+                return remote_registry.lookup(serverName);
+            } catch (KeeperException | InterruptedException | RemoteException | NotBoundException e1) {
+
+            }
         }
 
         return null; //TODO: make it better

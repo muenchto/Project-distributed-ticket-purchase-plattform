@@ -129,6 +129,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
         boolean requestAsBackupServer = theaterNr >= firstBackupTheater && theaterNr < lastBackupTheater;
         DataStorageIF tempStub = null;
         if (requestAsBackupServer) {
+            System.out.println("Acting now as Backup");
             // the request is done to this server as backup server
             tempStub = dataStorageStub;
             dataStorageStub = dataStorageStubAsBackup;
@@ -159,7 +160,8 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
                     dataStorageStub = dataStorageStubBackup;
                     System.out.println("WIDEBOXIMPL : switched to backup DBServer" + ((ID +1) % NUM_SERVERS));
 
-                    theater = dataStorageStub.getTheater(theaterName);
+                    theater = dataStorageStubBackup.getTheater(theaterName);
+                    System.out.println("Got theater from backup: "+theater.theaterName);
                 }
             }
 
@@ -229,7 +231,7 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
                     dataStorageStub = dataStorageStubBackup;
                     System.out.println("WIDEBOXIMPL : switched to backup DBServer" + ((ID +1) % NUM_SERVERS));
 
-                    theater = dataStorageStub.getTheater(theaterName);
+                    theater = dataStorageStubBackup.getTheater(theaterName);
                 }
             }
 
@@ -246,10 +248,12 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
                 reservedSeats.get(theaterName).put(new_seat.getSeatName(), clientID, EXPIRING_DURATION);
 
                 //when reserve happens before 15 sec timeout, we need to remove the old reserved seat
-                if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) != null ||
-                        reservedSeats.get(theaterName).get(old_seat.getSeatName()) == clientID) {
-                    reservedSeats.get(theaterName).remove(old_seat.getSeatName());
+                if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) != null) {
+                    if (reservedSeats.get(theaterName).get(old_seat.getSeatName()) == clientID){
+                        reservedSeats.get(theaterName).remove(old_seat.getSeatName());
+                    }
                 }
+
                 theater.freeSeat(old_seat);
 
                 return_seat = new_seat;
@@ -271,7 +275,6 @@ public class WideBoxImpl extends UnicastRemoteObject implements WideBoxIF, Conne
 
     @Override
     public Message accept(String theaterName, Seat acceptedSeat, int clientID) throws RemoteException {
-        System.out.println("accept called "+theaterName+", "+acceptedSeat.getSeatName()+", "+ clientID);
 
         // check if the theater is in this servers responsibility
         int theaterNr = Integer.parseInt(theaterName.substring(9));

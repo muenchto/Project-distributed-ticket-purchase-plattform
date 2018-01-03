@@ -32,7 +32,7 @@ public class WideBoxConfigHandler {
                     case "Total number of Database Server (equals to number of AppServers)":
                         this.num_servers = Integer.parseInt(split[1]);
                         break;
-                    case "Reservation expiring time (sec)":
+                    case "Reservation expiring time (millisec)":
                         this.expiring_time = Integer.parseInt(split[1]);
                         break;
 
