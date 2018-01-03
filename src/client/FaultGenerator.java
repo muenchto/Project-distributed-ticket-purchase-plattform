@@ -9,14 +9,14 @@ import java.rmi.registry.Registry;
 import java.util.Scanner;
 
 import appserver.LoadBalancer;
-import auxiliary.ConnectionHandler;
-import auxiliary.DataStorageIF;
-import auxiliary.LoadBalancerIF;
-import auxiliary.WideBoxIF;
+import auxiliary.*;
 
 public class FaultGenerator {
 
 	public static void main(String[] args) {
+
+		WideBoxConfigHandler configfile = new WideBoxConfigHandler();
+		int NUM_SERVERS = configfile.getNum_servers();
 
 		try {
 			String zkIP = "localhost";
@@ -41,8 +41,42 @@ public class FaultGenerator {
 			int number;
 			boolean loop = true;
 			while (loop) {
-				System.out.println("Enter Server to kill (db | app | lb):");
+				System.out.println("Enter server to kill (db | app | lb | all):");
 				serverChoice = sc.nextLine();
+				if (serverChoice.equals("all")) {
+					for (int i= 0; i < NUM_SERVERS; i++) {
+						try {
+							DataStorageIF dbserverStub = (DataStorageIF) connector.get("dbserver"+i, "/dbserver");
+							dbserverStub.killServer();
+						}
+						catch (Exception e){
+
+						}
+						try {
+							WideBoxIF wideboxStub = (WideBoxIF) connector.get("appserver"+i, "/appserver");
+							wideboxStub.killServer();
+						}
+						catch (Exception e){
+
+						}
+
+					}
+					try {
+						LoadBalancerIF lbStub = (LoadBalancerIF) connector.get("loadbalancer0", "/loadbalancer");
+						lbStub.killServer();
+					}
+					catch (Exception e){
+
+					}
+					try {
+						LoadBalancerIF lbStub1 = (LoadBalancerIF) connector.get("loadbalancer1", "/loadbalancer");
+						lbStub1.killServer();
+					}
+					catch (Exception e){
+
+					}
+					break;
+				}
 				System.out.println("Specify the number");
 				number = Integer.parseInt(sc.nextLine());
 				switch (serverChoice) {
